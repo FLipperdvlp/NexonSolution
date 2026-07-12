@@ -512,7 +512,7 @@ async def start_handler(message: types.Message) -> None:
 
     welcome_text = (
         "🍓 <b>Добро пожаловать в Клубничный бот репутации!</b>\n\n"
-        "Powered by Nexan Group Solution "
+        "Powered by Nexon Group Solution "
         "Этот бот помогает покупателям и продавцам клубники "
         "безопасно работать друг с другом.\n\n"
         "🌟 <b>Возможности бота:</b>\n"
