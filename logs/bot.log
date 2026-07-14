@@ -1,0 +1,3 @@
+2026-07-15 00:15:01,611 | INFO    | aiogram.event | Update id=543847285 is not handled. Duration 5 ms by bot id=8578283530
+2026-07-15 00:15:11,916 | INFO    | aiogram.event | Update id=543847286 is not handled. Duration 3 ms by bot id=8578283530
+2026-07-15 00:20:45,865 | INFO    | aiogram.event | Update id=543847287 is not handled. Duration 2 ms by bot id=8578283530

@@ -2,6 +2,8 @@ import asyncio
 import logging
 import os
 import re
+from datetime import datetime
+from logging.handlers import TimedRotatingFileHandler
 from html import escape as html_escape
 from typing import Optional, Tuple
 from aiogram import Bot, Dispatcher, F, types
@@ -26,25 +28,81 @@ from database import Database
 # ---------------------------------------------------------------------------
 load_dotenv()
 
-BOT_TOKEN: str = os.getenv("BOT_TOKEN", "")
+BOT_TOKEN: str = os.getenv("BOT_TOKEN", "8578283530:AAEUajtwik66P-ReEfPA_j8ge36zClfoN-M")
 if not BOT_TOKEN:
     raise ValueError(
         "❌ BOT_TOKEN не задан! Создай файл .env и укажи BOT_TOKEN=<твой токен>"
     )
 
 ADMIN_IDS: list[int] = [
-    int(x) for x in os.getenv("ADMIN_IDS", "6155527631").split(",") if x.strip()
+    int(x) for x in os.getenv("ADMIN_IDS", "6155527631, 8372409305").split(",") if x.strip()
 ]
 DB_PATH: str = os.getenv("DB_PATH", "reputation.db")
+
+# Username "живого гаранта", который показывается в разделе 🛡️ Гарант.
+# Можно переопределить через переменную окружения GARANT_USERNAME.
+GARANT_USERNAME: str = os.getenv("GARANT_USERNAME", "gavrilovit")
 
 # ---------------------------------------------------------------------------
 # Логирование
 # ---------------------------------------------------------------------------
+LOGS_DIR = os.getenv("LOGS_DIR", "logs")
+os.makedirs(LOGS_DIR, exist_ok=True)
+
+LOG_FORMAT = "%(asctime)s | %(levelname)-7s | %(name)s | %(message)s"
+formatter = logging.Formatter(LOG_FORMAT)
+
+bot_file_handler = TimedRotatingFileHandler(
+    filename=os.path.join(LOGS_DIR, "bot.log"),
+    when="midnight",
+    backupCount=14,
+    encoding="utf-8",
+)
+bot_file_handler.setFormatter(formatter)
+
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
+    handlers=[console_handler, bot_file_handler],
 )
 logger = logging.getLogger(__name__)
+
+action_formatter = logging.Formatter("%(asctime)s | %(message)s")
+action_file_handler = TimedRotatingFileHandler(
+    filename=os.path.join(LOGS_DIR, "actions.log"),
+    when="midnight",
+    backupCount=14,
+    encoding="utf-8",
+)
+action_file_handler.setFormatter(action_formatter)
+
+action_logger = logging.getLogger("actions")
+action_logger.setLevel(logging.INFO)
+action_logger.addHandler(action_file_handler)
+action_console_handler = logging.StreamHandler()
+action_console_handler.setFormatter(action_formatter)
+action_logger.addHandler(action_console_handler)
+action_logger.propagate = False
+
+
+def log_action(
+    user_id: Optional[int],
+    username: Optional[str],
+    action: str,
+    details: str = "",
+    chat: Optional[types.Chat] = None,
+) -> None:
+    uname = f"@{username}" if username else "-"
+    chat_part = ""
+    if chat is not None:
+        chat_label = chat.title or chat.type
+        chat_part = f" | chat={escape(chat_label)}({chat.id})"
+    action_logger.info(
+        f"user_id={user_id if user_id is not None else '-'} username={uname}"
+        f" | {action}{chat_part} | {details}"
+    )
 
 class CheckState(StatesGroup):
     waiting_for_username = State()
@@ -63,9 +121,6 @@ class AdminState(StatesGroup):
     waiting_unban_target = State()
 
 
-# ---------------------------------------------------------------------------
-# Глобальные объекты
-# ---------------------------------------------------------------------------
 bot = Bot(
     token=BOT_TOKEN,
     default=DefaultBotProperties(parse_mode=ParseMode.HTML),
@@ -81,22 +136,21 @@ def is_admin(user_id: int) -> bool:
 def is_private(message: types.Message) -> bool:
     return message.chat.type == "private"
 
-# ---------------------------------------------------------------------------
-# Клавиатуры
-# ---------------------------------------------------------------------------
-#def main_menu_kb(admin: bool = False) -> InlineKeyboardMarkup:
-#    rows = [
-#        [InlineKeyboardButton(text="✍️ Оставить отзыв", callback_data="leave_review")],
-#        [InlineKeyboardButton(text="🔍 Проверить продавца", callback_data="check")],
-#        [
-#            InlineKeyboardButton(text="📊 Топ продавцов", callback_data="top"),
-#            InlineKeyboardButton(text="📈 Статистика", callback_data="stats"),
-#        ],
-#        [InlineKeyboardButton(text="❓ Как пользоваться", callback_data="help")],
-#    ]
-#    if admin:
-#        rows.append([InlineKeyboardButton(text="🛡️ Админ-панель", callback_data="admin_panel")])
-#    return InlineKeyboardMarkup(inline_keyboard=rows)
+def main_menu_kb(admin: bool = False, private: bool = False) -> InlineKeyboardMarkup:
+    rows = [
+        [InlineKeyboardButton(text="✍️ Оставить отзыв", callback_data="leave_review")],
+        [InlineKeyboardButton(text="🔍 Проверить продавца", callback_data="check")],
+        [
+            InlineKeyboardButton(text="📊 Топ продавцов", callback_data="top"),
+            InlineKeyboardButton(text="📈 Статистика", callback_data="stats"),
+        ],
+        [InlineKeyboardButton(text="❓ Как пользоваться", callback_data="help")],
+    ]
+    if private:
+        rows.append([InlineKeyboardButton(text="🛡️ Гарант", callback_data="garant_menu")])
+    if admin:
+        rows.append([InlineKeyboardButton(text="🛡️ Админ-панель", callback_data="admin_panel")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 def review_cancel_kb() -> InlineKeyboardMarkup:
@@ -123,6 +177,13 @@ def review_photos_kb(count: int) -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="❌ Отменить", callback_data="review_cancel")],
         ]
     )
+
+
+def back_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="◀️ Назад в меню", callback_data="menu")]]
+    )
+
 
 def card_kb(target_id: int, has_photos: bool) -> InlineKeyboardMarkup:
     rows: list[list[InlineKeyboardButton]] = []
@@ -184,25 +245,34 @@ def admin_cancel_kb() -> InlineKeyboardMarkup:
     )
 
 
-# ---------------------------------------------------------------------------
-# Паттерн распознавания команды репутации
-# ---------------------------------------------------------------------------
+def garant_menu_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🧑‍💼 Живой гарант", callback_data="garant_live")],
+            [InlineKeyboardButton(text="💰 Деп", callback_data="garant_dep")],
+            [InlineKeyboardButton(text="◀️ Назад в меню", callback_data="menu")],
+        ]
+    )
+
+
+def garant_back_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="◀️ Назад", callback_data="garant_menu")],
+            [InlineKeyboardButton(text="◀️ Назад в меню", callback_data="menu")],
+        ]
+    )
+
+
 REP_PATTERN = re.compile(
     r"^\s*([+\-])\s*реп\s+@?(\w+)\s*(.*)$",
     re.IGNORECASE | re.DOTALL,
 )
 
 
-# ---------------------------------------------------------------------------
-# Вспомогательные функции
-# ---------------------------------------------------------------------------
 def parse_rep_message(
     text: str,
 ) -> Optional[Tuple[str, str, str]]:
-    """
-    Парсит команду репутации из текста.
-    Возвращает (знак, identifier, описание) или None.
-    """
     match = REP_PATTERN.match(text)
     if not match:
         return None
@@ -212,16 +282,17 @@ def parse_rep_message(
     return sign, identifier, description
 
 
-# Буфер для сборки альбомов (media group). Telegram присылает каждое фото
-# альбома отдельным апдейтом с одинаковым media_group_id, а подпись
-# ("+реп ...") прикрепляется только к одному из них — остальные приходят
-# без текста. Собираем их сюда через outer middleware ниже.
 album_buffers: dict[str, list[types.Message]] = {}
+
+# Набор media_group_id, которые прямо сейчас собираются в мастере отзыва
+# (review_photo_handler). Нужен, чтобы на альбом из нескольких фото
+# отправлялось только ОДНО подтверждение "Добавлено...", а не по одному
+# на каждое фото альбома.
+album_confirm_in_progress: set[str] = set()
 
 
 @dp.message.outer_middleware()
 async def album_collector_middleware(handler, event: types.Message, data: dict):
-    """Складывает все сообщения одного альбома в общий буфер по media_group_id."""
     if event.media_group_id:
         album_buffers.setdefault(event.media_group_id, []).append(event)
     return await handler(event, data)
@@ -229,14 +300,12 @@ async def album_collector_middleware(handler, event: types.Message, data: dict):
 
 @dp.channel_post.outer_middleware()
 async def album_collector_channel_middleware(handler, event: types.Message, data: dict):
-    """То же самое, но для постов в каналах (dp.channel_post — отдельный поток апдейтов)."""
     if event.media_group_id:
         album_buffers.setdefault(event.media_group_id, []).append(event)
     return await handler(event, data)
 
 
 def get_single_photo(message: types.Message) -> Optional[str]:
-    """Одно фото — из самого сообщения либо из reply-сообщения."""
     if message.photo:
         return message.photo[-1].file_id
     if message.reply_to_message and message.reply_to_message.photo:
@@ -244,19 +313,13 @@ def get_single_photo(message: types.Message) -> Optional[str]:
     return None
 
 
-async def collect_review_photos(message: types.Message) -> list[str]:
-    """
-    Собирает ВСЕ фото сделки:
-    • если пользователь прислал альбом (несколько фото одним сообщением) —
-      ждём немного, пока все фото альбома долетят, и берём их все;
-    • иначе — одно фото из самого сообщения или из reply.
-    """
+async def collect_review_photos(
+    message: types.Message, delete_after: bool = False
+) -> list[str]:
     if message.media_group_id:
         gid = message.media_group_id
-        # Небольшая пауза, чтобы все фото альбома успели попасть в буфер
         await asyncio.sleep(1.5)
         messages = album_buffers.pop(gid, [message])
-        # Сохраняем порядок отправки пользователем
         messages = sorted(messages, key=lambda m: m.message_id)
 
         photo_ids: list[str] = []
@@ -268,9 +331,21 @@ async def collect_review_photos(message: types.Message) -> list[str]:
                     seen.add(fid)
                     photo_ids.append(fid)
         if photo_ids:
+            if delete_after:
+                for m in messages:
+                    if m.photo:
+                        try:
+                            await m.delete()
+                        except TelegramAPIError:
+                            pass
             return photo_ids
 
     single = get_single_photo(message)
+    if single and delete_after and message.photo:
+        try:
+            await message.delete()
+        except TelegramAPIError:
+            pass
     return [single] if single else []
 
 
@@ -315,11 +390,6 @@ def display_name(target_id: int, username: str = "") -> str:
 
 
 def get_review_photo_ids(rev) -> list[str]:
-    """
-    Безопасно достаёт список photo_file_id из строки отзыва (dict или sqlite3.Row).
-    Несколько фото хранятся в одном текстовом поле через запятую (в file_id
-    Telegram запятых не бывает, так что разделитель безопасен).
-    """
     try:
         value = rev["photo_file_id"]
     except (KeyError, IndexError, TypeError):
@@ -330,7 +400,6 @@ def get_review_photo_ids(rev) -> list[str]:
 
 
 def get_review_id(rev) -> Optional[int]:
-    """Безопасно достаёт первичный ключ отзыва (id / review_id) из строки БД."""
     for key in ("id", "review_id"):
         try:
             value = rev[key]
@@ -345,20 +414,15 @@ def get_review_id(rev) -> Optional[int]:
 
 
 def deal_button_label(rev, index: int) -> str:
-    """Короткая подпись сделки для кнопки в меню скриншотов."""
     sign_emoji = "✅" if rev["sign"] == "+" else "❌"
     date_str = str(rev["created_at"])[:10]
     n_photos = len(get_review_photo_ids(rev))
     return f"{index}. {sign_emoji} {date_str} · {n_photos} фото"
 
 
-# ---------------------------------------------------------------------------
-# Резолвинг идентификатора (username ИЛИ numeric id) -> реальный telegram_id
-# ---------------------------------------------------------------------------
 async def resolve_target(identifier: str) -> Tuple[Optional[int], str]:
     raw = identifier.strip().lstrip("@")
 
-    # Числовой telegram_id введён напрямую
     if raw.isdigit():
         target_id = int(raw)
         username = db.get_username_for_id(target_id) or ""
@@ -366,15 +430,10 @@ async def resolve_target(identifier: str) -> Tuple[Optional[int], str]:
 
     username = raw.lower()
 
-    # 1) ищем среди тех, кто уже взаимодействовал с ботом
     target_id = db.get_user_id_by_username(username)
     if target_id:
         return target_id, username
 
-    # 2) пробуем резолвить через Telegram API. Это работает только для
-    #    публичных каналов/групп либо пользователей, которые уже писали
-    #    этому боту / состоят с ним в общем чате — обычные приватные
-    #    аккаунты, никогда не видевшие бота, Telegram резолвить не даст.
     try:
         chat = await bot.get_chat(f"@{username}")
         target_id = chat.id
@@ -388,11 +447,6 @@ async def resolve_target(identifier: str) -> Tuple[Optional[int], str]:
         return None, username
 
 
-# ---------------------------------------------------------------------------
-# Резолвинг цели через reply (самый надёжный способ — Telegram сам
-# присылает объект from_user того, на чьё сообщение отвечают, поэтому
-# username вообще не нужен и никакие ограничения API не действуют)
-# ---------------------------------------------------------------------------
 def resolve_target_from_reply(message: types.Message) -> Optional[Tuple[int, str]]:
     reply = message.reply_to_message
     if reply is None or reply.from_user is None:
@@ -412,13 +466,6 @@ def resolve_target_from_reply(message: types.Message) -> Optional[Tuple[int, str
 async def resolve_target_smart(
     identifier: Optional[str], message: types.Message
 ) -> Tuple[Optional[int], str]:
-    """
-    Единая точка резолвинга цели.
-    Приоритет: reply на сообщение пользователя > текстовый identifier.
-    Так, даже если у человека закрытый/незнакомый боту username,
-    достаточно ответить (reply) на его сообщение — и бот найдёт его
-    гарантированно, без обращения к Telegram API поиска по username.
-    """
     from_reply = resolve_target_from_reply(message)
     if from_reply:
         return from_reply
@@ -428,21 +475,15 @@ async def resolve_target_smart(
 
 
 
-# ---------------------------------------------------------------------------
-# Запрет команд в каналах для обычных пользователей                                                                 Блокировка комманд для обычных юзеров
-# ---------------------------------------------------------------------------
 @dp.message.outer_middleware()
 async def block_channel_commands(handler, event: types.Message, data: dict):
-    # Только сообщения с командами в группах/каналах
     if event.chat.type in ("group", "supergroup"):
 
         text = event.text or ""
 
-        # Если это команда
         if text.startswith("/"):
             user_id = event.from_user.id
 
-            # Не админ — блокируем
             if not is_admin(user_id):
                 try:
                     await event.delete()
@@ -455,10 +496,6 @@ async def block_channel_commands(handler, event: types.Message, data: dict):
 
 
 
-
-# ---------------------------------------------------------------------------
-# Карточка репутации (общая для Message и CallbackQuery)
-# ---------------------------------------------------------------------------
 async def send_reputation_card(
     target: types.Message | types.CallbackQuery,
     identifier: Optional[str] = None,
@@ -468,64 +505,72 @@ async def send_reputation_card(
     if isinstance(target, CallbackQuery):
         msg = target.message
         is_callback = True
+        requester = target.from_user
     else:
         msg = target
         is_callback = False
+        requester = target.from_user
 
-    # source_message — сообщение, из которого нужно смотреть reply
-    # (для callback это не имеет смысла, там всегда только identifier)
     if source_message is not None:
         target_id, username = await resolve_target_smart(identifier, source_message)
     else:
         target_id, username = await resolve_target(identifier or "")
 
-    #if target_id is None:
-    #    not_found_text = (
-    #        f"❌ <b>Не удалось найти пользователя @{escape(username)}</b>\n\n"
-    #        f"Telegram не даёт боту искать людей по username, если они "
-    #        f"ни разу не писали этому боту и не состоят с ним в общем чате "
-    #        f"— это ограничение самого Telegram, а не бота.\n\n"
-    #        f"✅ <b>Как найти гарантированно:</b>\n"
-    #        f"• Ответь (reply) на любое сообщение этого человека и повтори команду\n"
-    #        f"• Либо укажи числовой Telegram ID, например: <code>/check 123456789</code>\n"
-    #        f"• Либо попроси его один раз написать /start этому боту"
-    #    )
-    #    return
-#
-    label = display_name(target_id, username)
-#
-    ## Проверяем бан
-    #if db.is_banned(target_id):
-    #    ban_text = (
-    #        f"🚫 <b>Пользователь {label} заблокирован</b>\n\n"
-    #        f"Данный продавец находится в чёрном списке 🍓 Клубничного бота.\n"
-    #        f"Рекомендуем <b>не совершать</b> сделки с ним."
-    #    )
-    #    if is_callback:
-    #        await msg.edit_text(ban_text, reply_markup=back_kb())
-    #    else:
-    #        await msg.answer(ban_text, reply_markup=back_kb())
-    #    return
+    if target_id is None:
+        not_found_text = (
+            f"❌ <b>Не удалось найти пользователя @{escape(username)}</b>\n\n"
+            f"Telegram не даёт боту искать людей по username, если они "
+            f"ни разу не писали этому боту и не состоят с ним в общем чате "
+            f"— это ограничение самого Telegram, а не бота.\n\n"
+            f"✅ <b>Как найти гарантированно:</b>\n"
+            f"• Ответь (reply) на любое сообщение этого человека и повтори команду\n"
+            f"• Либо укажи числовой Telegram ID, например: <code>/check 123456789</code>\n"
+            f"• Либо попроси его один раз написать /start этому боту"
+        )
+        if is_callback:
+            await msg.edit_text(not_found_text, reply_markup=back_kb())
+        else:
+            await msg.answer(not_found_text, reply_markup=back_kb())
+        return
 
-    # Получаем статистику и отзывы
+    label = display_name(target_id, username)
+
+    log_action(
+        requester.id if requester else None,
+        requester.username if requester else None,
+        "ПРОВЕРКА РЕПУТАЦИИ",
+        details=f"цель={label}(id={target_id})",
+        chat=msg.chat if msg else None,
+    )
+
+    if db.is_banned(target_id):
+        ban_text = (
+            f"🚫 <b>Пользователь {label} заблокирован</b>\n\n"
+            f"Данный продавец находится в чёрном списке 🍓 Клубничного бота.\n"
+            f"Рекомендуем <b>не совершать</b> сделки с ним."
+        )
+        if is_callback:
+            await msg.edit_text(ban_text, reply_markup=back_kb())
+        else:
+            await msg.answer(ban_text, reply_markup=back_kb())
+        return
+
     stats = db.get_user_stats(target_id)
     reviews = db.get_user_reviews(target_id, limit=5)
 
-    ## Нет отзывов
-    #if stats is None:
-    #    no_reviews_text = (
-    #        f"❌ <b>Отзывов о {label} не найдено</b>\n\n"
-    #        f"Этот продавец ещё не появлялся в нашей базе.\n\n"
-    #        f"⚠️ <i>Будьте осторожны при работе с незнакомыми продавцами!</i>\n"
-    #        f"Попросите отзывы напрямую или поищите в других источниках."
-    #    )
-    #    if is_callback:
-    #        await msg.edit_text(no_reviews_text, reply_markup=back_kb())
-    #    else:
-    #        await msg.answer(no_reviews_text, reply_markup=back_kb())
-    #    return
+    if stats is None:
+        no_reviews_text = (
+            f"❌ <b>Отзывов о {label} не найдено</b>\n\n"
+            f"Этот продавец ещё не появлялся в нашей базе.\n\n"
+            f"⚠️ <i>Будьте осторожны при работе с незнакомыми продавцами!</i>\n"
+            f"Попросите отзывы напрямую или поищите в других источниках."
+        )
+        if is_callback:
+            await msg.edit_text(no_reviews_text, reply_markup=back_kb())
+        else:
+            await msg.answer(no_reviews_text, reply_markup=back_kb())
+        return
 
-    # Формируем карточку
     bar = trust_bar(stats["score"])
     lines = [
         f"🍓 <b>Репутация продавца {label}</b>",
@@ -556,7 +601,7 @@ async def send_reputation_card(
         desc = truncate(rev["description"] or "", 200)
 
         lines.append(
-            f"\n{medal} {sign_emoji} от {reviewer_tag}{source_tag} "
+            f"\n{medal} {sign_emoji}"
             f"<i>({date_str})</i>"
         )
         if desc:
@@ -581,12 +626,7 @@ async def send_reputation_card(
         if "message is not modified" not in str(e):
             logger.error(f"Ошибка отправки карточки: {e}")
 
-<<<<<<< HEAD
-=======
 
-# ---------------------------------------------------------------------------
-# ХЕНДЛЕР: /start
-# ---------------------------------------------------------------------------
 @dp.message(CommandStart())
 async def start_handler(message: types.Message) -> None:
     user = message.from_user
@@ -595,40 +635,43 @@ async def start_handler(message: types.Message) -> None:
         username=user.username or "",
         first_name=user.first_name or "",
     )
+    log_action(user.id, user.username, "СТАРТ БОТА", chat=message.chat)
 
     welcome_text = (
-        "🍓 <b>Добро пожаловать в Клубничный бот репутации!</b>\n\n"
-        "Powered by Nexon Group Solution "
+        "🍓 <b>Добро пожаловать в Nexon бот репутации!</b>\n\n"
+        "Powered by Nexon Group Solution \n"
         "Этот бот помогает покупателям и продавцам клубники "
         "безопасно работать друг с другом.\n\n"
         "🌟 <b>Возможности бота:</b>\n"
-        "  🍓 <b>Принимать отзывы</b> — с подтверждением скриншотом\n"
+        "  ✍️ <b>Оставить отзыв</b> — прямо в меню, без команд\n"
         "  🔍 <b>Искать репутацию</b> — быстрая проверка любого продавца\n"
         "  📊 <b>Топ продавцов</b> — рейтинг лучших по отзывам\n"
         "  📡 <b>Мониторинг каналов</b> — автосбор отзывов из каналов\n"
         "  🛡️ <b>Защита от накрутки</b> — антиспам и верификация\n\n"
+        "💡 Быстрый вызов мастера отзыва — команда /rep\n\n"
         "Выбери действие в меню 👇"
     )
 
-    await message.answer(welcome_text, reply_markup=main_menu_kb())
+    await message.answer(
+        welcome_text,
+        reply_markup=main_menu_kb(admin=is_admin(user.id), private=is_private(message)),
+    )
 
 
-# ---------------------------------------------------------------------------
-# ХЕНДЛЕР: /help
-# ---------------------------------------------------------------------------
 @dp.message(Command("help"))
 async def help_handler(message: types.Message) -> None:
-    """Справка по боту на русском языке."""
     help_text = (
-        "❓ <b>Как пользоваться Клубничным ботом</b>\n\n"
+        "❓ <b>Как пользоваться Nexon ботом</b>\n\n"
         "━━━━━━━━━━━━━━━━━━━━━\n"
-        "📝 <b>Как оставить отзыв</b>\n"
-        "Напиши в группе:\n"
+        "✍️ <b>Как оставить отзыв</b>\n"
+        "👉 Самый простой способ — кнопка <b>«✍️ Оставить отзыв»</b> в меню "
+        "или команда /rep: бот сам спросит тип отзыва, продавца, описание "
+        "и скриншоты по шагам.\n\n"
+        "Также можно по-старому текстом в группе:\n"
         "<code>+реп @username описание сделки</code>\n"
         "<code>-реп @username описание проблемы</code>\n"
-        "Можно указать и числовой Telegram ID вместо @username.\n"
-        "👉 <b>Самый надёжный способ</b> — ответить (reply) на сообщение "
-        "продавца и написать <code>+реп good</code> без username вообще.\n"
+        "Можно указать числовой Telegram ID вместо @username, "
+        "или ответить (reply) на сообщение продавца.\n"
         "и <b>прикрепи скриншот</b> сделки!\n\n"
         "━━━━━━━━━━━━━━━━━━━━━\n"
         "🔍 <b>Как проверить продавца</b>\n"
@@ -649,7 +692,6 @@ async def help_handler(message: types.Message) -> None:
         "🔴 <b>Мошенник</b> — рейтинг ниже −20%"
     )
 
-    # Определяем способ отправки: редактируем или отвечаем
     if hasattr(message, "edit_text"):
         try:
             await message.edit_text(help_text, reply_markup=back_kb())
@@ -659,10 +701,8 @@ async def help_handler(message: types.Message) -> None:
         await message.answer(help_text, reply_markup=back_kb())
 
 
->>>>>>> b62c8d3aeacbff6f7e5180cf4b5bac238d5e1cbe
-# ---------------------------------------------------------------------------
-# ХЕНДЛЕР: /check @username или /check <id>, либо /check в reply
-# ---------------------------------------------------------------------------
+
+
 @dp.message(Command("check"))
 async def check_command(message: types.Message, command: CommandObject) -> None:
     identifier: Optional[str] = None
@@ -673,46 +713,49 @@ async def check_command(message: types.Message, command: CommandObject) -> None:
             await message.answer(
                 "❌ Некорректный запрос. "
                 "Используй @username или числовой Telegram ID.",
-                #reply_markup=back_kb(),
+                reply_markup=back_kb(),
             )
             return
 
-    # Если это reply — можно вообще без identifier, бот возьмёт автора
-    # сообщения, на которое ответили
     if identifier is None and message.reply_to_message is None:
         await message.answer(
             "🔍 <b>Укажи имя пользователя или ID</b>\n\n"
             "Пример: <code>/check @username</code> или <code>/check 123456789</code>\n"
             "Либо ответь (reply) на сообщение продавца и напиши просто <code>/check</code>.",
-            #reply_markup=back_kb(),
+            reply_markup=back_kb(),
         )
         return
 
     await send_reputation_card(message, identifier, source_message=message)
 
 
-# ---------------------------------------------------------------------------
-# ХЕНДЛЕР: +реп / -реп в группах и личных сообщениях
-# ---------------------------------------------------------------------------
 @dp.message(F.text.regexp(r"^[+\-]\s*реп\s+(@?\w+|\S+)"))
 @dp.message(F.caption.regexp(r"^[+\-]\s*реп\s+(@?\w+|\S+)"))
 async def reputation_handler(message: types.Message) -> None:
     text = get_target_text(message)
     parsed = parse_rep_message(text)
     if not parsed:
+        await message.answer(
+            "❌ <b>Неверный формат команды</b>\n\n"
+            "Правильно так:\n"
+            "<code>+реп @username описание сделки</code>\n"
+            "<code>-реп @username описание проблемы</code>\n\n"
+            "Не забудь <b>@</b> перед именем пользователя, либо укажи "
+            "числовой Telegram ID вместо него.\n"
+            "Также можно ответить (reply) на сообщение продавца.",
+            reply_markup=help_kb(),
+        )
         return
 
     sign, identifier, description = parsed
     reviewer = message.from_user
 
-    # Регистрируем того, кто оставляет отзыв
     db.upsert_user(
         telegram_id=reviewer.id,
         username=reviewer.username or "",
         first_name=reviewer.first_name or "",
     )
 
-    # --- Проверка: автор не в бане ---
     if db.is_banned(reviewer.id):
         try:
             await message.delete()
@@ -724,7 +767,6 @@ async def reputation_handler(message: types.Message) -> None:
         )
         return
 
-    # Резолвим цель: приоритет — reply на сообщение продавца, иначе username/ID
     target_id, target_username = await resolve_target_smart(identifier, message)
     if target_id is None:
         await message.answer(
@@ -737,7 +779,6 @@ async def reputation_handler(message: types.Message) -> None:
         )
         return
 
-    # --- Проверка: нельзя оставить отзыв самому себе ---
     if target_id == reviewer.id:
         try:
             await message.delete()
@@ -749,8 +790,8 @@ async def reputation_handler(message: types.Message) -> None:
         )
         return
 
-    # --- Проверка: скриншот обязателен (поддержка альбомов из нескольких фото) ---
-    photos = await collect_review_photos(message)
+    delete_photo_msg = message.chat.type in ("group", "supergroup")
+    photos = await collect_review_photos(message, delete_after=delete_photo_msg)
     if not photos:
         try:
             await message.delete()
@@ -765,7 +806,6 @@ async def reputation_handler(message: types.Message) -> None:
         )
         return
 
-    # --- Проверка: описание достаточно подробное ---
     if len(description) < 2:
         try:
             await message.delete()
@@ -779,7 +819,15 @@ async def reputation_handler(message: types.Message) -> None:
         )
         return
 
-    # --- Сохраняем отзыв ---
+    if db.has_recent_review(reviewer.id, target_id, hours=0.03):
+        await message.answer(
+            f"⏰ <b>Подождите 2 минуты</b>\n\n"
+            f"Вы уже оставляли отзыв о {display_name(target_id, target_username)} сегодня.\n"
+            f"Повторный отзыв можно будет оставить через 2 минуты.",
+        )
+        return
+
+
     chat = message.chat
     review_id = db.add_review(
         target_id=target_id,
@@ -795,10 +843,6 @@ async def reputation_handler(message: types.Message) -> None:
         message_id=message.message_id,
         source="chat",
     )
-    try:
-        await message.delete()
-    except TelegramAPIError:
-        pass
 
     sign_emoji = "✅" if sign == "+" else "❌"
     sign_word = "положительный" if sign == "+" else "отрицательный"
@@ -813,40 +857,24 @@ async def reputation_handler(message: types.Message) -> None:
         f"{photos_line}"
         f"📝 <b>Описание:</b>\n"
         f"<blockquote>{escape(desc_preview)}</blockquote>\n\n"
-        #f"🔍 Проверить репутацию: /check {escape(target_username or target_id)}\n"
+        f"🔍 Проверить репутацию: /check {escape(target_username or target_id)}\n"
         f"🆔 ID отзыва: <code>{review_id}</code>"
     )
 
-    await message.answer(confirmation)#, reply_markup=view_user_kb(target_id, target_username))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    await message.answer(confirmation)
     logger.info(
         f"Новый отзыв #{review_id}: {sign} реп target_id={target_id} "
-        f"от {reviewer.id} (@{reviewer.username})"
+    )
+    log_action(
+        reviewer.id,
+        reviewer.username,
+        f"НОВЫЙ ОТЗЫВ ({sign_word})",
+        details=f"review_id={review_id} цель={label}(id={target_id}) фото={len(photos)} "
+                f"описание='{description[:120]}'",
+        chat=chat,
     )
 
 
-# ---------------------------------------------------------------------------
-# ХЕНДЛЕР: +реп / -реп в каналах (мониторинг)
-# ---------------------------------------------------------------------------
 @dp.channel_post(F.text.regexp(r"^[+\-]\s*реп\s+@?\w+"))
 @dp.channel_post(F.caption.regexp(r"^[+\-]\s*реп\s+@?\w+"))
 async def channel_reputation_handler(message: types.Message) -> None:
@@ -871,7 +899,6 @@ async def channel_reputation_handler(message: types.Message) -> None:
 
     chat = message.chat
 
-    # Регистрируем канал как мониторируемый
     db.add_monitored_channel(
         chat_id=chat.id,
         chat_title=chat.title or str(chat.id),
@@ -892,21 +919,19 @@ async def channel_reputation_handler(message: types.Message) -> None:
         source="channel",
     )
 
-    try:
-        await message.delete()
-    except TelegramAPIError:
-        pass
-
-
     logger.info(
         f"Канальный отзыв #{review_id}: {sign} реп @{target_id} "
         f"из канала '{chat.title}' (id={chat.id})"
     )
+    log_action(
+        None,
+        None,
+        "НОВЫЙ ОТЗЫВ (канал)",
+        details=f"review_id={review_id} цель=id={target_id} фото={len(photos)}",
+        chat=chat,
+    )
 
 
-# ---------------------------------------------------------------------------
-# CALLBACK: кнопка «Проверить продавца» → запрос username через FSM
-# ---------------------------------------------------------------------------
 @dp.callback_query(F.data == "check")
 async def check_callback(callback: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(CheckState.waiting_for_username)
@@ -916,14 +941,11 @@ async def check_callback(callback: CallbackQuery, state: FSMContext) -> None:
         "для проверки репутации.\n\n"
         "💡 Либо просто перешли/ответь (reply) на сообщение продавца в чате "
         "командой <code>/check</code> — так надёжнее.",
-        #reply_markup=back_kb(),
+        reply_markup=back_kb(),
     )
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# FSM: обработка введённого username после нажатия кнопки
-# ---------------------------------------------------------------------------
 @dp.message(CheckState.waiting_for_username)
 async def process_check_username(message: types.Message, state: FSMContext) -> None:
     raw = (message.text or "").strip().lstrip("@")
@@ -933,7 +955,7 @@ async def process_check_username(message: types.Message, state: FSMContext) -> N
             "❌ <b>Некорректное имя пользователя</b>\n\n"
             "Используй только буквы, цифры и подчёркивание (_).\n"
             "Попробуй ещё раз:",
-            #reply_markup=back_kb(),
+            reply_markup=back_kb(),
         )
         return
 
@@ -941,9 +963,6 @@ async def process_check_username(message: types.Message, state: FSMContext) -> N
     await send_reputation_card(message, raw, source_message=message)
 
 
-# ---------------------------------------------------------------------------
-# МАСТЕР ОСТАВЛЕНИЯ ОТЗЫВА (кнопки вместо "+реп"/"-реп")
-# ---------------------------------------------------------------------------
 async def start_review_wizard(msg: types.Message, is_edit: bool) -> None:
     text = (
         "✍️ <b>Оставляем отзыв о продавце</b>\n\n"
@@ -1035,7 +1054,7 @@ async def review_target_handler(message: types.Message, state: FSMContext) -> No
         await state.clear()
         await message.answer(
             "🚫 <b>Ваш аккаунт заблокирован</b>\nВы не можете оставлять отзывы.",
-            #reply_markup=main_menu_kb(admin=is_admin(reviewer.id)),
+            reply_markup=main_menu_kb(admin=is_admin(reviewer.id), private=is_private(message)),
         )
         return
 
@@ -1075,7 +1094,17 @@ async def review_photo_handler(message: types.Message, state: FSMContext) -> Non
     photos: list[str] = list(data.get("photos", []))
 
     if message.media_group_id:
-        new_photos = await collect_review_photos(message)
+        gid = message.media_group_id
+        if gid in album_confirm_in_progress:
+            # Это фото — часть альбома, который уже обрабатывается другим
+            # апдейтом (первым фото альбома). Не отвечаем повторно —
+            # оно уже будет учтено в общем подтверждении.
+            return
+        album_confirm_in_progress.add(gid)
+        try:
+            new_photos = await collect_review_photos(message)
+        finally:
+            album_confirm_in_progress.discard(gid)
     else:
         single = get_single_photo(message)
         new_photos = [single] if single else []
@@ -1116,12 +1145,13 @@ async def review_done_callback(callback: CallbackQuery, state: FSMContext) -> No
     description = data["description"]
     reviewer = callback.from_user
 
-    # Финальные проверки на случай, если что-то изменилось за время заполнения
     if db.is_banned(reviewer.id):
         await state.clear()
         await callback.message.edit_text(
             "🚫 <b>Ваш аккаунт заблокирован</b>\nВы не можете оставлять отзывы.",
-            #reply_markup=main_menu_kb(admin=is_admin(reviewer.id)),
+            reply_markup=main_menu_kb(
+                admin=is_admin(reviewer.id), private=is_private(callback.message)
+            ),
         )
         await callback.answer()
         return
@@ -1141,7 +1171,6 @@ async def review_done_callback(callback: CallbackQuery, state: FSMContext) -> No
         message_id=callback.message.message_id,
         source="menu",
     )
-                                                                                                # NE TUT!
 
     label = display_name(target_id, target_username)
     sign_emoji = "✅" if sign == "+" else "❌"
@@ -1159,30 +1188,18 @@ async def review_done_callback(callback: CallbackQuery, state: FSMContext) -> No
     )
 
     await state.clear()
-    await callback.message.edit_text(confirmation)#, reply_markup=view_user_kb(target_id, target_username))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    await callback.message.edit_text(confirmation, reply_markup=view_user_kb(target_id, target_username))
     await callback.answer("Сохранено! 🍓")
     logger.info(
         f"Новый отзыв #{review_id} (через меню): {sign} target_id={target_id} "
-        f"от {reviewer.id} (@{reviewer.username})"
+    )
+    log_action(
+        reviewer.id,
+        reviewer.username,
+        f"НОВЫЙ ОТЗЫВ через меню ({sign_word})",
+        details=f"review_id={review_id} цель={label}(id={target_id}) фото={len(photos)} "
+                f"описание='{description[:120]}'",
+        chat=chat,
     )
 
 
@@ -1191,14 +1208,13 @@ async def review_cancel_callback(callback: CallbackQuery, state: FSMContext) -> 
     await state.clear()
     await callback.message.edit_text(
         "❌ <b>Оставление отзыва отменено</b>",
-        #reply_markup=main_menu_kb(admin=is_admin(callback.from_user.id)),
+        reply_markup=main_menu_kb(
+            admin=is_admin(callback.from_user.id), private=is_private(callback.message)
+        ),
     )
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# CALLBACK: view_{target_id} — прямой просмотр репутации
-# ---------------------------------------------------------------------------
 @dp.callback_query(F.data.startswith("view_"))
 async def view_callback(callback: CallbackQuery) -> None:
     identifier = callback.data.split("_", 1)[1]
@@ -1206,9 +1222,6 @@ async def view_callback(callback: CallbackQuery) -> None:
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# CALLBACK: photos_{target_id} — список сделок со скриншотами (меню выбора)
-# ---------------------------------------------------------------------------
 @dp.callback_query(F.data.startswith("photos_"))
 async def photos_menu_callback(callback: CallbackQuery) -> None:
     try:
@@ -1230,7 +1243,6 @@ async def photos_menu_callback(callback: CallbackQuery) -> None:
     rows: list[list[InlineKeyboardButton]] = []
     for i, rev in enumerate(reviews_with_photos, start=1):
         review_id = get_review_id(rev)
-        # Если в БД нет колонки id — используем позицию в этом же списке
         ref = str(review_id) if review_id is not None else f"idx{i - 1}"
         rows.append(
             [
@@ -1250,9 +1262,6 @@ async def photos_menu_callback(callback: CallbackQuery) -> None:
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# CALLBACK: rphotos_{target_id}_{review_id} — скриншоты конкретной сделки
-# ---------------------------------------------------------------------------
 @dp.callback_query(F.data.startswith("rphotos_"))
 async def review_photos_callback(callback: CallbackQuery) -> None:
     try:
@@ -1300,7 +1309,6 @@ async def review_photos_callback(callback: CallbackQuery) -> None:
 
     caption_lines = [
         f"{sign_emoji} <b>{sign_word.capitalize()} отзыв</b> ({date_str})",
-        f"👤 От: {reviewer_tag}",
     ]
     if desc:
         caption_lines.append(f"📝 {escape(desc)}")
@@ -1337,9 +1345,6 @@ async def review_photos_callback(callback: CallbackQuery) -> None:
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# CALLBACK: топ продавцов
-# ---------------------------------------------------------------------------
 @dp.callback_query(F.data == "top")
 async def top_callback(callback: CallbackQuery) -> None:
     top_users = db.get_top_users(limit=10, min_reviews=2)
@@ -1349,7 +1354,7 @@ async def top_callback(callback: CallbackQuery) -> None:
             "📊 <b>Топ продавцов</b>\n\n"
             "😔 Пока никто не попал в топ.\n"
             "Нужно минимум <b>2 отзыва</b> для попадания в рейтинг.",
-            #reply_markup=back_kb(),
+            reply_markup=back_kb(),
         )
         await callback.answer()
         return
@@ -1369,13 +1374,10 @@ async def top_callback(callback: CallbackQuery) -> None:
 
     lines.append("\n🍓 <i>Топ формируется по количеству и качеству отзывов</i>")
 
-    # await callback.message.edit_text("\n".join(lines), reply_markup=back_kb())
+    await callback.message.edit_text("\n".join(lines), reply_markup=back_kb())
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# CALLBACK: глобальная статистика
-# ---------------------------------------------------------------------------
 @dp.callback_query(F.data == "stats")
 async def stats_callback(callback: CallbackQuery) -> None:
     s = db.get_global_stats()
@@ -1391,23 +1393,78 @@ async def stats_callback(callback: CallbackQuery) -> None:
         f"🍓 <i>Помогаем делать бизнес честным!</i>"
     )
 
-    kb = admin_panel_kb() if is_admin(callback.from_user.id) else help_kb() #back_kb
+    kb = admin_panel_kb() if is_admin(callback.from_user.id) else back_kb()
     await callback.message.edit_text(stats_text, reply_markup=kb)
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# CALLBACK: помощь
-# ---------------------------------------------------------------------------
 @dp.callback_query(F.data == "help")
 async def help_callback(callback: CallbackQuery) -> None:
-    #await help_handler(callback.message)
+    await help_handler(callback.message)
     await callback.answer()
 
 
-# ADMIN: /admin — панель администратора (работает и в личных сообщениях, и в
-# группах — единственное условие — id отправителя должен быть в ADMIN_IDS)
-# ---------------------------------------------------------------------------
+@dp.callback_query(F.data == "menu")
+async def menu_callback(
+    callback: CallbackQuery, state: FSMContext
+) -> None:
+    await state.clear()
+
+    welcome_text = (
+        "<b>Бот репутации</b>\n\n"
+        "Выбери действие в меню 👇"
+    )
+
+    try:
+        await callback.message.edit_text(
+            welcome_text,
+            reply_markup=main_menu_kb(
+                admin=is_admin(callback.from_user.id),
+                private=is_private(callback.message),
+            ),
+        )
+    except TelegramAPIError as e:
+        if "message is not modified" not in str(e):
+            logger.warning(f"Ошибка при возврате в меню: {e}")
+
+    await callback.answer()
+
+
+@dp.callback_query(F.data == "garant_menu")
+async def garant_menu_callback(callback: CallbackQuery) -> None:
+    text = (
+        "🛡️ <b>Гарант сделок</b>\n\n"
+        "Выбери, каким способом хочешь провести безопасную сделку:\n\n"
+        "🧑‍💼 <b>Живой гарант</b> — сделка через реального человека-гаранта\n"
+        "💰 <b>Деп</b> — автоматический депозит-гарант"
+    )
+    try:
+        await callback.message.edit_text(text, reply_markup=garant_menu_kb())
+    except TelegramAPIError as e:
+        if "message is not modified" not in str(e):
+            logger.warning(f"Ошибка открытия меню гаранта: {e}")
+    await callback.answer()
+
+
+@dp.callback_query(F.data == "garant_live")
+async def garant_live_callback(callback: CallbackQuery) -> None:
+    text = (
+        "🧑‍💼 <b>Живой гарант</b>\n\n"
+        f"👤 @{escape(GARANT_USERNAME)}\n\n"
+        f"Это <b>гарант</b> — обращайся к нему для проведения безопасной "
+        f"сделки между покупателем и продавцом."
+    )
+    await callback.message.edit_text(text, reply_markup=garant_back_kb())
+    await callback.answer()
+
+
+@dp.callback_query(F.data == "garant_dep")
+async def garant_dep_callback(callback: CallbackQuery) -> None:
+    text = "💰 <b>Деп</b>\n\n🚧 <i>Функция в разработке.</i>"
+    await callback.message.edit_text(text, reply_markup=garant_back_kb())
+    await callback.answer()
+
+
 def admin_panel_text(user_id: int) -> str:
     return (
         "🛡️ <b>Панель администратора</b>\n\n"
@@ -1422,13 +1479,14 @@ async def admin_handler(message: types.Message, state: FSMContext) -> None:
         return
 
     await state.clear()
+    log_action(message.from_user.id, message.from_user.username, "ОТКРЫТА АДМИН-ПАНЕЛЬ", chat=message.chat)
     await message.answer(
         admin_panel_text(message.from_user.id),
         reply_markup=admin_panel_kb(),
     )
 
 
-@dp.callback_query(F.data == "iqos_panel")
+@dp.callback_query(F.data == "admin_panel")
 async def admin_panel_callback(callback: CallbackQuery, state: FSMContext) -> None:
     if not is_admin(callback.from_user.id):
         await callback.answer("🚫 Доступ запрещён", show_alert=True)
@@ -1445,7 +1503,6 @@ async def admin_panel_callback(callback: CallbackQuery, state: FSMContext) -> No
     await callback.answer()
 
 
-# --- Удаление отзыва по ID ---
 @dp.callback_query(F.data == "admin_delreview")
 async def admin_delreview_callback(callback: CallbackQuery, state: FSMContext) -> None:
     if not is_admin(callback.from_user.id):
@@ -1486,14 +1543,27 @@ async def admin_delreview_input(message: types.Message, state: FSMContext) -> No
             reply_markup=admin_panel_kb(),
         )
         logger.info(f"Админ {message.from_user.id} удалил отзыв #{review_id}")
+        log_action(
+            message.from_user.id,
+            message.from_user.username,
+            "УДАЛЕНИЕ ОТЗЫВА",
+            details=f"review_id={review_id} результат=успешно",
+            chat=message.chat,
+        )
     else:
         await message.answer(
             f"❌ Отзыв <code>#{review_id}</code> не найден.",
             reply_markup=admin_panel_kb(),
         )
+        log_action(
+            message.from_user.id,
+            message.from_user.username,
+            "УДАЛЕНИЕ ОТЗЫВА",
+            details=f"review_id={review_id} результат=не_найден",
+            chat=message.chat,
+        )
 
 
-# --- Бан пользователя ---
 @dp.callback_query(F.data == "admin_ban")
 async def admin_ban_callback(callback: CallbackQuery, state: FSMContext) -> None:
     if not is_admin(callback.from_user.id):
@@ -1548,9 +1618,15 @@ async def admin_ban_input(message: types.Message, state: FSMContext) -> None:
     logger.info(
         f"Админ {message.from_user.id} забанил target_id={target_id} (причина: {reason})"
     )
+    log_action(
+        message.from_user.id,
+        message.from_user.username,
+        "БАН ПОЛЬЗОВАТЕЛЯ",
+        details=f"цель={label}(id={target_id}) причина='{reason}'",
+        chat=message.chat,
+    )
 
 
-# --- Разбан пользователя ---
 @dp.callback_query(F.data == "admin_unban")
 async def admin_unban_callback(callback: CallbackQuery, state: FSMContext) -> None:
     if not is_admin(callback.from_user.id):
@@ -1596,9 +1672,15 @@ async def admin_unban_input(message: types.Message, state: FSMContext) -> None:
         reply_markup=admin_panel_kb(),
     )
     logger.info(f"Админ {message.from_user.id} разбанил target_id={target_id}")
+    log_action(
+        message.from_user.id,
+        message.from_user.username,
+        "РАЗБАН ПОЛЬЗОВАТЕЛЯ",
+        details=f"цель={label}(id={target_id})",
+        chat=message.chat,
+    )
 
 
-# --- Список мониторируемых каналов ---
 @dp.callback_query(F.data == "admin_channels")
 async def admin_channels_callback(callback: CallbackQuery) -> None:
     if not is_admin(callback.from_user.id):
@@ -1624,32 +1706,44 @@ async def admin_channels_callback(callback: CallbackQuery) -> None:
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# ADMIN (текстовые команды — оставлены для совместимости, работают и в ЛС)
-# ---------------------------------------------------------------------------
 @dp.message(Command("delreview"))
-async def delreview_handler(message: types.Message, command: CommandObject) -> None:
+async def delreview_handler(message: types.Message, command: CommandObject):
     if not is_admin(message.from_user.id):
         return
-
     if not command.args:
         await message.answer(
-            "❌ Укажи ID отзыва.\nПример: <code>/delreview 42</code>"
+            "Пример:\n"
+            "<code>/delreview @username 2</code>"
         )
         return
-
-    try:
-        review_id = int(command.args.strip().split()[0])
-    except ValueError:
-        await message.answer("❌ ID должен быть числом.")
+    parts = command.args.split()
+    if len(parts) != 2:
+        await message.answer(
+            "Используй:\n"
+            "<code>/delreview @username 2</code>"
+        )
         return
-
-    success = db.delete_review(review_id)
-    if success:
-        await message.answer(f"✅ Отзыв <code>#{review_id}</code> успешно удалён.")
-        logger.info(f"Админ {message.from_user.id} удалил отзыв #{review_id}")
-    else:
-        await message.answer(f"❌ Отзыв <code>#{review_id}</code> не найден.")
+    username = parts[0]
+    try:
+        review_number = int(parts[1])
+    except ValueError:
+        await message.answer("Номер отзыва должен быть числом.")
+        return
+    review = db.get_review_by_number(username, review_number)
+    if review is None:
+        await message.answer("Такого отзыва нет.")
+        return
+    db.delete_review(review["id"])
+    await message.answer(
+        f"✅ Удалён отзыв №{review_number} пользователя {username}"
+    )
+    log_action(
+        message.from_user.id,
+        message.from_user.username,
+        "УДАЛЕНИЕ ОТЗЫВА (текстовая команда)",
+        details=f"цель={username} номер={review_number} review_id={review['id']}",
+        chat=message.chat,
+    )
 
 
 @dp.message(Command("banuser"))
@@ -1684,6 +1778,13 @@ async def banuser_handler(message: types.Message, command: CommandObject) -> Non
     logger.info(
         f"Админ {message.from_user.id} забанил target_id={target_id} (причина: {reason})"
     )
+    log_action(
+        message.from_user.id,
+        message.from_user.username,
+        "БАН ПОЛЬЗОВАТЕЛЯ (текстовая команда)",
+        details=f"цель={label}(id={target_id}) причина='{reason}'",
+        chat=message.chat,
+    )
 
 
 @dp.message(Command("unban"))
@@ -1709,6 +1810,13 @@ async def unban_handler(message: types.Message, command: CommandObject) -> None:
     label = display_name(target_id, target_username)
     await message.answer(f"✅ Пользователь{label} разблокирован.")
     logger.info(f"Админ {message.from_user.id} разбанил target_id{target_id}")
+    log_action(
+        message.from_user.id,
+        message.from_user.username,
+        "РАЗБАН ПОЛЬЗОВАТЕЛЯ (текстовая команда)",
+        details=f"цель={label}(id={target_id})",
+        chat=message.chat,
+    )
 
 
 @dp.message(Command("channels"))
@@ -1734,11 +1842,7 @@ async def channels_handler(message: types.Message) -> None:
     await message.answer("\n".join(lines))
 
 
-# ---------------------------------------------------------------------------
-# Запуск бота
-# ---------------------------------------------------------------------------
 async def on_startup() -> None:
-    """Инициализация при запуске."""
     db.init()
     await bot.set_my_commands(
         [
@@ -1749,12 +1853,9 @@ async def on_startup() -> None:
         ]
     )
 
-    # Для админов дополнительно показываем /admin в меню команд их личного
-    # чата с ботом (scope BotCommandScopeChat), чтобы панель было легко
-    # открыть одним тапом в личных сообщениях.
     admin_commands = [
         types.BotCommand(command="start", description="🍓 Главное меню"),
-        types.BotCommand(command="iqos", description="🛡️ Админ-панель"),
+        types.BotCommand(command="admin", description="🛡️ Админ-панель"),
         types.BotCommand(command="rep", description="✍️ Оставить отзыв"),
         types.BotCommand(command="check", description="🔍 Проверить продавца"),
         types.BotCommand(command="help", description="❓ Как пользоваться"),
@@ -1773,12 +1874,13 @@ async def on_startup() -> None:
         f"🍓 Бот @{me.username} запущен! "
         f"Администраторы: {ADMIN_IDS if ADMIN_IDS else 'не назначены'}"
     )
+    logger.info(f"Логи пишутся в папку: {os.path.abspath(LOGS_DIR)}")
 
 
 async def main() -> None:
     db.init()
     dp.startup.register(on_startup)
-    logger.info("🍓 Strawberry Reputation Bot стартует...")
+    logger.info("🍓 Nexon Reputation Bot стартует...")
     await dp.start_polling(bot)
 
 

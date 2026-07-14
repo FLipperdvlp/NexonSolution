@@ -60,6 +60,31 @@ class Database:
                 """
             )
 
+
+
+    
+    def get_reviews_by_username(self, username: str):
+        username = username.lstrip("@").lower()
+    
+        with self._conn() as conn:
+            rows = conn.execute("""
+                SELECT *
+                FROM reviews
+                WHERE target_username = ?
+                ORDER BY created_at DESC
+            """, (username,)).fetchall()
+    
+        return [dict(r) for r in rows]
+    
+    
+    def get_review_by_number(self, username: str, number: int):
+        reviews = self.get_reviews_by_username(username)
+    
+        if number < 1 or number > len(reviews):
+            return None
+    
+        return reviews[number - 1]
+
     # ------------------------------------------------------------------
     # Пользователи / резолвинг username -> id
     # ------------------------------------------------------------------

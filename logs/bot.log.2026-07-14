@@ -1,0 +1,278 @@
+2026-07-14 16:28:55,997 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-14 16:28:56,222 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-14 16:28:56,222 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-14 16:28:56,222 | INFO    | aiogram.dispatcher | Start polling
+2026-07-14 16:28:56,248 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-14 16:28:56,299 | INFO    | aiogram.event | Update id=543847120 is not handled. Duration 8 ms by bot id=8578283530
+2026-07-14 16:28:56,300 | INFO    | aiogram.event | Update id=543847118 is not handled. Duration 10 ms by bot id=8578283530
+2026-07-14 16:28:56,300 | INFO    | aiogram.event | Update id=543847119 is not handled. Duration 10 ms by bot id=8578283530
+2026-07-14 16:28:56,301 | INFO    | aiogram.event | Update id=543847121 is not handled. Duration 9 ms by bot id=8578283530
+2026-07-14 16:29:50,254 | INFO    | aiogram.event | Update id=543847122 is not handled. Duration 3 ms by bot id=8578283530
+2026-07-14 16:31:34,684 | INFO    | aiogram.event | Update id=543847123 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 16:31:50,046 | INFO    | aiogram.event | Update id=543847124 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 16:33:39,878 | INFO    | aiogram.event | Update id=543847125 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 16:33:43,386 | INFO    | aiogram.event | Update id=543847126 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 16:41:27,140 | INFO    | aiogram.event | Update id=543847127 is handled. Duration 570 ms by bot id=8578283530
+2026-07-14 16:41:56,939 | INFO    | aiogram.event | Update id=543847128 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 16:42:06,944 | INFO    | aiogram.event | Update id=543847129 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 16:42:10,280 | INFO    | aiogram.event | Update id=543847130 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 16:42:28,423 | INFO    | aiogram.event | Update id=543847131 is not handled. Duration 1 ms by bot id=8578283530
+2026-07-14 16:42:48,723 | INFO    | aiogram.event | Update id=543847132 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 16:42:54,438 | INFO    | aiogram.event | Update id=543847133 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 16:42:58,853 | INFO    | aiogram.event | Update id=543847134 is not handled. Duration 1 ms by bot id=8578283530
+2026-07-14 16:43:03,303 | INFO    | aiogram.event | Update id=543847135 is not handled. Duration 1 ms by bot id=8578283530
+2026-07-14 16:43:14,113 | INFO    | aiogram.event | Update id=543847136 is handled. Duration 379 ms by bot id=8578283530
+2026-07-14 16:43:19,168 | INFO    | aiogram.event | Update id=543847137 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 16:43:20,123 | INFO    | aiogram.event | Update id=543847138 is not handled. Duration 1 ms by bot id=8578283530
+2026-07-14 16:43:25,732 | INFO    | aiogram.event | Update id=543847139 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 16:43:31,763 | INFO    | aiogram.event | Update id=543847140 is handled. Duration 98 ms by bot id=8578283530
+2026-07-14 16:43:34,650 | INFO    | aiogram.event | Update id=543847141 is handled. Duration 117 ms by bot id=8578283530
+2026-07-14 16:43:40,608 | INFO    | aiogram.event | Update id=543847142 is handled. Duration 85 ms by bot id=8578283530
+2026-07-14 16:43:43,962 | INFO    | aiogram.event | Update id=543847143 is handled. Duration 84 ms by bot id=8578283530
+2026-07-14 16:43:49,875 | INFO    | aiogram.event | Update id=543847144 is handled. Duration 88 ms by bot id=8578283530
+2026-07-14 16:43:55,892 | INFO    | aiogram.event | Update id=543847145 is handled. Duration 168 ms by bot id=8578283530
+2026-07-14 16:43:57,398 | INFO    | aiogram.event | Update id=543847146 is handled. Duration 86 ms by bot id=8578283530
+2026-07-14 16:44:00,140 | INFO    | aiogram.event | Update id=543847147 is handled. Duration 128 ms by bot id=8578283530
+2026-07-14 16:44:01,214 | INFO    | aiogram.event | Update id=543847148 is handled. Duration 147 ms by bot id=8578283530
+2026-07-14 16:44:20,382 | INFO    | aiogram.event | Update id=543847149 is not handled. Duration 1 ms by bot id=8578283530
+2026-07-14 16:44:24,521 | INFO    | aiogram.event | Update id=543847150 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 16:47:01,894 | INFO    | aiogram.event | Update id=543847151 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 16:52:48,360 | INFO    | aiogram.event | Update id=543847152 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 16:56:27,424 | INFO    | aiogram.event | Update id=543847153 is handled. Duration 94 ms by bot id=8578283530
+2026-07-14 16:56:35,057 | INFO    | aiogram.event | Update id=543847154 is handled. Duration 110 ms by bot id=8578283530
+2026-07-14 16:56:56,338 | INFO    | aiogram.event | Update id=543847155 is handled. Duration 74 ms by bot id=8578283530
+2026-07-14 16:57:11,057 | INFO    | aiogram.event | Update id=543847156 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 16:57:16,532 | INFO    | aiogram.event | Update id=543847157 is handled. Duration 89 ms by bot id=8578283530
+2026-07-14 16:57:33,078 | INFO    | aiogram.event | Update id=543847158 is not handled. Duration 1 ms by bot id=8578283530
+2026-07-14 16:57:43,804 | INFO    | aiogram.event | Update id=543847159 is not handled. Duration 1 ms by bot id=8578283530
+2026-07-14 16:57:43,865 | INFO    | aiogram.event | Update id=543847160 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 16:57:47,281 | INFO    | aiogram.event | Update id=543847161 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 16:58:08,936 | INFO    | aiogram.event | Update id=543847162 is not handled. Duration 1 ms by bot id=8578283530
+2026-07-14 16:58:18,873 | INFO    | aiogram.event | Update id=543847163 is not handled. Duration 1 ms by bot id=8578283530
+2026-07-14 17:23:04,442 | INFO    | aiogram.event | Update id=543847164 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 17:39:34,970 | INFO    | aiogram.event | Update id=543847165 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 17:40:58,997 | INFO    | aiogram.event | Update id=543847166 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 17:41:13,759 | INFO    | aiogram.event | Update id=543847167 is not handled. Duration 1 ms by bot id=8578283530
+2026-07-14 17:56:24,323 | INFO    | aiogram.event | Update id=543847168 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 19:17:40,407 | INFO    | aiogram.event | Update id=543847169 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 19:56:25,664 | INFO    | aiogram.event | Update id=543847170 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 20:31:26,457 | INFO    | aiogram.event | Update id=543847171 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 20:34:47,215 | INFO    | aiogram.event | Update id=543847172 is handled. Duration 191 ms by bot id=8578283530
+2026-07-14 20:50:26,012 | INFO    | aiogram.event | Update id=543847173 is not handled. Duration 2 ms by bot id=8578283530
+2026-07-14 21:26:04,523 | INFO    | aiogram.event | Update id=543847174 is not handled. Duration 12 ms by bot id=8578283530
+2026-07-14 21:33:35,998 | INFO    | aiogram.event | Update id=543847175 is not handled. Duration 15 ms by bot id=8578283530
+2026-07-14 21:34:34,787 | INFO    | aiogram.event | Update id=543847176 is not handled. Duration 11 ms by bot id=8578283530
+2026-07-14 21:34:37,758 | INFO    | aiogram.event | Update id=543847177 is not handled. Duration 13 ms by bot id=8578283530
+2026-07-14 21:34:42,879 | INFO    | aiogram.event | Update id=543847178 is not handled. Duration 11 ms by bot id=8578283530
+2026-07-14 21:35:14,926 | INFO    | aiogram.event | Update id=543847179 is not handled. Duration 5 ms by bot id=8578283530
+2026-07-14 21:35:23,046 | INFO    | aiogram.event | Update id=543847180 is not handled. Duration 8 ms by bot id=8578283530
+2026-07-14 21:35:30,334 | INFO    | aiogram.event | Update id=543847181 is not handled. Duration 6 ms by bot id=8578283530
+2026-07-14 21:35:38,739 | INFO    | aiogram.event | Update id=543847182 is not handled. Duration 5 ms by bot id=8578283530
+2026-07-14 21:35:40,819 | INFO    | aiogram.event | Update id=543847183 is not handled. Duration 3 ms by bot id=8578283530
+2026-07-14 21:35:50,158 | INFO    | aiogram.event | Update id=543847184 is not handled. Duration 5 ms by bot id=8578283530
+2026-07-14 21:43:30,495 | INFO    | aiogram.event | Update id=543847185 is not handled. Duration 3 ms by bot id=8578283530
+2026-07-14 21:43:42,214 | INFO    | aiogram.event | Update id=543847186 is not handled. Duration 4 ms by bot id=8578283530
+2026-07-14 21:44:02,788 | INFO    | aiogram.event | Update id=543847187 is not handled. Duration 3 ms by bot id=8578283530
+2026-07-14 21:44:11,176 | INFO    | aiogram.event | Update id=543847188 is not handled. Duration 3 ms by bot id=8578283530
+2026-07-14 21:45:00,979 | INFO    | aiogram.event | Update id=543847189 is not handled. Duration 3 ms by bot id=8578283530
+2026-07-14 21:45:48,401 | INFO    | aiogram.event | Update id=543847190 is not handled. Duration 4 ms by bot id=8578283530
+2026-07-14 21:45:52,948 | INFO    | aiogram.event | Update id=543847191 is not handled. Duration 4 ms by bot id=8578283530
+2026-07-14 21:45:59,333 | INFO    | aiogram.event | Update id=543847192 is not handled. Duration 25 ms by bot id=8578283530
+2026-07-14 21:46:03,148 | INFO    | aiogram.event | Update id=543847193 is not handled. Duration 4 ms by bot id=8578283530
+2026-07-14 21:46:08,534 | INFO    | aiogram.event | Update id=543847194 is not handled. Duration 3 ms by bot id=8578283530
+2026-07-14 21:46:09,668 | INFO    | aiogram.event | Update id=543847195 is not handled. Duration 4 ms by bot id=8578283530
+2026-07-14 21:46:17,432 | INFO    | aiogram.event | Update id=543847196 is not handled. Duration 3 ms by bot id=8578283530
+2026-07-14 21:46:29,649 | INFO    | aiogram.event | Update id=543847197 is not handled. Duration 3 ms by bot id=8578283530
+2026-07-14 21:56:27,539 | INFO    | aiogram.event | Update id=543847198 is not handled. Duration 4 ms by bot id=8578283530
+2026-07-14 22:58:09,820 | INFO    | aiogram.event | Update id=543847200 is not handled. Duration 53 ms by bot id=8578283530
+2026-07-14 22:58:10,265 | INFO    | aiogram.event | Update id=543847199 is handled. Duration 792 ms by bot id=8578283530
+2026-07-14 23:18:20,335 | INFO    | aiogram.event | Update id=543847201 is handled. Duration 434 ms by bot id=8578283530
+2026-07-14 23:19:18,782 | INFO    | aiogram.event | Update id=543847202 is handled. Duration 241 ms by bot id=8578283530
+2026-07-14 23:19:20,206 | INFO    | aiogram.event | Update id=543847203 is handled. Duration 103 ms by bot id=8578283530
+2026-07-14 23:19:39,184 | INFO    | aiogram.event | Update id=543847204 is handled. Duration 114 ms by bot id=8578283530
+2026-07-14 23:19:39,242 | INFO    | aiogram.event | Update id=543847205 is handled. Duration 169 ms by bot id=8578283530
+2026-07-14 23:19:57,711 | INFO    | aiogram.event | Update id=543847206 is handled. Duration 274 ms by bot id=8578283530
+2026-07-14 23:20:07,521 | INFO    | aiogram.event | Update id=543847207 is handled. Duration 72 ms by bot id=8578283530
+2026-07-14 23:20:11,418 | INFO    | aiogram.event | Update id=543847208 is handled. Duration 218 ms by bot id=8578283530
+2026-07-14 23:20:12,951 | INFO    | aiogram.event | Update id=543847209 is handled. Duration 109 ms by bot id=8578283530
+2026-07-14 23:20:18,723 | INFO    | aiogram.event | Update id=543847210 is handled. Duration 103 ms by bot id=8578283530
+2026-07-14 23:20:42,925 | INFO    | aiogram.event | Update id=543847211 is handled. Duration 97 ms by bot id=8578283530
+2026-07-14 23:20:55,556 | INFO    | aiogram.event | Update id=543847212 is handled. Duration 88 ms by bot id=8578283530
+2026-07-14 23:21:03,461 | INFO    | aiogram.event | Update id=543847214 is handled. Duration 1626 ms by bot id=8578283530
+2026-07-14 23:21:03,493 | INFO    | aiogram.event | Update id=543847213 is handled. Duration 1658 ms by bot id=8578283530
+2026-07-14 23:21:07,051 | INFO    | __main__ | Новый отзыв #46 (через меню): - target_id=7397191468 
+2026-07-14 23:21:07,052 | INFO    | aiogram.event | Update id=543847215 is handled. Duration 115 ms by bot id=8578283530
+2026-07-14 23:21:08,047 | INFO    | aiogram.event | Update id=543847216 is not handled. Duration 6 ms by bot id=8578283530
+2026-07-14 23:21:13,734 | INFO    | aiogram.event | Update id=543847217 is handled. Duration 168 ms by bot id=8578283530
+2026-07-14 23:21:18,268 | INFO    | aiogram.event | Update id=543847218 is handled. Duration 123 ms by bot id=8578283530
+2026-07-14 23:21:19,943 | INFO    | aiogram.event | Update id=543847219 is handled. Duration 338 ms by bot id=8578283530
+2026-07-14 23:21:27,401 | INFO    | aiogram.event | Update id=543847220 is not handled. Duration 7 ms by bot id=8578283530
+2026-07-14 23:21:38,658 | INFO    | aiogram.event | Update id=543847221 is handled. Duration 129 ms by bot id=8578283530
+2026-07-14 23:21:40,620 | INFO    | aiogram.event | Update id=543847222 is handled. Duration 180 ms by bot id=8578283530
+2026-07-14 23:21:41,947 | INFO    | aiogram.event | Update id=543847223 is handled. Duration 164 ms by bot id=8578283530
+2026-07-14 23:21:51,124 | INFO    | aiogram.event | Update id=543847224 is handled. Duration 105 ms by bot id=8578283530
+2026-07-14 23:21:51,830 | INFO    | aiogram.event | Update id=543847225 is handled. Duration 100 ms by bot id=8578283530
+2026-07-14 23:21:58,711 | INFO    | aiogram.event | Update id=543847226 is handled. Duration 60 ms by bot id=8578283530
+2026-07-14 23:22:16,921 | INFO    | aiogram.event | Update id=543847227 is handled. Duration 58 ms by bot id=8578283530
+2026-07-14 23:22:25,831 | INFO    | aiogram.event | Update id=543847228 is handled. Duration 66 ms by bot id=8578283530
+2026-07-14 23:22:33,671 | INFO    | aiogram.event | Update id=543847229 is handled. Duration 216 ms by bot id=8578283530
+2026-07-14 23:22:46,417 | INFO    | aiogram.event | Update id=543847230 is handled. Duration 89 ms by bot id=8578283530
+2026-07-14 23:22:56,449 | INFO    | aiogram.event | Update id=543847231 is handled. Duration 107 ms by bot id=8578283530
+2026-07-14 23:22:57,610 | INFO    | aiogram.event | Update id=543847232 is handled. Duration 153 ms by bot id=8578283530
+2026-07-14 23:23:19,779 | INFO    | aiogram.event | Update id=543847233 is handled. Duration 63 ms by bot id=8578283530
+2026-07-14 23:24:50,692 | INFO    | aiogram.event | Update id=543847234 is handled. Duration 74 ms by bot id=8578283530
+2026-07-14 23:44:28,437 | INFO    | aiogram.event | Update id=543847235 is not handled. Duration 207 ms by bot id=8578283530
+2026-07-14 23:44:28,469 | ERROR   | aiogram.event | Cause exception while process update id=543847235 by bot id=8578283530
+DatabaseError: database disk image is malformed
+Traceback (most recent call last):
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 320, in _process_update
+    response = await self.feed_update(bot, update, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 164, in feed_update
+    response = await self.update.wrap_outer_middleware(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+    )
+    ^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\middlewares\error.py", line 27, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\middlewares\user_context.py", line 58, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\fsm\middleware.py", line 43, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\event\telegram.py", line 126, in trigger
+    return await wrapped_inner(event, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\event\handler.py", line 71, in call
+    return await wrapped()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 283, in _listen_update
+    return await self.propagate_event(update_type=update_type, event=event, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\router.py", line 165, in propagate_event
+    return await observer.wrap_outer_middleware(_wrapped, event=event, data=kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\main.py", line 329, in album_collector_middleware
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\main.py", line 577, in block_channel_commands
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\router.py", line 157, in _wrapped
+    return await self._propagate_event(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\router.py", line 185, in _propagate_event
+    response = await observer.trigger(event, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\event\telegram.py", line 126, in trigger
+    return await wrapped_inner(event, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\event\handler.py", line 71, in call
+    return await wrapped()
+           ^^^^^^^^^^^^^^^
+  File "c:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\main.py", line 727, in start_handler
+    db.upsert_user(
+    ~~~~~~~~~~~~~~^
+        telegram_id=user.id,
+        ^^^^^^^^^^^^^^^^^^^^
+        username=user.username or "",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        first_name=user.first_name or "",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "c:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\database.py", line 96, in upsert_user
+    conn.execute(
+    ~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<7 lines>...
+        (telegram_id, username, first_name),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+sqlite3.DatabaseError: database disk image is malformed
+2026-07-14 23:44:34,749 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-14 23:44:34,806 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-14 23:44:34,807 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-14 23:44:35,084 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-14 23:45:45,166 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-14 23:45:45,492 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-14 23:45:45,493 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-14 23:45:45,494 | INFO    | aiogram.dispatcher | Start polling
+2026-07-14 23:45:45,523 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-14 23:45:49,687 | INFO    | aiogram.event | Update id=543847236 is handled. Duration 190 ms by bot id=8578283530
+2026-07-14 23:45:51,974 | INFO    | aiogram.event | Update id=543847237 is handled. Duration 122 ms by bot id=8578283530
+2026-07-14 23:45:56,223 | INFO    | aiogram.event | Update id=543847238 is handled. Duration 123 ms by bot id=8578283530
+2026-07-14 23:45:57,150 | INFO    | aiogram.event | Update id=543847239 is handled. Duration 114 ms by bot id=8578283530
+2026-07-14 23:46:00,714 | INFO    | aiogram.event | Update id=543847240 is handled. Duration 117 ms by bot id=8578283530
+2026-07-14 23:47:31,519 | INFO    | aiogram.event | Update id=543847242 is not handled. Duration 37 ms by bot id=8578283530
+2026-07-14 23:47:31,650 | INFO    | aiogram.event | Update id=543847241 is handled. Duration 170 ms by bot id=8578283530
+2026-07-14 23:47:49,098 | INFO    | aiogram.event | Update id=543847243 is handled. Duration 85 ms by bot id=8578283530
+2026-07-14 23:48:40,547 | INFO    | aiogram.event | Update id=543847244 is not handled. Duration 10 ms by bot id=8578283530
+2026-07-14 23:49:05,202 | INFO    | aiogram.event | Update id=543847245 is handled. Duration 129 ms by bot id=8578283530
+2026-07-14 23:49:06,279 | INFO    | aiogram.event | Update id=543847246 is handled. Duration 129 ms by bot id=8578283530
+2026-07-14 23:49:09,337 | INFO    | aiogram.event | Update id=543847247 is handled. Duration 85 ms by bot id=8578283530
+2026-07-14 23:50:18,975 | INFO    | aiogram.event | Update id=543847248 is handled. Duration 70 ms by bot id=8578283530
+2026-07-14 23:50:33,783 | INFO    | aiogram.event | Update id=543847249 is handled. Duration 123 ms by bot id=8578283530
+2026-07-14 23:50:33,967 | INFO    | aiogram.event | Update id=543847250 is handled. Duration 305 ms by bot id=8578283530
+2026-07-14 23:50:40,494 | INFO    | aiogram.event | Update id=543847251 is handled. Duration 42 ms by bot id=8578283530
+2026-07-14 23:50:43,559 | INFO    | aiogram.event | Update id=543847252 is handled. Duration 109 ms by bot id=8578283530
+2026-07-14 23:50:45,092 | INFO    | aiogram.event | Update id=543847253 is handled. Duration 150 ms by bot id=8578283530
+2026-07-14 23:50:45,875 | INFO    | aiogram.event | Update id=543847254 is handled. Duration 93 ms by bot id=8578283530
+2026-07-14 23:50:52,298 | INFO    | aiogram.event | Update id=543847255 is handled. Duration 109 ms by bot id=8578283530
+2026-07-14 23:50:57,838 | INFO    | aiogram.event | Update id=543847256 is handled. Duration 51 ms by bot id=8578283530
+2026-07-14 23:51:08,722 | INFO    | aiogram.event | Update id=543847258 is handled. Duration 1576 ms by bot id=8578283530
+2026-07-14 23:51:08,970 | INFO    | aiogram.event | Update id=543847257 is handled. Duration 1825 ms by bot id=8578283530
+2026-07-14 23:51:13,897 | INFO    | __main__ | Новый отзыв #1 (через меню): - target_id=7397191468 
+2026-07-14 23:51:13,901 | INFO    | aiogram.event | Update id=543847259 is handled. Duration 140 ms by bot id=8578283530
+2026-07-14 23:51:15,735 | INFO    | aiogram.event | Update id=543847260 is not handled. Duration 8 ms by bot id=8578283530
+2026-07-14 23:51:18,895 | INFO    | aiogram.event | Update id=543847261 is handled. Duration 106 ms by bot id=8578283530
+2026-07-14 23:51:20,041 | INFO    | aiogram.event | Update id=543847262 is handled. Duration 174 ms by bot id=8578283530
+2026-07-14 23:51:28,562 | INFO    | aiogram.event | Update id=543847263 is handled. Duration 184 ms by bot id=8578283530
+2026-07-14 23:51:33,621 | INFO    | aiogram.event | Update id=543847264 is handled. Duration 153 ms by bot id=8578283530
+2026-07-14 23:51:39,932 | INFO    | aiogram.event | Update id=543847265 is handled. Duration 96 ms by bot id=8578283530
+2026-07-14 23:51:42,226 | INFO    | aiogram.event | Update id=543847266 is handled. Duration 109 ms by bot id=8578283530
+2026-07-14 23:51:53,235 | INFO    | aiogram.event | Update id=543847267 is handled. Duration 63 ms by bot id=8578283530
+2026-07-14 23:51:58,110 | INFO    | aiogram.event | Update id=543847268 is handled. Duration 116 ms by bot id=8578283530
+2026-07-14 23:52:03,428 | INFO    | aiogram.event | Update id=543847269 is handled. Duration 205 ms by bot id=8578283530
+2026-07-14 23:52:07,991 | INFO    | aiogram.event | Update id=543847270 is handled. Duration 54 ms by bot id=8578283530
+2026-07-14 23:52:10,659 | INFO    | aiogram.event | Update id=543847271 is handled. Duration 122 ms by bot id=8578283530
+2026-07-14 23:52:13,673 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-14 23:52:13,698 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-14 23:52:13,701 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-14 23:52:13,979 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-14 23:52:48,083 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-14 23:52:48,430 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-14 23:52:48,430 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-14 23:52:48,431 | INFO    | aiogram.dispatcher | Start polling
+2026-07-14 23:52:48,458 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-14 23:52:52,975 | INFO    | aiogram.event | Update id=543847272 is handled. Duration 181 ms by bot id=8578283530
+2026-07-14 23:56:29,738 | INFO    | aiogram.event | Update id=543847273 is not handled. Duration 34 ms by bot id=8578283530
+2026-07-14 23:58:53,739 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-14 23:58:53,922 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-14 23:58:53,922 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-14 23:58:54,190 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-14 23:59:04,967 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-14 23:59:05,282 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-14 23:59:05,283 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-14 23:59:05,283 | INFO    | aiogram.dispatcher | Start polling
+2026-07-14 23:59:05,311 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-14 23:59:15,671 | INFO    | aiogram.event | Update id=543847274 is handled. Duration 154 ms by bot id=8578283530
+2026-07-14 23:59:17,951 | INFO    | aiogram.event | Update id=543847275 is handled. Duration 94 ms by bot id=8578283530
+2026-07-14 23:59:19,033 | INFO    | aiogram.event | Update id=543847276 is handled. Duration 117 ms by bot id=8578283530
+2026-07-14 23:59:25,856 | INFO    | aiogram.event | Update id=543847277 is handled. Duration 67 ms by bot id=8578283530
+2026-07-14 23:59:39,795 | INFO    | aiogram.event | Update id=543847278 is handled. Duration 483 ms by bot id=8578283530
+2026-07-14 23:59:46,953 | INFO    | aiogram.event | Update id=543847280 is handled. Duration 3 ms by bot id=8578283530
+2026-07-14 23:59:48,526 | INFO    | aiogram.event | Update id=543847279 is handled. Duration 1576 ms by bot id=8578283530
+2026-07-14 23:59:49,870 | INFO    | __main__ | Новый отзыв #1 (через меню): - target_id=7397191468 
+2026-07-14 23:59:49,870 | INFO    | aiogram.event | Update id=543847281 is handled. Duration 154 ms by bot id=8578283530
+2026-07-14 23:59:51,287 | INFO    | aiogram.event | Update id=543847282 is handled. Duration 117 ms by bot id=8578283530
+2026-07-14 23:59:52,477 | INFO    | aiogram.event | Update id=543847283 is handled. Duration 160 ms by bot id=8578283530
+2026-07-14 23:59:54,144 | INFO    | aiogram.event | Update id=543847284 is handled. Duration 197 ms by bot id=8578283530
