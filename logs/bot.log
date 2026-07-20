@@ -440,3 +440,10 @@ aiogram.exceptions.TelegramBadRequest: Telegram server says - Bad Request: can't
 2026-07-20 06:22:11,893 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
 2026-07-20 06:22:11,893 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
 2026-07-20 06:22:12,144 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-20 06:22:23,033 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-20 06:22:23,264 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-20 06:22:23,264 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-20 06:22:23,264 | INFO    | aiogram.dispatcher | Start polling
+2026-07-20 06:22:23,292 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-20 06:29:44,974 | INFO    | aiogram.event | Update id=543848446 is not handled. Duration 9 ms by bot id=8578283530
+2026-07-20 06:30:05,498 | INFO    | aiogram.event | Update id=543848447 is not handled. Duration 3 ms by bot id=8578283530
