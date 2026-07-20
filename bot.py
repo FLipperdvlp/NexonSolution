@@ -19,7 +19,7 @@ from aiogram.types import (
 )
 from dotenv import load_dotenv
 
-from database import Database
+from db.database import Database
 
 # ---------------------------------------------------------------------------
 # Загрузка переменных окружения

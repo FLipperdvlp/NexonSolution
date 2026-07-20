@@ -20,8 +20,18 @@ from aiogram.types import (
     InlineKeyboardMarkup,
 )
 from dotenv import load_dotenv
+from aiocryptopay import AioCryptoPay, Networks
+from db.database import Database
 
-from database import Database
+
+class DepositState(StatesGroup):
+    waiting_amount = State()
+class WithdrawState(StatesGroup):
+    waiting_amount = State()
+    waiting_wallet = State()
+class TransferState(StatesGroup):
+    waiting_user = State()
+    waiting_amount = State()
 
 # ---------------------------------------------------------------------------
 # Загрузка переменных окружения
@@ -33,6 +43,13 @@ if not BOT_TOKEN:
     raise ValueError(
         "❌ BOT_TOKEN не задан! Создай файл .env и укажи BOT_TOKEN=<твой токен>"
     )
+
+CRYPTO_TOKEN = "609209:AAVVfrpjEHytPvjZgcpl3VBoozwwEwSCnMq"
+
+crypto = AioCryptoPay(
+    token=CRYPTO_TOKEN,
+    network=Networks.MAIN_NET
+)
 
 ADMIN_IDS: list[int] = [
     int(x) for x in os.getenv("ADMIN_IDS", "6155527631, 8372409305").split(",") if x.strip()
@@ -143,6 +160,12 @@ def main_menu_kb(admin: bool = False, private: bool = False) -> InlineKeyboardMa
         [
             InlineKeyboardButton(text="📊 Топ продавцов", callback_data="top"),
             InlineKeyboardButton(text="📈 Статистика", callback_data="stats"),
+        ],
+        [
+            InlineKeyboardButton(
+                text="💳 Мой баланс",
+                callback_data="balance"
+            )
         ],
         [InlineKeyboardButton(text="❓ Как пользоваться", callback_data="help")],
     ]
@@ -263,6 +286,36 @@ def garant_back_kb() -> InlineKeyboardMarkup:
         ]
     )
 
+def balance_kb():
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="💰 Пополнить",
+                    callback_data="deposit"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="💸 Вывести",
+                    callback_data="withdraw"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔄 Передать",
+                    callback_data="transfer"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="⬅️ Назад",
+                    callback_data="menu"
+                )
+            ]
+        ]
+    )
 
 REP_PATTERN = re.compile(
     r"^\s*([+\-])\s*реп\s+@?(\w+)\s*(.*)$",
@@ -1464,6 +1517,316 @@ async def garant_dep_callback(callback: CallbackQuery) -> None:
     await callback.message.edit_text(text, reply_markup=garant_back_kb())
     await callback.answer()
 
+@dp.callback_query(F.data=="balance")
+async def balance_callback(callback:CallbackQuery):
+
+    balance = db.get_balance(
+        callback.from_user.id
+    )
+
+
+    text = (
+        "💳 <b>Ваш баланс</b>\n\n"
+        f"💰 {balance:.2f} USDT"
+    )
+
+
+    await callback.message.edit_text(
+        text,
+        reply_markup=balance_kb()
+    )
+
+    await callback.answer()
+
+
+@dp.callback_query(F.data=="deposit")
+async def deposit_callback(
+    callback: CallbackQuery,
+    state: FSMContext
+):
+    await state.set_state(
+        DepositState.waiting_amount
+    )
+    await callback.message.edit_text(
+        """
+            💰 <b>Пополнение баланса</b>
+            Введите сумму в USDT:
+            Минимальная сумма:
+            <b>1 USDT</b>
+        """,
+        reply_markup=back_kb()
+    )
+
+    await callback.answer()
+
+@dp.callback_query(F.data=="withdraw")
+async def withdraw_callback(
+    callback: CallbackQuery,
+    state: FSMContext
+):
+    balance = db.get_balance(
+        callback.from_user.id
+    )
+    await state.set_state(
+        WithdrawState.waiting_amount
+    )
+    await callback.message.edit_text(
+        f"""
+💸 <b>Вывод средств</b>
+
+
+Ваш баланс:
+<b>{balance:.2f} USDT</b>
+
+
+Введите сумму вывода:
+        """,
+        reply_markup=back_kb()
+    )
+    await callback.answer()
+
+@dp.message(WithdrawState.waiting_amount)
+async def withdraw_amount(
+    message: types.Message,
+    state:FSMContext
+):
+    try:
+        amount=float(message.text)
+    except:
+        await message.answer(
+            "❌ Введите число"
+        )
+        return
+    balance=db.get_balance(
+        message.from_user.id
+    )
+    if amount > balance:
+        await message.answer(
+            "❌ Недостаточно средств"
+        )
+        return
+    await state.update_data(
+        amount=amount
+    )
+    await state.set_state(
+        WithdrawState.waiting_wallet
+    )
+    await message.answer(
+        """
+            💳 Отправьте ваш USDT кошелек:
+
+            Например:
+            TON / TRC20 / ERC20
+        """
+    )
+
+@dp.message(WithdrawState.waiting_wallet)
+async def withdraw_wallet(
+    message:types.Message,
+    state:FSMContext
+):
+    data=await state.get_data()
+    amount=data["amount"]
+    wallet=message.text
+
+    # снимаем баланс
+    success=db.remove_balance(
+        message.from_user.id,
+        amount
+    )
+    if not success:
+        await message.answer(
+            "❌ Ошибка"
+        )
+        return
+    await message.answer(
+        f"""
+            ✅ <b>Заявка создана</b>
+
+            Сумма:
+            <b>{amount} USDT</b>
+
+            Кошелек:
+            <code>{wallet}</code>
+
+            Администратор обработает вывод.
+        """
+    )
+    await state.clear()
+
+@dp.callback_query(F.data=="transfer")
+async def transfer_callback(
+    callback:CallbackQuery,
+    state:FSMContext
+):
+    await state.set_state(
+        TransferState.waiting_user
+    )
+    await callback.message.edit_text(
+        """
+            🔄 <b>Передача баланса</b>
+            
+            Введите Telegram ID получателя:
+
+            Например:
+            123456789
+        """
+    )
+
+    await callback.answer()
+
+@dp.message(TransferState.waiting_user)
+async def transfer_user(
+    message:types.Message,
+    state:FSMContext
+):
+    try:
+        user_id=int(message.text)
+    except:
+        await message.answer(
+            "❌ Нужен Telegram ID"
+        )
+        return
+
+    await state.update_data(
+        target=user_id
+    )
+
+    await state.set_state(
+        TransferState.waiting_amount
+    )
+
+    await message.answer(
+        "💰 Введите сумму:"
+    )
+
+@dp.message(TransferState.waiting_amount)
+async def transfer_amount(
+    message:types.Message,
+    state:FSMContext
+):
+
+    data=await state.get_data()
+    target=data["target"]
+    amount=float(message.text)
+    sender=message.from_user.id
+    if db.get_balance(sender)<amount:
+        await message.answer(
+            "❌ Недостаточно средств"
+        )
+        return
+
+    db.remove_balance(
+        sender,
+        amount
+    )
+
+    db.add_balance(
+        target,
+        amount
+    )
+
+    await message.answer(
+        f"""
+            ✅ <b>Перевод выполнен</b>
+
+            👤 Получатель:
+            <code>{target}</code>
+
+            💰 Сумма:
+            <b>{amount} USDT</b>
+        """
+    )
+
+    await state.clear()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+async def check_crypto_payments():
+    invoices = await crypto.get_invoices(
+        status="paid"
+    )
+
+    for inv in invoices:
+        invoice_id=str(inv.invoice_id)
+        data=db.get_invoice(invoice_id)
+
+        if not data:
+            continue
+
+        if data["status"]=="paid":
+            continue
+
+        db.add_balance(
+            data["telegram_id"],
+            float(data["amount"])
+        )
+
+        db.mark_invoice_paid(invoice_id)
+
+
+@dp.message(DepositState.waiting_amount)
+async def process_deposit_amount(
+    message: types.Message,
+    state: FSMContext
+):
+    try:
+        amount = float(
+            message.text.replace(",", ".")
+        )
+    except ValueError:
+        await message.answer(
+            "❌ Введите только число\n\nНапример: 10"
+        )
+        return
+    if amount < 1:
+        await message.answer(
+            "❌ Минимальное пополнение 1 USDT"
+        )
+        return
+    invoice = await crypto.create_invoice(
+        asset="USDT",
+        amount=amount,
+        payload=str(message.from_user.id)
+    )
+    db.save_invoice(
+        invoice_id=str(invoice.invoice_id),
+        telegram_id=message.from_user.id,
+        amount=amount,
+        asset="USDT"
+    )
+    await message.answer(
+        f"""
+            💰 <b>Счёт создан</b>
+            Сумма:
+            <b>{amount:.2f} USDT</b>
+            Оплатить:
+            {invoice.bot_invoice_url}
+            После оплаты баланс будет автоматически пополнен.
+        """,
+        reply_markup=back_kb()
+    )
+
+    await state.clear()
+
 
 def admin_panel_text(user_id: int) -> str:
     return (
@@ -1847,18 +2210,21 @@ async def on_startup() -> None:
     await bot.set_my_commands(
         [
             types.BotCommand(command="start", description="🍓 Главное меню"),
-            types.BotCommand(command="rep", description="✍️ Оставить отзыв"),
+            types.BotCommand(command="rep",   description="✍️ Оставить отзыв"),
             types.BotCommand(command="check", description="🔍 Проверить продавца"),
-            types.BotCommand(command="help", description="❓ Как пользоваться"),
+            types.BotCommand(command="help",  description="❓ Как пользоваться"),
         ]
     )
 
     admin_commands = [
-        types.BotCommand(command="start", description="🍓 Главное меню"),
-        types.BotCommand(command="admin", description="🛡️ Админ-панель"),
-        types.BotCommand(command="rep", description="✍️ Оставить отзыв"),
-        types.BotCommand(command="check", description="🔍 Проверить продавца"),
-        types.BotCommand(command="help", description="❓ Как пользоваться"),
+        types.BotCommand(command="start",   description="🍓 Главное меню"),
+        types.BotCommand(command="admin",   description="🛡️ Админ-панель"),
+        types.BotCommand(command="balance", description="💰 Баланс"),
+        types.BotCommand(command="balance", description="🔄 Перевод"),
+        types.BotCommand(command="balance", description="💳 Вывод"),
+        types.BotCommand(command="rep",     description="✍️ Оставить отзыв"),
+        types.BotCommand(command="check",   description="🔍 Проверить продавца"),
+        types.BotCommand(command="help",    description="❓ Как пользоваться"),
     ]
     for admin_id in ADMIN_IDS:
         try:

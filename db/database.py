@@ -13,6 +13,122 @@ class Database:
         conn.execute("PRAGMA foreign_keys = ON")
         return conn
 
+    def get_balance(self, telegram_id: int) -> float:
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT balance FROM user_balances WHERE telegram_id=?",
+                (telegram_id,)
+            ).fetchone()
+            return float(row["balance"]) if row else 0.0
+
+    def add_balance(self, telegram_id: int, amount: float):
+        with self._conn() as conn:
+
+            conn.execute("""
+                INSERT INTO user_balances (telegram_id, balance)
+                VALUES (?, ?)
+                ON CONFLICT(telegram_id)
+                DO UPDATE SET balance = balance + excluded.balance
+            """, (telegram_id, amount))
+
+            conn.execute("""
+                INSERT INTO balance_history
+                (telegram_id, amount, operation)
+                VALUES (?, ?, 'deposit')
+            """, (telegram_id, amount))
+
+    def remove_balance(self, telegram_id: int, amount: float) -> bool:
+
+        balance = self.get_balance(telegram_id)
+
+        if balance < amount:
+            return False
+
+        with self._conn() as conn:
+
+            conn.execute("""
+                UPDATE user_balances
+                SET balance = balance - ?
+                WHERE telegram_id=?
+            """, (amount, telegram_id))
+
+            conn.execute("""
+                INSERT INTO balance_history
+                (telegram_id, amount, operation)
+                VALUES (?, ?, 'withdraw')
+            """, (telegram_id, amount))
+
+        return True
+
+    def save_invoice(
+        self,
+        invoice_id: str,
+        telegram_id: int,
+        amount: float,
+        asset: str
+    ):
+
+        with self._conn() as conn:
+
+            conn.execute("""
+                INSERT INTO invoices
+                (invoice_id, telegram_id, amount, asset)
+                VALUES (?, ?, ?, ?)
+            """, (
+                invoice_id,
+                telegram_id,
+                amount,
+                asset
+            ))
+
+    def mark_invoice_paid(self, invoice_id: str):
+    
+        with self._conn() as conn:
+        
+            conn.execute("""
+                UPDATE invoices
+                SET
+                    status='paid',
+                    paid_at=CURRENT_TIMESTAMP
+                WHERE invoice_id=?
+            """, (invoice_id,))
+
+    def get_invoice(self, invoice_id: str):
+
+        with self._conn() as conn:
+
+            row = conn.execute("""
+                SELECT *
+                FROM invoices
+                WHERE invoice_id=?
+            """, (invoice_id,)).fetchone()
+
+            return dict(row) if row else None
+
+    def is_invoice_paid(self, invoice_id: str) -> bool:
+    
+        with self._conn() as conn:
+        
+            row = conn.execute(
+                """
+                SELECT status 
+                FROM invoices
+                WHERE invoice_id=?
+                """,
+                (invoice_id,)
+            ).fetchone()
+    
+            return row and row["status"] == "paid"
+
+
+
+
+
+
+
+
+
+
     def init(self) -> None:
         with self._conn() as conn:
             conn.executescript(
@@ -56,6 +172,32 @@ class Database:
                 CREATE TABLE IF NOT EXISTS channels (
                     chat_id    INTEGER PRIMARY KEY,
                     chat_title TEXT
+                );
+
+                CREATE TABLE IF NOT EXISTS user_balances (
+                    telegram_id INTEGER PRIMARY KEY,
+                    balance REAL NOT NULL DEFAULT 0,
+                    FOREIGN KEY (telegram_id) REFERENCES users(telegram_id)
+                );
+
+                CREATE TABLE IF NOT EXISTS invoices (
+                    invoice_id INTEGER PRIMARY KEY,
+                    telegram_id INTEGER NOT NULL,
+                    amount REAL NOT NULL,
+                    asset TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'active',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    paid_at TIMESTAMP,
+                    FOREIGN KEY (telegram_id) REFERENCES users(telegram_id)
+                );
+
+                CREATE TABLE IF NOT EXISTS balance_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    telegram_id INTEGER NOT NULL,
+                    amount REAL NOT NULL,
+                    operation TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (telegram_id) REFERENCES users(telegram_id)
                 );
                 """
             )
