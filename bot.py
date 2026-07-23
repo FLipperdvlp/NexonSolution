@@ -53,7 +53,7 @@ if not BOT_TOKEN:
         "❌ BOT_TOKEN не задан! Создай файл .env и укажи BOT_TOKEN=<твой токен>"
     )
 
-CRYPTO_TOKEN = "609209:AAVVfrpjEHytPvjZgcpl3VBoozwwEwSCnMq"
+CRYPTO_TOKEN = os.getenv("CRYPTO_TOKEN", "609209:AAVVfrpjEHytPvjZgcpl3VBoozwwEwSCnMq")
 
 crypto = AioCryptoPay(
     token=CRYPTO_TOKEN,
@@ -178,6 +178,35 @@ def is_admin(user_id: int) -> bool:
 
 def is_private(message: types.Message) -> bool:
     return message.chat.type == "private"
+
+
+# ---------------------------------------------------------------------------
+# Регистрация username <-> telegram_id для ЛЮБОГО сообщения, которое видит
+# бот (личка, группа, супергруппа) — не только команды и +реп.
+#
+# Раньше resolve_target() умел находить продавца по @username только если
+# он либо уже писал боту лично, либо уже фигурировал в базе (upsert_user
+# вызывался лишь в отдельных хендлерах). Из-за этого отзыв по @username
+# на участника группы, который боту в личку не писал, падал с "не найден",
+# даже если человек активно переписывается прямо в этой группе.
+#
+# Этот middleware стоит первым и просто регистрирует автора любого
+# апдейта в БД, ничего не блокируя — дальше сообщение идёт по обычной
+# цепочке хендлеров как раньше.
+@dp.message.outer_middleware()
+async def register_user_middleware(handler, event: types.Message, data: dict):
+    user = event.from_user
+    if user is not None and not user.is_bot:
+        try:
+            db.upsert_user(
+                telegram_id=user.id,
+                username=user.username or "",
+                first_name=user.first_name or "",
+            )
+        except Exception as e:
+            logger.warning(f"Не удалось зарегистрировать пользователя {user.id}: {e}")
+    return await handler(event, data)
+
 
 def main_menu_kb(admin: bool = False, private: bool = False) -> InlineKeyboardMarkup:
     rows = [
@@ -574,9 +603,14 @@ async def block_channel_commands(handler, event: types.Message, data: dict):
         text = event.text or ""
 
         if text.startswith("/"):
-            user_id = event.from_user.id
+            user = event.from_user
+            # Анонимные админы группы (или сообщения от имени привязанного
+            # канала) приходят без from_user — раньше это падало с
+            # AttributeError. Такие сообщения просто пропускаем дальше.
+            if user is None:
+                return await handler(event, data)
 
-            if not is_admin(user_id):
+            if not is_admin(user.id):
                 try:
                     await event.delete()
                 except TelegramAPIError:
@@ -842,6 +876,16 @@ async def reputation_handler(message: types.Message) -> None:
     sign, identifier, description = parsed
     reviewer = message.from_user
 
+    if reviewer is None:
+        # Сообщение отправлено анонимно (от имени группы/анонимного админа) —
+        # нам физически некого записать автором отзыва.
+        await message.answer(
+            "❌ <b>Не удалось определить отправителя</b>\n\n"
+            "Похоже, сообщение отправлено анонимно от имени группы. "
+            "Отключи анонимность и повтори отзыв от своего имени."
+        )
+        return
+
     db.upsert_user(
         telegram_id=reviewer.id,
         username=reviewer.username or "",
@@ -1101,6 +1145,13 @@ async def review_sign_callback(callback: CallbackQuery, state: FSMContext) -> No
 @dp.message(ReviewState.waiting_target)
 async def review_target_handler(message: types.Message, state: FSMContext) -> None:
     reviewer = message.from_user
+    if reviewer is None:
+        await state.clear()
+        await message.answer(
+            "❌ Не удалось определить отправителя (анонимное сообщение). "
+            "Отключи анонимность и начни оставление отзыва заново."
+        )
+        return
     target_id: Optional[int] = None
     username = ""
 
@@ -1795,6 +1846,12 @@ async def check_crypto_payments():
     invoices = await crypto.get_invoices(
         status="paid"
     )
+
+    # aiocryptopay иногда возвращает None вместо пустого списка, когда
+    # оплаченных инвойсов нет — раньше это валило `for inv in invoices`
+    # с "'NoneType' object is not iterable" каждые 15 секунд.
+    if not invoices:
+        return
 
     for inv in invoices:
         invoice_id=str(inv.invoice_id)
