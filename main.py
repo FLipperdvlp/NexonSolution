@@ -22,6 +22,7 @@ from aiogram.types import (
 from dotenv import load_dotenv
 from aiocryptopay import AioCryptoPay, Networks
 from db.database import Database
+from aiogram.types import WebAppInfo
 
 
 class DepositState(StatesGroup):
@@ -155,6 +156,10 @@ def is_private(message: types.Message) -> bool:
 
 def main_menu_kb(admin: bool = False, private: bool = False) -> InlineKeyboardMarkup:
     rows = [
+        [InlineKeyboardButton(
+            text="🍓 Открыть Nexon",
+            web_app=WebAppInfo(url="https://effulgent-kataifi-b0cc37.netlify.app/")
+        )],
         [InlineKeyboardButton(text="✍️ Оставить отзыв", callback_data="leave_review")],
         [InlineKeyboardButton(text="🔍 Проверить продавца", callback_data="check")],
         [
@@ -2207,6 +2212,13 @@ async def channels_handler(message: types.Message) -> None:
 
 async def on_startup() -> None:
     db.init()
+    await bot.set_chat_menu_button(
+        menu_button=types.MenuButtonWebApp(
+            text="Nexon",
+            web_app=WebAppInfo(url="https://effulgent-kataifi-b0cc37.netlify.app/")
+        )
+    )
+
     await bot.set_my_commands(
         [
             types.BotCommand(command="start", description="🍓 Главное меню"),

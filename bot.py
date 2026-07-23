@@ -1,9 +1,18 @@
 import asyncio
+import hashlib
+import hmac
+import json
 import logging
 import os
 import re
+import uuid
+from datetime import datetime
+from logging.handlers import TimedRotatingFileHandler
 from html import escape as html_escape
+from pathlib import Path
 from typing import Optional, Tuple
+from urllib.parse import parse_qsl
+
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -16,10 +25,22 @@ from aiogram.types import (
     CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    WebAppInfo,
 )
+from aiohttp import web
 from dotenv import load_dotenv
-
+from aiocryptopay import AioCryptoPay, Networks
 from db.database import Database
+
+
+class DepositState(StatesGroup):
+    waiting_amount = State()
+class WithdrawState(StatesGroup):
+    waiting_amount = State()
+    waiting_wallet = State()
+class TransferState(StatesGroup):
+    waiting_user = State()
+    waiting_amount = State()
 
 # ---------------------------------------------------------------------------
 # Загрузка переменных окружения
@@ -32,6 +53,13 @@ if not BOT_TOKEN:
         "❌ BOT_TOKEN не задан! Создай файл .env и укажи BOT_TOKEN=<твой токен>"
     )
 
+CRYPTO_TOKEN = "609209:AAVVfrpjEHytPvjZgcpl3VBoozwwEwSCnMq"
+
+crypto = AioCryptoPay(
+    token=CRYPTO_TOKEN,
+    network=Networks.MAIN_NET
+)
+
 ADMIN_IDS: list[int] = [
     int(x) for x in os.getenv("ADMIN_IDS", "6155527631, 8372409305").split(",") if x.strip()
 ]
@@ -42,13 +70,82 @@ DB_PATH: str = os.getenv("DB_PATH", "reputation.db")
 GARANT_USERNAME: str = os.getenv("GARANT_USERNAME", "gavrilovit")
 
 # ---------------------------------------------------------------------------
+# Mini App / Web API конфигурация
+# ---------------------------------------------------------------------------
+# Адрес, где захостен nexon-miniapp.html (Netlify/Vercel/свой домен, обязательно HTTPS).
+WEBAPP_URL: str = os.getenv("WEBAPP_URL", "https://effulgent-kataifi-b0cc37.netlify.app/")
+# Origin мини-аппа для CORS (по умолчанию берём из WEBAPP_URL без завершающего слэша).
+WEBAPP_ORIGIN: str = os.getenv("WEBAPP_ORIGIN", WEBAPP_URL.rstrip("/"))
+
+# Хост/порт, на которых поднимается встроенный веб-API для мини-аппа.
+API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
+API_PORT: int = int(os.getenv("API_PORT", "8080"))
+
+# Куда сохранять скриншоты, загруженные через мини-апп (не через бота).
+UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "uploads"))
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+MAX_PHOTO_BYTES = 8 * 1024 * 1024  # 8 МБ на один скриншот
+
+# ---------------------------------------------------------------------------
 # Логирование
 # ---------------------------------------------------------------------------
+LOGS_DIR = os.getenv("LOGS_DIR", "logs")
+os.makedirs(LOGS_DIR, exist_ok=True)
+
+LOG_FORMAT = "%(asctime)s | %(levelname)-7s | %(name)s | %(message)s"
+formatter = logging.Formatter(LOG_FORMAT)
+
+bot_file_handler = TimedRotatingFileHandler(
+    filename=os.path.join(LOGS_DIR, "bot.log"),
+    when="midnight",
+    backupCount=14,
+    encoding="utf-8",
+)
+bot_file_handler.setFormatter(formatter)
+
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
+    handlers=[console_handler, bot_file_handler],
 )
 logger = logging.getLogger(__name__)
+
+action_formatter = logging.Formatter("%(asctime)s | %(message)s")
+action_file_handler = TimedRotatingFileHandler(
+    filename=os.path.join(LOGS_DIR, "actions.log"),
+    when="midnight",
+    backupCount=14,
+    encoding="utf-8",
+)
+action_file_handler.setFormatter(action_formatter)
+
+action_logger = logging.getLogger("actions")
+action_logger.setLevel(logging.INFO)
+action_logger.addHandler(action_file_handler)
+action_console_handler = logging.StreamHandler()
+action_console_handler.setFormatter(action_formatter)
+action_logger.addHandler(action_console_handler)
+action_logger.propagate = False
+
+
+def log_action(
+    user_id: Optional[int],
+    username: Optional[str],
+    action: str,
+    details: str = "",
+    chat: Optional[types.Chat] = None,
+) -> None:
+    uname = f"@{username}" if username else "-"
+    chat_part = ""
+    if chat is not None:
+        chat_label = chat.title or chat.type
+        chat_part = f" | chat={escape(chat_label)}({chat.id})"
+    action_logger.info(
+        f"user_id={user_id if user_id is not None else '-'} username={uname}"
+        f" | {action}{chat_part} | {details}"
+    )
 
 class CheckState(StatesGroup):
     waiting_for_username = State()
@@ -67,9 +164,6 @@ class AdminState(StatesGroup):
     waiting_unban_target = State()
 
 
-# ---------------------------------------------------------------------------
-# Глобальные объекты
-# ---------------------------------------------------------------------------
 bot = Bot(
     token=BOT_TOKEN,
     default=DefaultBotProperties(parse_mode=ParseMode.HTML),
@@ -85,16 +179,23 @@ def is_admin(user_id: int) -> bool:
 def is_private(message: types.Message) -> bool:
     return message.chat.type == "private"
 
-# ---------------------------------------------------------------------------
-# Клавиатуры
-# ---------------------------------------------------------------------------
 def main_menu_kb(admin: bool = False, private: bool = False) -> InlineKeyboardMarkup:
     rows = [
+        [InlineKeyboardButton(
+            text="🍓 Открыть Nexon",
+            web_app=WebAppInfo(url=WEBAPP_URL)
+        )],
         [InlineKeyboardButton(text="✍️ Оставить отзыв", callback_data="leave_review")],
         [InlineKeyboardButton(text="🔍 Проверить продавца", callback_data="check")],
         [
             InlineKeyboardButton(text="📊 Топ продавцов", callback_data="top"),
             InlineKeyboardButton(text="📈 Статистика", callback_data="stats"),
+        ],
+        [
+            InlineKeyboardButton(
+                text="💳 Мой баланс",
+                callback_data="balance"
+            )
         ],
         [InlineKeyboardButton(text="❓ Как пользоваться", callback_data="help")],
     ]
@@ -215,26 +316,55 @@ def garant_back_kb() -> InlineKeyboardMarkup:
         ]
     )
 
+def balance_kb():
 
-# ---------------------------------------------------------------------------
-# Паттерн распознавания команды репутации
-# ---------------------------------------------------------------------------
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="💰 Пополнить",
+                    callback_data="deposit"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="💸 Вывести",
+                    callback_data="withdraw"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔄 Передать",
+                    callback_data="transfer"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="⬅️ Назад",
+                    callback_data="menu"
+                )
+            ]
+        ]
+    )
+
 REP_PATTERN = re.compile(
     r"^\s*([+\-])\s*реп\s+@?(\w+)\s*(.*)$",
     re.IGNORECASE | re.DOTALL,
 )
 
+# Кошелёк для вывода принимаем только в сети TRC20 (адрес TRON: начинается
+# с "T", 34 символа base58). Пополнение баланса всегда идёт через CryptoBot
+# (aiocryptopay) — эта часть уже была без выбора провайдера.
+TRC20_ADDRESS_PATTERN = re.compile(r"^T[1-9A-HJ-NP-Za-km-z]{33}$")
 
-# ---------------------------------------------------------------------------
-# Вспомогательные функции
-# ---------------------------------------------------------------------------
+
+def is_valid_trc20_address(wallet: str) -> bool:
+    return bool(TRC20_ADDRESS_PATTERN.match((wallet or "").strip()))
+
+
 def parse_rep_message(
     text: str,
 ) -> Optional[Tuple[str, str, str]]:
-    """
-    Парсит команду репутации из текста.
-    Возвращает (знак, identifier, описание) или None.
-    """
     match = REP_PATTERN.match(text)
     if not match:
         return None
@@ -244,16 +374,17 @@ def parse_rep_message(
     return sign, identifier, description
 
 
-# Буфер для сборки альбомов (media group). Telegram присылает каждое фото
-# альбома отдельным апдейтом с одинаковым media_group_id, а подпись
-# ("+реп ...") прикрепляется только к одному из них — остальные приходят
-# без текста. Собираем их сюда через outer middleware ниже.
 album_buffers: dict[str, list[types.Message]] = {}
+
+# Набор media_group_id, которые прямо сейчас собираются в мастере отзыва
+# (review_photo_handler). Нужен, чтобы на альбом из нескольких фото
+# отправлялось только ОДНО подтверждение "Добавлено...", а не по одному
+# на каждое фото альбома.
+album_confirm_in_progress: set[str] = set()
 
 
 @dp.message.outer_middleware()
 async def album_collector_middleware(handler, event: types.Message, data: dict):
-    """Складывает все сообщения одного альбома в общий буфер по media_group_id."""
     if event.media_group_id:
         album_buffers.setdefault(event.media_group_id, []).append(event)
     return await handler(event, data)
@@ -261,14 +392,12 @@ async def album_collector_middleware(handler, event: types.Message, data: dict):
 
 @dp.channel_post.outer_middleware()
 async def album_collector_channel_middleware(handler, event: types.Message, data: dict):
-    """То же самое, но для постов в каналах (dp.channel_post — отдельный поток апдейтов)."""
     if event.media_group_id:
         album_buffers.setdefault(event.media_group_id, []).append(event)
     return await handler(event, data)
 
 
 def get_single_photo(message: types.Message) -> Optional[str]:
-    """Одно фото — из самого сообщения либо из reply-сообщения."""
     if message.photo:
         return message.photo[-1].file_id
     if message.reply_to_message and message.reply_to_message.photo:
@@ -279,24 +408,10 @@ def get_single_photo(message: types.Message) -> Optional[str]:
 async def collect_review_photos(
     message: types.Message, delete_after: bool = False
 ) -> list[str]:
-    """
-    Собирает ВСЕ фото сделки:
-    • если пользователь прислал альбом (несколько фото одним сообщением) —
-      ждём немного, пока все фото альбома долетят, и берём их все;
-    • иначе — одно фото из самого сообщения или из reply.
-
-    delete_after: если True — сразу после сбора file_id удаляет сообщения
-    с фото (используется в группах, чтобы не захламлять чат скриншотами
-    сделок). Реплаи (чужие сообщения, из которых просто взято фото) не
-    удаляются — удаляются только сообщения, отправленные самим автором
-    отзыва.
-    """
     if message.media_group_id:
         gid = message.media_group_id
-        # Небольшая пауза, чтобы все фото альбома успели попасть в буфер
         await asyncio.sleep(1.5)
         messages = album_buffers.pop(gid, [message])
-        # Сохраняем порядок отправки пользователем
         messages = sorted(messages, key=lambda m: m.message_id)
 
         photo_ids: list[str] = []
@@ -319,7 +434,6 @@ async def collect_review_photos(
 
     single = get_single_photo(message)
     if single and delete_after and message.photo:
-        # Удаляем только если фото было в самом сообщении, а не в reply
         try:
             await message.delete()
         except TelegramAPIError:
@@ -368,11 +482,6 @@ def display_name(target_id: int, username: str = "") -> str:
 
 
 def get_review_photo_ids(rev) -> list[str]:
-    """
-    Безопасно достаёт список photo_file_id из строки отзыва (dict или sqlite3.Row).
-    Несколько фото хранятся в одном текстовом поле через запятую (в file_id
-    Telegram запятых не бывает, так что разделитель безопасен).
-    """
     try:
         value = rev["photo_file_id"]
     except (KeyError, IndexError, TypeError):
@@ -383,7 +492,6 @@ def get_review_photo_ids(rev) -> list[str]:
 
 
 def get_review_id(rev) -> Optional[int]:
-    """Безопасно достаёт первичный ключ отзыва (id / review_id) из строки БД."""
     for key in ("id", "review_id"):
         try:
             value = rev[key]
@@ -398,20 +506,15 @@ def get_review_id(rev) -> Optional[int]:
 
 
 def deal_button_label(rev, index: int) -> str:
-    """Короткая подпись сделки для кнопки в меню скриншотов."""
     sign_emoji = "✅" if rev["sign"] == "+" else "❌"
     date_str = str(rev["created_at"])[:10]
     n_photos = len(get_review_photo_ids(rev))
     return f"{index}. {sign_emoji} {date_str} · {n_photos} фото"
 
 
-# ---------------------------------------------------------------------------
-# Резолвинг идентификатора (username ИЛИ numeric id) -> реальный telegram_id
-# ---------------------------------------------------------------------------
 async def resolve_target(identifier: str) -> Tuple[Optional[int], str]:
     raw = identifier.strip().lstrip("@")
 
-    # Числовой telegram_id введён напрямую
     if raw.isdigit():
         target_id = int(raw)
         username = db.get_username_for_id(target_id) or ""
@@ -419,15 +522,10 @@ async def resolve_target(identifier: str) -> Tuple[Optional[int], str]:
 
     username = raw.lower()
 
-    # 1) ищем среди тех, кто уже взаимодействовал с ботом
     target_id = db.get_user_id_by_username(username)
     if target_id:
         return target_id, username
 
-    # 2) пробуем резолвить через Telegram API. Это работает только для
-    #    публичных каналов/групп либо пользователей, которые уже писали
-    #    этому боту / состоят с ним в общем чате — обычные приватные
-    #    аккаунты, никогда не видевшие бота, Telegram резолвить не даст.
     try:
         chat = await bot.get_chat(f"@{username}")
         target_id = chat.id
@@ -441,11 +539,6 @@ async def resolve_target(identifier: str) -> Tuple[Optional[int], str]:
         return None, username
 
 
-# ---------------------------------------------------------------------------
-# Резолвинг цели через reply (самый надёжный способ — Telegram сам
-# присылает объект from_user того, на чьё сообщение отвечают, поэтому
-# username вообще не нужен и никакие ограничения API не действуют)
-# ---------------------------------------------------------------------------
 def resolve_target_from_reply(message: types.Message) -> Optional[Tuple[int, str]]:
     reply = message.reply_to_message
     if reply is None or reply.from_user is None:
@@ -465,13 +558,6 @@ def resolve_target_from_reply(message: types.Message) -> Optional[Tuple[int, str
 async def resolve_target_smart(
     identifier: Optional[str], message: types.Message
 ) -> Tuple[Optional[int], str]:
-    """
-    Единая точка резолвинга цели.
-    Приоритет: reply на сообщение пользователя > текстовый identifier.
-    Так, даже если у человека закрытый/незнакомый боту username,
-    достаточно ответить (reply) на его сообщение — и бот найдёт его
-    гарантированно, без обращения к Telegram API поиска по username.
-    """
     from_reply = resolve_target_from_reply(message)
     if from_reply:
         return from_reply
@@ -481,21 +567,15 @@ async def resolve_target_smart(
 
 
 
-# ---------------------------------------------------------------------------
-# Запрет команд в каналах для обычных пользователей                                                                 Блокировка комманд для обычных юзеров
-# ---------------------------------------------------------------------------
 @dp.message.outer_middleware()
 async def block_channel_commands(handler, event: types.Message, data: dict):
-    # Только сообщения с командами в группах/каналах
     if event.chat.type in ("group", "supergroup"):
 
         text = event.text or ""
 
-        # Если это команда
         if text.startswith("/"):
             user_id = event.from_user.id
 
-            # Не админ — блокируем
             if not is_admin(user_id):
                 try:
                     await event.delete()
@@ -508,9 +588,6 @@ async def block_channel_commands(handler, event: types.Message, data: dict):
 
 
 
-# ---------------------------------------------------------------------------
-# Карточка репутации (общая для Message и CallbackQuery)
-# ---------------------------------------------------------------------------
 async def send_reputation_card(
     target: types.Message | types.CallbackQuery,
     identifier: Optional[str] = None,
@@ -520,12 +597,12 @@ async def send_reputation_card(
     if isinstance(target, CallbackQuery):
         msg = target.message
         is_callback = True
+        requester = target.from_user
     else:
         msg = target
         is_callback = False
+        requester = target.from_user
 
-    # source_message — сообщение, из которого нужно смотреть reply
-    # (для callback это не имеет смысла, там всегда только identifier)
     if source_message is not None:
         target_id, username = await resolve_target_smart(identifier, source_message)
     else:
@@ -550,7 +627,14 @@ async def send_reputation_card(
 
     label = display_name(target_id, username)
 
-    # Проверяем бан
+    log_action(
+        requester.id if requester else None,
+        requester.username if requester else None,
+        "ПРОВЕРКА РЕПУТАЦИИ",
+        details=f"цель={label}(id={target_id})",
+        chat=msg.chat if msg else None,
+    )
+
     if db.is_banned(target_id):
         ban_text = (
             f"🚫 <b>Пользователь {label} заблокирован</b>\n\n"
@@ -563,11 +647,9 @@ async def send_reputation_card(
             await msg.answer(ban_text, reply_markup=back_kb())
         return
 
-    # Получаем статистику и отзывы
     stats = db.get_user_stats(target_id)
     reviews = db.get_user_reviews(target_id, limit=5)
 
-    # Нет отзывов
     if stats is None:
         no_reviews_text = (
             f"❌ <b>Отзывов о {label} не найдено</b>\n\n"
@@ -581,7 +663,6 @@ async def send_reputation_card(
             await msg.answer(no_reviews_text, reply_markup=back_kb())
         return
 
-    # Формируем карточку
     bar = trust_bar(stats["score"])
     lines = [
         f"🍓 <b>Репутация продавца {label}</b>",
@@ -638,9 +719,6 @@ async def send_reputation_card(
             logger.error(f"Ошибка отправки карточки: {e}")
 
 
-# ---------------------------------------------------------------------------
-# ХЕНДЛЕР: /start
-# ---------------------------------------------------------------------------
 @dp.message(CommandStart())
 async def start_handler(message: types.Message) -> None:
     user = message.from_user
@@ -649,6 +727,7 @@ async def start_handler(message: types.Message) -> None:
         username=user.username or "",
         first_name=user.first_name or "",
     )
+    log_action(user.id, user.username, "СТАРТ БОТА", chat=message.chat)
 
     welcome_text = (
         "🍓 <b>Добро пожаловать в Nexon бот репутации!</b>\n\n"
@@ -671,12 +750,8 @@ async def start_handler(message: types.Message) -> None:
     )
 
 
-# ---------------------------------------------------------------------------
-# ХЕНДЛЕР: /help
-# ---------------------------------------------------------------------------
 @dp.message(Command("help"))
 async def help_handler(message: types.Message) -> None:
-    """Справка по боту на русском языке."""
     help_text = (
         "❓ <b>Как пользоваться Nexon ботом</b>\n\n"
         "━━━━━━━━━━━━━━━━━━━━━\n"
@@ -709,7 +784,6 @@ async def help_handler(message: types.Message) -> None:
         "🔴 <b>Мошенник</b> — рейтинг ниже −20%"
     )
 
-    # Определяем способ отправки: редактируем или отвечаем
     if hasattr(message, "edit_text"):
         try:
             await message.edit_text(help_text, reply_markup=back_kb())
@@ -721,9 +795,6 @@ async def help_handler(message: types.Message) -> None:
 
 
 
-# ---------------------------------------------------------------------------
-# ХЕНДЛЕР: /check @username или /check <id>, либо /check в reply
-# ---------------------------------------------------------------------------
 @dp.message(Command("check"))
 async def check_command(message: types.Message, command: CommandObject) -> None:
     identifier: Optional[str] = None
@@ -738,8 +809,6 @@ async def check_command(message: types.Message, command: CommandObject) -> None:
             )
             return
 
-    # Если это reply — можно вообще без identifier, бот возьмёт автора
-    # сообщения, на которое ответили
     if identifier is None and message.reply_to_message is None:
         await message.answer(
             "🔍 <b>Укажи имя пользователя или ID</b>\n\n"
@@ -752,18 +821,12 @@ async def check_command(message: types.Message, command: CommandObject) -> None:
     await send_reputation_card(message, identifier, source_message=message)
 
 
-# ---------------------------------------------------------------------------
-# ХЕНДЛЕР: +реп / -реп в группах и личных сообщениях
-# ---------------------------------------------------------------------------
 @dp.message(F.text.regexp(r"^[+\-]\s*реп\s+(@?\w+|\S+)"))
 @dp.message(F.caption.regexp(r"^[+\-]\s*реп\s+(@?\w+|\S+)"))
 async def reputation_handler(message: types.Message) -> None:
     text = get_target_text(message)
     parsed = parse_rep_message(text)
     if not parsed:
-        # Сообщение явно начинается с "+реп"/"-реп", но дальше формат не
-        # совпал (нет @username/ID и т.п.) — объясняем, как правильно,
-        # а не молчим.
         await message.answer(
             "❌ <b>Неверный формат команды</b>\n\n"
             "Правильно так:\n"
@@ -779,14 +842,12 @@ async def reputation_handler(message: types.Message) -> None:
     sign, identifier, description = parsed
     reviewer = message.from_user
 
-    # Регистрируем того, кто оставляет отзыв
     db.upsert_user(
         telegram_id=reviewer.id,
         username=reviewer.username or "",
         first_name=reviewer.first_name or "",
     )
 
-    # --- Проверка: автор не в бане ---
     if db.is_banned(reviewer.id):
         try:
             await message.delete()
@@ -798,7 +859,6 @@ async def reputation_handler(message: types.Message) -> None:
         )
         return
 
-    # Резолвим цель: приоритет — reply на сообщение продавца, иначе username/ID
     target_id, target_username = await resolve_target_smart(identifier, message)
     if target_id is None:
         await message.answer(
@@ -811,7 +871,6 @@ async def reputation_handler(message: types.Message) -> None:
         )
         return
 
-    # --- Проверка: нельзя оставить отзыв самому себе ---
     if target_id == reviewer.id:
         try:
             await message.delete()
@@ -823,9 +882,6 @@ async def reputation_handler(message: types.Message) -> None:
         )
         return
 
-    # --- Проверка: скриншот обязателен (поддержка альбомов из нескольких фото) ---
-    # В группах/супергруппах сообщение(-я) со скриншотом удаляется сразу
-    # после сбора file_id, чтобы не захламлять чат.
     delete_photo_msg = message.chat.type in ("group", "supergroup")
     photos = await collect_review_photos(message, delete_after=delete_photo_msg)
     if not photos:
@@ -842,7 +898,6 @@ async def reputation_handler(message: types.Message) -> None:
         )
         return
 
-    # --- Проверка: описание достаточно подробное ---
     if len(description) < 2:
         try:
             await message.delete()
@@ -856,17 +911,15 @@ async def reputation_handler(message: types.Message) -> None:
         )
         return
 
-    # --- Проверка: не более одного отзыва об одном человеке в сутки ---
-    if db.has_recent_review(reviewer.id, target_id, hours=0.03):    #if db.has_recent_review(reviewer.id, target_id, minutes=2):
+    if db.has_recent_review(reviewer.id, target_id, hours=0.03):
         await message.answer(
-            f"⏰ <b>Подождите 2 минуты</b>\n\n"    #        f"⏰ <b>Подождите 2 минуты</b>\n\n"
+            f"⏰ <b>Подождите 2 минуты</b>\n\n"
             f"Вы уже оставляли отзыв о {display_name(target_id, target_username)} сегодня.\n"
-            f"Повторный отзыв можно будет оставить через 2 минуты.",    #        f"Повторный отзыв можно будет оставить через 2 минуты.",
+            f"Повторный отзыв можно будет оставить через 2 минуты.",
         )
         return
 
 
-    # --- Сохраняем отзыв ---
     chat = message.chat
     review_id = db.add_review(
         target_id=target_id,
@@ -900,28 +953,20 @@ async def reputation_handler(message: types.Message) -> None:
         f"🆔 ID отзыва: <code>{review_id}</code>"
     )
 
-    await message.answer(confirmation)#, reply_markup=view_user_kb(target_id, target_username))
+    await message.answer(confirmation)
     logger.info(
         f"Новый отзыв #{review_id}: {sign} реп target_id={target_id} "
-        #f"от {reviewer.id} (@{reviewer.username})"
+    )
+    log_action(
+        reviewer.id,
+        reviewer.username,
+        f"НОВЫЙ ОТЗЫВ ({sign_word})",
+        details=f"review_id={review_id} цель={label}(id={target_id}) фото={len(photos)} "
+                f"описание='{description[:120]}'",
+        chat=chat,
     )
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-# ---------------------------------------------------------------------------
-# ХЕНДЛЕР: +реп / -реп в каналах (мониторинг)
-# ---------------------------------------------------------------------------
 @dp.channel_post(F.text.regexp(r"^[+\-]\s*реп\s+@?\w+"))
 @dp.channel_post(F.caption.regexp(r"^[+\-]\s*реп\s+@?\w+"))
 async def channel_reputation_handler(message: types.Message) -> None:
@@ -946,7 +991,6 @@ async def channel_reputation_handler(message: types.Message) -> None:
 
     chat = message.chat
 
-    # Регистрируем канал как мониторируемый
     db.add_monitored_channel(
         chat_id=chat.id,
         chat_title=chat.title or str(chat.id),
@@ -971,11 +1015,15 @@ async def channel_reputation_handler(message: types.Message) -> None:
         f"Канальный отзыв #{review_id}: {sign} реп @{target_id} "
         f"из канала '{chat.title}' (id={chat.id})"
     )
+    log_action(
+        None,
+        None,
+        "НОВЫЙ ОТЗЫВ (канал)",
+        details=f"review_id={review_id} цель=id={target_id} фото={len(photos)}",
+        chat=chat,
+    )
 
 
-# ---------------------------------------------------------------------------
-# CALLBACK: кнопка «Проверить продавца» → запрос username через FSM
-# ---------------------------------------------------------------------------
 @dp.callback_query(F.data == "check")
 async def check_callback(callback: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(CheckState.waiting_for_username)
@@ -990,9 +1038,6 @@ async def check_callback(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# FSM: обработка введённого username после нажатия кнопки
-# ---------------------------------------------------------------------------
 @dp.message(CheckState.waiting_for_username)
 async def process_check_username(message: types.Message, state: FSMContext) -> None:
     raw = (message.text or "").strip().lstrip("@")
@@ -1010,9 +1055,6 @@ async def process_check_username(message: types.Message, state: FSMContext) -> N
     await send_reputation_card(message, raw, source_message=message)
 
 
-# ---------------------------------------------------------------------------
-# МАСТЕР ОСТАВЛЕНИЯ ОТЗЫВА (кнопки вместо "+реп"/"-реп")
-# ---------------------------------------------------------------------------
 async def start_review_wizard(msg: types.Message, is_edit: bool) -> None:
     text = (
         "✍️ <b>Оставляем отзыв о продавце</b>\n\n"
@@ -1144,7 +1186,17 @@ async def review_photo_handler(message: types.Message, state: FSMContext) -> Non
     photos: list[str] = list(data.get("photos", []))
 
     if message.media_group_id:
-        new_photos = await collect_review_photos(message)
+        gid = message.media_group_id
+        if gid in album_confirm_in_progress:
+            # Это фото — часть альбома, который уже обрабатывается другим
+            # апдейтом (первым фото альбома). Не отвечаем повторно —
+            # оно уже будет учтено в общем подтверждении.
+            return
+        album_confirm_in_progress.add(gid)
+        try:
+            new_photos = await collect_review_photos(message)
+        finally:
+            album_confirm_in_progress.discard(gid)
     else:
         single = get_single_photo(message)
         new_photos = [single] if single else []
@@ -1185,7 +1237,6 @@ async def review_done_callback(callback: CallbackQuery, state: FSMContext) -> No
     description = data["description"]
     reviewer = callback.from_user
 
-    # Финальные проверки на случай, если что-то изменилось за время заполнения
     if db.is_banned(reviewer.id):
         await state.clear()
         await callback.message.edit_text(
@@ -1233,23 +1284,15 @@ async def review_done_callback(callback: CallbackQuery, state: FSMContext) -> No
     await callback.answer("Сохранено! 🍓")
     logger.info(
         f"Новый отзыв #{review_id} (через меню): {sign} target_id={target_id} "
-        #f"от {reviewer.id} (@{reviewer.username})"
     )
-
-     
-
-
-
-
-
-
-
-
-
-
-
-
-
+    log_action(
+        reviewer.id,
+        reviewer.username,
+        f"НОВЫЙ ОТЗЫВ через меню ({sign_word})",
+        details=f"review_id={review_id} цель={label}(id={target_id}) фото={len(photos)} "
+                f"описание='{description[:120]}'",
+        chat=chat,
+    )
 
 
 @dp.callback_query(F.data == "review_cancel")
@@ -1264,9 +1307,6 @@ async def review_cancel_callback(callback: CallbackQuery, state: FSMContext) -> 
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# CALLBACK: view_{target_id} — прямой просмотр репутации
-# ---------------------------------------------------------------------------
 @dp.callback_query(F.data.startswith("view_"))
 async def view_callback(callback: CallbackQuery) -> None:
     identifier = callback.data.split("_", 1)[1]
@@ -1274,9 +1314,6 @@ async def view_callback(callback: CallbackQuery) -> None:
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# CALLBACK: photos_{target_id} — список сделок со скриншотами (меню выбора)
-# ---------------------------------------------------------------------------
 @dp.callback_query(F.data.startswith("photos_"))
 async def photos_menu_callback(callback: CallbackQuery) -> None:
     try:
@@ -1298,7 +1335,6 @@ async def photos_menu_callback(callback: CallbackQuery) -> None:
     rows: list[list[InlineKeyboardButton]] = []
     for i, rev in enumerate(reviews_with_photos, start=1):
         review_id = get_review_id(rev)
-        # Если в БД нет колонки id — используем позицию в этом же списке
         ref = str(review_id) if review_id is not None else f"idx{i - 1}"
         rows.append(
             [
@@ -1318,9 +1354,6 @@ async def photos_menu_callback(callback: CallbackQuery) -> None:
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# CALLBACK: rphotos_{target_id}_{review_id} — скриншоты конкретной сделки
-# ---------------------------------------------------------------------------
 @dp.callback_query(F.data.startswith("rphotos_"))
 async def review_photos_callback(callback: CallbackQuery) -> None:
     try:
@@ -1368,7 +1401,6 @@ async def review_photos_callback(callback: CallbackQuery) -> None:
 
     caption_lines = [
         f"{sign_emoji} <b>{sign_word.capitalize()} отзыв</b> ({date_str})",
-        #f"👤 От: {reviewer_tag}",
     ]
     if desc:
         caption_lines.append(f"📝 {escape(desc)}")
@@ -1405,9 +1437,6 @@ async def review_photos_callback(callback: CallbackQuery) -> None:
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# CALLBACK: топ продавцов
-# ---------------------------------------------------------------------------
 @dp.callback_query(F.data == "top")
 async def top_callback(callback: CallbackQuery) -> None:
     top_users = db.get_top_users(limit=10, min_reviews=2)
@@ -1441,9 +1470,6 @@ async def top_callback(callback: CallbackQuery) -> None:
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# CALLBACK: глобальная статистика
-# ---------------------------------------------------------------------------
 @dp.callback_query(F.data == "stats")
 async def stats_callback(callback: CallbackQuery) -> None:
     s = db.get_global_stats()
@@ -1464,18 +1490,12 @@ async def stats_callback(callback: CallbackQuery) -> None:
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# CALLBACK: помощь
-# ---------------------------------------------------------------------------
 @dp.callback_query(F.data == "help")
 async def help_callback(callback: CallbackQuery) -> None:
     await help_handler(callback.message)
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# CALLBACK: возврат в главное меню
-# ---------------------------------------------------------------------------
 @dp.callback_query(F.data == "menu")
 async def menu_callback(
     callback: CallbackQuery, state: FSMContext
@@ -1502,9 +1522,6 @@ async def menu_callback(
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# CALLBACK: 🛡️ Гарант — меню выбора (Живой гарант / Деп)
-# ---------------------------------------------------------------------------
 @dp.callback_query(F.data == "garant_menu")
 async def garant_menu_callback(callback: CallbackQuery) -> None:
     text = (
@@ -1539,11 +1556,311 @@ async def garant_dep_callback(callback: CallbackQuery) -> None:
     await callback.message.edit_text(text, reply_markup=garant_back_kb())
     await callback.answer()
 
+@dp.callback_query(F.data=="balance")
+async def balance_callback(callback:CallbackQuery):
 
-# ---------------------------------------------------------------------------
-# ADMIN: /admin — панель администратора (работает и в личных сообщениях, и в
-# группах — единственное условие — id отправителя должен быть в ADMIN_IDS)
-# ---------------------------------------------------------------------------
+    balance = db.get_balance(
+        callback.from_user.id
+    )
+
+
+    text = (
+        "💳 <b>Ваш баланс</b>\n\n"
+        f"💰 {balance:.2f} USDT"
+    )
+
+
+    await callback.message.edit_text(
+        text,
+        reply_markup=balance_kb()
+    )
+
+    await callback.answer()
+
+
+@dp.callback_query(F.data=="deposit")
+async def deposit_callback(
+    callback: CallbackQuery,
+    state: FSMContext
+):
+    await state.set_state(
+        DepositState.waiting_amount
+    )
+    await callback.message.edit_text(
+        """
+            💰 <b>Пополнение баланса</b>
+            Пополнение — только через <b>CryptoBot</b>, USDT в сети <b>TRC20</b>.
+            Введите сумму в USDT:
+            Минимальная сумма:
+            <b>1 USDT</b>
+        """,
+        reply_markup=back_kb()
+    )
+
+    await callback.answer()
+
+@dp.callback_query(F.data=="withdraw")
+async def withdraw_callback(
+    callback: CallbackQuery,
+    state: FSMContext
+):
+    balance = db.get_balance(
+        callback.from_user.id
+    )
+    await state.set_state(
+        WithdrawState.waiting_amount
+    )
+    await callback.message.edit_text(
+        f"""
+💸 <b>Вывод средств</b>
+
+Вывод — только на кошелёк USDT в сети <b>TRC20</b>.
+
+Ваш баланс:
+<b>{balance:.2f} USDT</b>
+
+
+Введите сумму вывода:
+        """,
+        reply_markup=back_kb()
+    )
+    await callback.answer()
+
+@dp.message(WithdrawState.waiting_amount)
+async def withdraw_amount(
+    message: types.Message,
+    state:FSMContext
+):
+    try:
+        amount=float(message.text)
+    except:
+        await message.answer(
+            "❌ Введите число"
+        )
+        return
+    balance=db.get_balance(
+        message.from_user.id
+    )
+    if amount > balance:
+        await message.answer(
+            "❌ Недостаточно средств"
+        )
+        return
+    await state.update_data(
+        amount=amount
+    )
+    await state.set_state(
+        WithdrawState.waiting_wallet
+    )
+    await message.answer(
+        """
+            💳 Отправьте ваш USDT-кошелёк в сети <b>TRC20</b> (адрес TRON, начинается с «T»):
+
+            Например:
+            TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        """
+    )
+
+@dp.message(WithdrawState.waiting_wallet)
+async def withdraw_wallet(
+    message:types.Message,
+    state:FSMContext
+):
+    data=await state.get_data()
+    amount=data["amount"]
+    wallet=(message.text or "").strip()
+
+    # Принимаем вывод только на кошелёк в сети TRC20
+    if not is_valid_trc20_address(wallet):
+        await message.answer(
+            "❌ <b>Это не похоже на адрес TRC20</b>\n\n"
+            "Адрес TRON начинается с «T» и состоит из 34 символов.\n"
+            "Отправьте корректный TRC20-адрес:"
+        )
+        return
+
+    # снимаем баланс
+    success=db.remove_balance(
+        message.from_user.id,
+        amount
+    )
+    if not success:
+        await message.answer(
+            "❌ Ошибка"
+        )
+        return
+    await message.answer(
+        f"""
+            ✅ <b>Заявка создана</b>
+
+            Сумма:
+            <b>{amount} USDT</b>
+
+            Кошелек (TRC20):
+            <code>{wallet}</code>
+
+            Администратор обработает вывод.
+        """
+    )
+    await state.clear()
+
+@dp.callback_query(F.data=="transfer")
+async def transfer_callback(
+    callback:CallbackQuery,
+    state:FSMContext
+):
+    await state.set_state(
+        TransferState.waiting_user
+    )
+    await callback.message.edit_text(
+        """
+            🔄 <b>Передача баланса</b>
+            
+            Введите Telegram ID получателя:
+
+            Например:
+            123456789
+        """
+    )
+
+    await callback.answer()
+
+@dp.message(TransferState.waiting_user)
+async def transfer_user(
+    message:types.Message,
+    state:FSMContext
+):
+    try:
+        user_id=int(message.text)
+    except:
+        await message.answer(
+            "❌ Нужен Telegram ID"
+        )
+        return
+
+    await state.update_data(
+        target=user_id
+    )
+
+    await state.set_state(
+        TransferState.waiting_amount
+    )
+
+    await message.answer(
+        "💰 Введите сумму:"
+    )
+
+@dp.message(TransferState.waiting_amount)
+async def transfer_amount(
+    message:types.Message,
+    state:FSMContext
+):
+
+    data=await state.get_data()
+    target=data["target"]
+    amount=float(message.text)
+    sender=message.from_user.id
+    if db.get_balance(sender)<amount:
+        await message.answer(
+            "❌ Недостаточно средств"
+        )
+        return
+
+    db.remove_balance(
+        sender,
+        amount
+    )
+
+    db.add_balance(
+        target,
+        amount
+    )
+
+    await message.answer(
+        f"""
+            ✅ <b>Перевод выполнен</b>
+
+            👤 Получатель:
+            <code>{target}</code>
+
+            💰 Сумма:
+            <b>{amount} USDT</b>
+        """
+    )
+
+    await state.clear()
+
+
+async def check_crypto_payments():
+    invoices = await crypto.get_invoices(
+        status="paid"
+    )
+
+    for inv in invoices:
+        invoice_id=str(inv.invoice_id)
+        data=db.get_invoice(invoice_id)
+
+        if not data:
+            continue
+
+        if data["status"]=="paid":
+            continue
+
+        db.add_balance(
+            data["telegram_id"],
+            float(data["amount"])
+        )
+
+        db.mark_invoice_paid(invoice_id)
+
+
+@dp.message(DepositState.waiting_amount)
+async def process_deposit_amount(
+    message: types.Message,
+    state: FSMContext
+):
+    try:
+        amount = float(
+            message.text.replace(",", ".")
+        )
+    except ValueError:
+        await message.answer(
+            "❌ Введите только число\n\nНапример: 10"
+        )
+        return
+    if amount < 1:
+        await message.answer(
+            "❌ Минимальное пополнение 1 USDT"
+        )
+        return
+    invoice = await crypto.create_invoice(
+        asset="USDT",
+        amount=amount,
+        payload=str(message.from_user.id)
+    )
+    db.save_invoice(
+        invoice_id=str(invoice.invoice_id),
+        telegram_id=message.from_user.id,
+        amount=amount,
+        asset="USDT"
+    )
+    await message.answer(
+        f"""
+            💰 <b>Счёт создан</b>
+            Сумма:
+            <b>{amount:.2f} USDT</b>
+            Оплатить:
+            {invoice.bot_invoice_url}
+
+            ⚠️ Пополняйте только через <b>CryptoBot</b>, сеть <b>TRC20</b>.
+            После оплаты баланс будет автоматически пополнен.
+        """,
+        reply_markup=back_kb()
+    )
+
+    await state.clear()
+
+
 def admin_panel_text(user_id: int) -> str:
     return (
         "🛡️ <b>Панель администратора</b>\n\n"
@@ -1558,6 +1875,7 @@ async def admin_handler(message: types.Message, state: FSMContext) -> None:
         return
 
     await state.clear()
+    log_action(message.from_user.id, message.from_user.username, "ОТКРЫТА АДМИН-ПАНЕЛЬ", chat=message.chat)
     await message.answer(
         admin_panel_text(message.from_user.id),
         reply_markup=admin_panel_kb(),
@@ -1581,7 +1899,6 @@ async def admin_panel_callback(callback: CallbackQuery, state: FSMContext) -> No
     await callback.answer()
 
 
-# --- Удаление отзыва по ID ---
 @dp.callback_query(F.data == "admin_delreview")
 async def admin_delreview_callback(callback: CallbackQuery, state: FSMContext) -> None:
     if not is_admin(callback.from_user.id):
@@ -1622,14 +1939,27 @@ async def admin_delreview_input(message: types.Message, state: FSMContext) -> No
             reply_markup=admin_panel_kb(),
         )
         logger.info(f"Админ {message.from_user.id} удалил отзыв #{review_id}")
+        log_action(
+            message.from_user.id,
+            message.from_user.username,
+            "УДАЛЕНИЕ ОТЗЫВА",
+            details=f"review_id={review_id} результат=успешно",
+            chat=message.chat,
+        )
     else:
         await message.answer(
             f"❌ Отзыв <code>#{review_id}</code> не найден.",
             reply_markup=admin_panel_kb(),
         )
+        log_action(
+            message.from_user.id,
+            message.from_user.username,
+            "УДАЛЕНИЕ ОТЗЫВА",
+            details=f"review_id={review_id} результат=не_найден",
+            chat=message.chat,
+        )
 
 
-# --- Бан пользователя ---
 @dp.callback_query(F.data == "admin_ban")
 async def admin_ban_callback(callback: CallbackQuery, state: FSMContext) -> None:
     if not is_admin(callback.from_user.id):
@@ -1684,9 +2014,15 @@ async def admin_ban_input(message: types.Message, state: FSMContext) -> None:
     logger.info(
         f"Админ {message.from_user.id} забанил target_id={target_id} (причина: {reason})"
     )
+    log_action(
+        message.from_user.id,
+        message.from_user.username,
+        "БАН ПОЛЬЗОВАТЕЛЯ",
+        details=f"цель={label}(id={target_id}) причина='{reason}'",
+        chat=message.chat,
+    )
 
 
-# --- Разбан пользователя ---
 @dp.callback_query(F.data == "admin_unban")
 async def admin_unban_callback(callback: CallbackQuery, state: FSMContext) -> None:
     if not is_admin(callback.from_user.id):
@@ -1732,9 +2068,15 @@ async def admin_unban_input(message: types.Message, state: FSMContext) -> None:
         reply_markup=admin_panel_kb(),
     )
     logger.info(f"Админ {message.from_user.id} разбанил target_id={target_id}")
+    log_action(
+        message.from_user.id,
+        message.from_user.username,
+        "РАЗБАН ПОЛЬЗОВАТЕЛЯ",
+        details=f"цель={label}(id={target_id})",
+        chat=message.chat,
+    )
 
 
-# --- Список мониторируемых каналов ---
 @dp.callback_query(F.data == "admin_channels")
 async def admin_channels_callback(callback: CallbackQuery) -> None:
     if not is_admin(callback.from_user.id):
@@ -1760,9 +2102,6 @@ async def admin_channels_callback(callback: CallbackQuery) -> None:
     await callback.answer()
 
 
-# ---------------------------------------------------------------------------
-# ADMIN (текстовые команды — оставлены для совместимости, работают и в ЛС)
-# ---------------------------------------------------------------------------
 @dp.message(Command("delreview"))
 async def delreview_handler(message: types.Message, command: CommandObject):
     if not is_admin(message.from_user.id):
@@ -1793,6 +2132,13 @@ async def delreview_handler(message: types.Message, command: CommandObject):
     db.delete_review(review["id"])
     await message.answer(
         f"✅ Удалён отзыв №{review_number} пользователя {username}"
+    )
+    log_action(
+        message.from_user.id,
+        message.from_user.username,
+        "УДАЛЕНИЕ ОТЗЫВА (текстовая команда)",
+        details=f"цель={username} номер={review_number} review_id={review['id']}",
+        chat=message.chat,
     )
 
 
@@ -1828,6 +2174,13 @@ async def banuser_handler(message: types.Message, command: CommandObject) -> Non
     logger.info(
         f"Админ {message.from_user.id} забанил target_id={target_id} (причина: {reason})"
     )
+    log_action(
+        message.from_user.id,
+        message.from_user.username,
+        "БАН ПОЛЬЗОВАТЕЛЯ (текстовая команда)",
+        details=f"цель={label}(id={target_id}) причина='{reason}'",
+        chat=message.chat,
+    )
 
 
 @dp.message(Command("unban"))
@@ -1853,6 +2206,13 @@ async def unban_handler(message: types.Message, command: CommandObject) -> None:
     label = display_name(target_id, target_username)
     await message.answer(f"✅ Пользователь{label} разблокирован.")
     logger.info(f"Админ {message.from_user.id} разбанил target_id{target_id}")
+    log_action(
+        message.from_user.id,
+        message.from_user.username,
+        "РАЗБАН ПОЛЬЗОВАТЕЛЯ (текстовая команда)",
+        details=f"цель={label}(id={target_id})",
+        chat=message.chat,
+    )
 
 
 @dp.message(Command("channels"))
@@ -1878,30 +2238,443 @@ async def channels_handler(message: types.Message) -> None:
     await message.answer("\n".join(lines))
 
 
-# ---------------------------------------------------------------------------
-# Запуск бота
-# ---------------------------------------------------------------------------
+# ===========================================================================
+# ====================  WEB API ДЛЯ MINI APP  ==============================
+# ===========================================================================
+# Всё ниже — отдельный HTTP-слой поверх той же базы `db` и того же `bot`,
+# который дёргает фронтенд (nexon-miniapp.html) через fetch(). Работает
+# в том же процессе и на том же event loop'е, что и поллинг бота.
+
+def validate_init_data(init_data: str, bot_token: str, max_age: int = 86400) -> Optional[dict]:
+    """
+    Проверяет подпись Telegram.WebApp.initData (см. документацию Telegram
+    Mini Apps). Возвращает распарсенные поля, если подпись верна и данные
+    не протухли, иначе None. НИКОГДА не доверяем user_id, присланному
+    в теле запроса напрямую — только тому, что подтверждено этой подписью.
+    """
+    if not init_data:
+        return None
+    try:
+        parsed = dict(parse_qsl(init_data, strict_parsing=True))
+    except ValueError:
+        return None
+
+    received_hash = parsed.pop("hash", None)
+    if not received_hash:
+        return None
+
+    data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(parsed.items()))
+    secret_key = hmac.new(b"WebAppData", bot_token.encode(), hashlib.sha256).digest()
+    calc_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+
+    if not hmac.compare_digest(calc_hash, received_hash):
+        return None
+
+    try:
+        auth_date = int(parsed.get("auth_date", "0"))
+    except ValueError:
+        return None
+    if max_age and (datetime.utcnow().timestamp() - auth_date) > max_age:
+        return None
+
+    return parsed
+
+
+def get_webapp_user(request: web.Request) -> Optional[dict]:
+    init_data = request.headers.get("X-Telegram-Init-Data", "")
+    parsed = validate_init_data(init_data, BOT_TOKEN)
+    if parsed is None:
+        return None
+    user_raw = parsed.get("user")
+    if not user_raw:
+        return None
+    try:
+        return json.loads(user_raw)
+    except (TypeError, ValueError):
+        return None
+
+
+def require_auth(handler):
+    async def wrapper(request: web.Request):
+        user = get_webapp_user(request)
+        if user is None:
+            return web.json_response({"error": "unauthorized"}, status=401)
+        request["tg_user"] = user
+        return await handler(request)
+    return wrapper
+
+
+def photo_url(photo_id: str) -> str:
+    """
+    Отзывы могут содержать либо Telegram file_id (фото, отправленное боту
+    в чате/альбоме), либо "web:<filename>" (скриншот, загруженный прямо
+    через мини-апп). Приводим оба варианта к ссылке, которую фронтенд
+    сможет просто вставить в <img src="...">.
+    """
+    if photo_id.startswith("web:"):
+        return f"/uploads/{photo_id[4:]}"
+    return f"/api/photo/{photo_id}"
+
+
+def serialize_review(rev) -> dict:
+    return {
+        "id": get_review_id(rev),
+        "sign": rev["sign"],
+        "description": rev["description"] or "",
+        "created_at": str(rev["created_at"]),
+        "reviewer_username": rev["reviewer_username"] or "",
+        "reviewer_name": rev["reviewer_name"] or "",
+        "photos": [photo_url(p) for p in get_review_photo_ids(rev)],
+    }
+
+
+@web.middleware
+async def cors_middleware(request: web.Request, handler):
+    if request.method == "OPTIONS":
+        resp = web.Response()
+    else:
+        try:
+            resp = await handler(request)
+        except web.HTTPException as exc:
+            resp = exc
+    resp.headers["Access-Control-Allow-Origin"] = WEBAPP_ORIGIN
+    resp.headers["Access-Control-Allow-Headers"] = "Content-Type, X-Telegram-Init-Data"
+    resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return resp
+
+
+async def api_me(request: web.Request) -> web.Response:
+    user = request["tg_user"]
+    db.upsert_user(
+        telegram_id=user["id"],
+        username=user.get("username") or "",
+        first_name=user.get("first_name") or "",
+    )
+    stats = db.get_user_stats(user["id"])
+    return web.json_response({
+        "id": user["id"],
+        "username": user.get("username") or "",
+        "first_name": user.get("first_name") or "",
+        "balance": db.get_balance(user["id"]),
+        "banned": db.is_banned(user["id"]),
+        "score": stats["score"] if stats else None,
+        "total": stats["total"] if stats else 0,
+        "positive": stats["positive"] if stats else 0,
+        "negative": stats["negative"] if stats else 0,
+    })
+
+
+async def api_check(request: web.Request) -> web.Response:
+    q = request.query.get("q", "").strip()
+    if not q:
+        return web.json_response({"error": "empty_query"}, status=400)
+
+    target_id, username = await resolve_target(q)
+    if target_id is None:
+        return web.json_response({"error": "not_found", "query": username}, status=404)
+
+    if db.is_banned(target_id):
+        return web.json_response({"id": target_id, "username": username, "banned": True})
+
+    stats = db.get_user_stats(target_id)
+    if stats is None:
+        return web.json_response({
+            "id": target_id, "username": username, "banned": False, "no_reviews": True,
+        })
+
+    reviews = db.get_user_reviews(target_id, limit=10)
+    return web.json_response({
+        "id": target_id,
+        "username": username,
+        "banned": False,
+        "score": stats["score"],
+        "total": stats["total"],
+        "positive": stats["positive"],
+        "negative": stats["negative"],
+        "reviews": [serialize_review(r) for r in reviews],
+    })
+
+
+async def api_top(request: web.Request) -> web.Response:
+    try:
+        limit = min(max(int(request.query.get("limit", 10)), 1), 50)
+    except ValueError:
+        limit = 10
+    users = db.get_top_users(limit=limit, min_reviews=2)
+    return web.json_response({"users": [dict(u) for u in users]})
+
+
+async def api_stats(request: web.Request) -> web.Response:
+    return web.json_response(db.get_global_stats())
+
+
+async def api_config(request: web.Request) -> web.Response:
+    """
+    Отдаёт мини-аппу параметры, которые реально хранятся/настроены на
+    бэкенде (не зашиты во фронтенде), чтобы страница «Гарант» и лимиты
+    депозита всегда совпадали с тем, что видит пользователь в самом боте.
+    """
+    return web.json_response({
+        "garant_username": GARANT_USERNAME,
+        "min_deposit": 1,
+    })
+
+
+async def api_photo(request: web.Request) -> web.Response:
+    """Проксирует фото из Telegram (по file_id), не светя токен бота фронтенду."""
+    file_id = request.match_info.get("file_id", "")
+    try:
+        tg_file = await bot.get_file(file_id)
+        buf = await bot.download_file(tg_file.file_path)
+    except TelegramAPIError:
+        raise web.HTTPNotFound()
+    return web.Response(
+        body=buf.read(),
+        content_type="image/jpeg",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
+async def api_add_review(request: web.Request) -> web.Response:
+    reviewer = request["tg_user"]
+    reviewer_id = reviewer["id"]
+
+    db.upsert_user(
+        telegram_id=reviewer_id,
+        username=reviewer.get("username") or "",
+        first_name=reviewer.get("first_name") or "",
+    )
+
+    if db.is_banned(reviewer_id):
+        return web.json_response({"error": "banned"}, status=403)
+
+    sign: Optional[str] = None
+    target_raw: Optional[str] = None
+    description = ""
+    saved_files: list[str] = []
+
+    reader = await request.multipart()
+    async for field in reader:
+        if field.name == "sign":
+            sign = (await field.text()).strip()
+        elif field.name == "target":
+            target_raw = (await field.text()).strip()
+        elif field.name == "description":
+            description = (await field.text()).strip()
+        elif field.name == "photos" and field.filename:
+            filename = f"{uuid.uuid4().hex}.jpg"
+            path = UPLOAD_DIR / filename
+            size = 0
+            with open(path, "wb") as f:
+                while True:
+                    chunk = await field.read_chunk(1 << 16)
+                    if not chunk:
+                        break
+                    size += len(chunk)
+                    if size > MAX_PHOTO_BYTES:
+                        f.close()
+                        path.unlink(missing_ok=True)
+                        return web.json_response({"error": "photo_too_large"}, status=413)
+                    f.write(chunk)
+            if size == 0:
+                path.unlink(missing_ok=True)
+            else:
+                saved_files.append(f"web:{filename}")
+
+    if sign not in ("+", "-"):
+        return web.json_response({"error": "bad_sign"}, status=400)
+    if not target_raw:
+        return web.json_response({"error": "no_target"}, status=400)
+    if len(description) < 3:
+        return web.json_response({"error": "description_too_short"}, status=400)
+    if not saved_files:
+        return web.json_response({"error": "no_photos"}, status=400)
+
+    target_id, target_username = await resolve_target(target_raw)
+    if target_id is None:
+        return web.json_response({"error": "target_not_found"}, status=404)
+    if target_id == reviewer_id:
+        return web.json_response({"error": "self_review"}, status=400)
+    if db.has_recent_review(reviewer_id, target_id, hours=0.03):
+        return web.json_response({"error": "rate_limited"}, status=429)
+
+    review_id = db.add_review(
+        target_id=target_id,
+        target_username=target_username,
+        reviewer_id=reviewer_id,
+        reviewer_username=reviewer.get("username") or "",
+        reviewer_name=reviewer.get("first_name") or "",
+        sign=sign,
+        description=description,
+        photo_file_id=",".join(saved_files),
+        chat_id=0,
+        chat_title="Nexon Mini App",
+        message_id=0,
+        source="webapp",
+    )
+    log_action(
+        reviewer_id, reviewer.get("username"), "НОВЫЙ ОТЗЫВ (mini app)",
+        details=f"review_id={review_id} цель=id={target_id} фото={len(saved_files)}",
+    )
+    return web.json_response({"ok": True, "review_id": review_id})
+
+
+async def api_wallet(request: web.Request) -> web.Response:
+    user = request["tg_user"]
+    return web.json_response({"balance": db.get_balance(user["id"])})
+
+
+async def api_deposit(request: web.Request) -> web.Response:
+    user = request["tg_user"]
+    try:
+        body = await request.json()
+        amount = float(body.get("amount", 0))
+    except (ValueError, TypeError, json.JSONDecodeError):
+        return web.json_response({"error": "bad_amount"}, status=400)
+    if amount < 1:
+        return web.json_response({"error": "min_amount"}, status=400)
+
+    invoice = await crypto.create_invoice(asset="USDT", amount=amount, payload=str(user["id"]))
+    db.save_invoice(
+        invoice_id=str(invoice.invoice_id),
+        telegram_id=user["id"],
+        amount=amount,
+        asset="USDT",
+    )
+    return web.json_response({
+        "ok": True,
+        "pay_url": invoice.bot_invoice_url,
+        "invoice_id": str(invoice.invoice_id),
+    })
+
+
+async def api_withdraw(request: web.Request) -> web.Response:
+    user = request["tg_user"]
+    try:
+        body = await request.json()
+        amount = float(body.get("amount", 0))
+        wallet = (body.get("wallet") or "").strip()
+    except (ValueError, TypeError, json.JSONDecodeError):
+        return web.json_response({"error": "bad_request"}, status=400)
+
+    if amount <= 0 or not wallet:
+        return web.json_response({"error": "bad_request"}, status=400)
+    if not is_valid_trc20_address(wallet):
+        return web.json_response({"error": "bad_wallet"}, status=400)
+    if not db.remove_balance(user["id"], amount):
+        return web.json_response({"error": "insufficient_funds"}, status=400)
+
+    for admin_id in ADMIN_IDS:
+        try:
+            await bot.send_message(
+                admin_id,
+                "💸 <b>Заявка на вывод (mini app)</b>\n"
+                f"Пользователь: <code>{user['id']}</code>\n"
+                f"Сумма: <b>{amount:.2f} USDT</b>\n"
+                f"Кошелёк (TRC20): <code>{escape(wallet)}</code>",
+            )
+        except TelegramAPIError:
+            pass
+
+    log_action(
+        user["id"], user.get("username"), "ЗАЯВКА НА ВЫВОД (mini app)",
+        details=f"сумма={amount} кошелёк={wallet}",
+    )
+    return web.json_response({"ok": True})
+
+
+async def api_transfer(request: web.Request) -> web.Response:
+    user = request["tg_user"]
+    try:
+        body = await request.json()
+        target_id = int(body.get("target_id"))
+        amount = float(body.get("amount", 0))
+    except (ValueError, TypeError, json.JSONDecodeError):
+        return web.json_response({"error": "bad_request"}, status=400)
+
+    if amount <= 0:
+        return web.json_response({"error": "bad_request"}, status=400)
+    if target_id == user["id"]:
+        return web.json_response({"error": "self_transfer"}, status=400)
+    if not db.remove_balance(user["id"], amount):
+        return web.json_response({"error": "insufficient_funds"}, status=400)
+
+    db.add_balance(target_id, amount)
+    log_action(
+        user["id"], user.get("username"), "ПЕРЕВОД (mini app)",
+        details=f"получатель={target_id} сумма={amount}",
+    )
+    return web.json_response({"ok": True})
+
+
+def build_web_app() -> web.Application:
+    app = web.Application(client_max_size=MAX_PHOTO_BYTES * 12, middlewares=[cors_middleware])
+
+    app.router.add_route("OPTIONS", "/{tail:.*}", lambda request: web.Response())
+
+    app.router.add_get("/api/me", require_auth(api_me))
+    app.router.add_get("/api/check", api_check)
+    app.router.add_get("/api/top", api_top)
+    app.router.add_get("/api/stats", api_stats)
+    app.router.add_get("/api/config", api_config)
+    app.router.add_get("/api/photo/{file_id}", api_photo)
+    app.router.add_post("/api/review", require_auth(api_add_review))
+    app.router.add_get("/api/wallet", require_auth(api_wallet))
+    app.router.add_post("/api/wallet/deposit", require_auth(api_deposit))
+    app.router.add_post("/api/wallet/withdraw", require_auth(api_withdraw))
+    app.router.add_post("/api/wallet/transfer", require_auth(api_transfer))
+
+    app.router.add_static("/uploads/", UPLOAD_DIR, show_index=False)
+    return app
+
+
+async def run_web_app() -> web.AppRunner:
+    app = build_web_app()
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, API_HOST, API_PORT)
+    await site.start()
+    logger.info(f"🌐 Web API для мини-аппа запущен на {API_HOST}:{API_PORT}")
+    return runner
+
+
+async def crypto_payments_loop() -> None:
+    """Раз в 15 секунд проверяет оплаченные CryptoPay-инвойсы и зачисляет баланс."""
+    while True:
+        try:
+            await check_crypto_payments()
+        except Exception as e:
+            logger.error(f"Ошибка при проверке платежей CryptoPay: {e}")
+        await asyncio.sleep(15)
+
+
 async def on_startup() -> None:
-    """Инициализация при запуске."""
     db.init()
+    await bot.set_chat_menu_button(
+        menu_button=types.MenuButtonWebApp(
+            text="Nexon",
+            web_app=WebAppInfo(url=WEBAPP_URL)
+        )
+    )
+
     await bot.set_my_commands(
         [
             types.BotCommand(command="start", description="🍓 Главное меню"),
-            types.BotCommand(command="rep", description="✍️ Оставить отзыв"),
+            types.BotCommand(command="rep",   description="✍️ Оставить отзыв"),
             types.BotCommand(command="check", description="🔍 Проверить продавца"),
-            types.BotCommand(command="help", description="❓ Как пользоваться"),
+            types.BotCommand(command="help",  description="❓ Как пользоваться"),
         ]
     )
 
-    # Для админов дополнительно показываем /admin в меню команд их личного
-    # чата с ботом (scope BotCommandScopeChat), чтобы панель было легко
-    # открыть одним тапом в личных сообщениях.
     admin_commands = [
-        types.BotCommand(command="start", description="🍓 Главное меню"),
-        types.BotCommand(command="admin", description="🛡️ Админ-панель"),
-        types.BotCommand(command="rep", description="✍️ Оставить отзыв"),
-        types.BotCommand(command="check", description="🔍 Проверить продавца"),
-        types.BotCommand(command="help", description="❓ Как пользоваться"),
+        types.BotCommand(command="start",   description="🍓 Главное меню"),
+        types.BotCommand(command="admin",   description="🛡️ Админ-панель"),
+        types.BotCommand(command="balance", description="💰 Баланс"),
+        types.BotCommand(command="balance", description="🔄 Перевод"),
+        types.BotCommand(command="balance", description="💳 Вывод"),
+        types.BotCommand(command="rep",     description="✍️ Оставить отзыв"),
+        types.BotCommand(command="check",   description="🔍 Проверить продавца"),
+        types.BotCommand(command="help",    description="❓ Как пользоваться"),
     ]
     for admin_id in ADMIN_IDS:
         try:
@@ -1917,13 +2690,21 @@ async def on_startup() -> None:
         f"🍓 Бот @{me.username} запущен! "
         f"Администраторы: {ADMIN_IDS if ADMIN_IDS else 'не назначены'}"
     )
+    logger.info(f"Логи пишутся в папку: {os.path.abspath(LOGS_DIR)}")
 
 
 async def main() -> None:
     db.init()
     dp.startup.register(on_startup)
     logger.info("🍓 Nexon Reputation Bot стартует...")
-    await dp.start_polling(bot)
+
+    web_runner = await run_web_app()
+    asyncio.create_task(crypto_payments_loop())
+
+    try:
+        await dp.start_polling(bot)
+    finally:
+        await web_runner.cleanup()
 
 
 if __name__ == "__main__":

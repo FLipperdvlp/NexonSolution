@@ -1,0 +1,563 @@
+# ===========================================================================
+# REVIEWS + PHOTOS
+# ===========================================================================
+
+
+def photo_url(photo_id: str) -> str:
+
+    if photo_id.startswith("web:"):
+
+        return (
+            f"/uploads/{photo_id[4:]}"
+        )
+
+
+    return (
+        f"/api/photo/{photo_id}"
+    )
+
+
+
+def serialize_review(
+    rev
+):
+
+    return {
+
+        "id":
+            get_review_id(rev),
+
+
+        "sign":
+            rev["sign"],
+
+
+        "description":
+            rev["description"] or "",
+
+
+        "created_at":
+            str(
+                rev["created_at"]
+            ),
+
+
+        "reviewer_username":
+            rev["reviewer_username"]
+            or "",
+
+
+        "reviewer_name":
+            rev["reviewer_name"]
+            or "",
+
+
+        "photos":
+            [
+                photo_url(p)
+                for p in get_review_photo_ids(rev)
+            ]
+
+    }
+
+
+
+
+async def api_photo(
+    request: web.Request
+):
+
+    file_id = request.match_info.get(
+        "file_id",
+        ""
+    )
+
+
+    try:
+
+        tg_file = await bot.get_file(
+            file_id
+        )
+
+
+        buffer = await bot.download_file(
+            tg_file.file_path
+        )
+
+
+    except TelegramAPIError:
+
+        raise web.HTTPNotFound()
+
+
+
+    return web.Response(
+
+        body=buffer.read(),
+
+        content_type="image/jpeg",
+
+        headers={
+
+            "Cache-Control":
+            "public,max-age=86400"
+
+        }
+
+    )
+
+
+
+
+
+async def api_add_review(
+    request: web.Request
+):
+
+    reviewer = request["tg_user"]
+
+    reviewer_id = reviewer["id"]
+
+
+
+    await sync_user(
+        reviewer
+    )
+
+
+
+    if db.is_banned(
+        reviewer_id
+    ):
+
+        return web.json_response(
+
+            {
+                "error":
+                "banned"
+            },
+
+            status=403
+
+        )
+
+
+
+    sign = None
+
+    target_raw = None
+
+    description = ""
+
+    photos = []
+
+
+
+    reader = await request.multipart()
+
+
+
+    async for field in reader:
+
+
+
+        if field.name == "sign":
+
+            sign = (
+                await field.text()
+            ).strip()
+
+
+
+        elif field.name == "target":
+
+            target_raw = (
+                await field.text()
+            ).strip()
+
+
+
+        elif field.name == "description":
+
+            description = (
+                await field.text()
+            ).strip()
+
+
+
+        elif (
+            field.name == "photos"
+            and field.filename
+        ):
+
+
+            filename = (
+                f"{uuid.uuid4().hex}.jpg"
+            )
+
+
+            path = (
+                UPLOAD_DIR /
+                filename
+            )
+
+
+            size = 0
+
+
+            with open(
+                path,
+                "wb"
+            ) as f:
+
+
+                while True:
+
+
+                    chunk = await field.read_chunk(
+                        65536
+                    )
+
+
+                    if not chunk:
+
+                        break
+
+
+
+                    size += len(chunk)
+
+
+
+                    if size > MAX_PHOTO_BYTES:
+
+
+                        path.unlink(
+                            missing_ok=True
+                        )
+
+
+                        return web.json_response(
+
+                            {
+                                "error":
+                                "photo_too_large"
+                            },
+
+                            status=413
+
+                        )
+
+
+
+                    f.write(chunk)
+
+
+
+            if size:
+
+                photos.append(
+                    f"web:{filename}"
+                )
+
+
+
+
+    if sign not in (
+        "+",
+        "-"
+    ):
+
+        return web.json_response(
+            {
+                "error":
+                "bad_sign"
+            },
+            status=400
+        )
+
+
+
+    if not target_raw:
+
+
+        return web.json_response(
+
+            {
+                "error":
+                "no_target"
+            },
+
+            status=400
+
+        )
+
+
+
+    if len(description) < 3:
+
+
+        return web.json_response(
+
+            {
+                "error":
+                "description_short"
+            },
+
+            status=400
+
+        )
+
+
+
+    if not photos:
+
+
+        return web.json_response(
+
+            {
+                "error":
+                "no_photos"
+            },
+
+            status=400
+
+        )
+
+
+
+
+    target_id, target_username = await resolve_target(
+        target_raw
+    )
+
+
+
+    if target_id is None:
+
+
+        return web.json_response(
+
+            {
+                "error":
+                "target_not_found"
+            },
+
+            status=404
+
+        )
+
+
+
+    if target_id == reviewer_id:
+
+
+        return web.json_response(
+
+            {
+                "error":
+                "self_review"
+            },
+
+            status=400
+
+        )
+
+
+
+    if db.has_recent_review(
+        reviewer_id,
+        target_id,
+        hours=0.03
+    ):
+
+
+        return web.json_response(
+
+            {
+                "error":
+                "rate_limit"
+            },
+
+            status=429
+
+        )
+
+
+
+
+    # добавляем цель в БД
+
+    try:
+
+        chat = await bot.get_chat(
+            target_id
+        )
+
+
+        db.upsert_user(
+
+            telegram_id=target_id,
+
+            username=chat.username or "",
+
+            first_name=chat.first_name or ""
+
+        )
+
+
+    except TelegramAPIError:
+
+        pass
+
+
+
+
+    review_id = db.add_review(
+
+        target_id=target_id,
+
+        target_username=target_username,
+
+
+        reviewer_id=reviewer_id,
+
+
+        reviewer_username=
+            reviewer.get("username")
+            or "",
+
+
+        reviewer_name=
+            reviewer.get("first_name")
+            or "",
+
+
+        sign=sign,
+
+
+        description=description,
+
+
+        photo_file_id=
+            ",".join(photos),
+
+
+        chat_id=0,
+
+
+        chat_title=
+            "Nexon Mini App",
+
+
+        message_id=0,
+
+
+        source="webapp"
+
+    )
+
+
+
+    log_action(
+
+        reviewer_id,
+
+        reviewer.get("username"),
+
+        "НОВЫЙ ОТЗЫВ MINI APP",
+
+        details=
+        f"review={review_id} target={target_id}"
+
+    )
+
+
+
+    return web.json_response({
+
+        "ok":
+            True,
+
+
+        "review_id":
+            review_id
+
+    })
+
+
+
+
+
+
+# ===========================================================================
+# TOP USERS
+# ===========================================================================
+
+
+async def api_top(
+    request: web.Request
+):
+
+
+    try:
+
+        limit = int(
+            request.query.get(
+                "limit",
+                10
+            )
+        )
+
+
+    except ValueError:
+
+        limit = 10
+
+
+
+    limit = max(
+        1,
+        min(limit,50)
+    )
+
+
+
+    users = db.get_top_users(
+        limit=limit,
+        min_reviews=2
+    )
+
+
+
+    return web.json_response({
+
+        "users":
+
+            [
+                dict(u)
+                for u in users
+            ]
+
+    })
+
+
+
+
+
+
+# ===========================================================================
+# GLOBAL STATS
+# ===========================================================================
+
+
+async def api_stats(
+    request: web.Request
+):
+
+
+    return web.json_response(
+
+        db.get_global_stats()
+
+    )

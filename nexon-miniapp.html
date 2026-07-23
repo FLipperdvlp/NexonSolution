@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Nexon — репутация продавцов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+/* ============================= TOKENS ============================= */
+:root{
+  --ink:        #130a0d;
+  --ink-2:      #1a1013;
+  --surface:    #1f1418;
+  --surface-hi: #2a1a1f;
+  --line:       rgba(246,236,231,0.08);
+  --line-hi:    rgba(246,236,231,0.16);
+
+  --berry:      #ff3d68;
+  --berry-2:    #ff7a59;
+  --berry-deep: #7a0e2b;
+  --leaf:       #58c47e;
+
+  --score-good: #4fd07a;
+  --score-ok:   #e8c14a;
+  --score-warn: #f0904a;
+  --score-bad:  #ef4f60;
+
+  --cream:      #f8ede7;
+  --muted:      #a8898f;
+  --muted-2:    #6f565b;
+
+  --r-lg: 26px;
+  --r-md: 18px;
+  --r-sm: 12px;
+
+  --font-display: "Fraunces", serif;
+  --font-body: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family:var(--font-body);
+  background:
+    radial-gradient(circle at 18% 8%, rgba(255,61,104,0.10), transparent 42%),
+    radial-gradient(circle at 85% 92%, rgba(255,122,89,0.08), transparent 40%),
+    var(--ink);
+  color:var(--cream);
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  min-height:100%;
+  padding:32px 16px;
+}
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+}
+:focus-visible{ outline:2px solid var(--berry-2); outline-offset:2px; border-radius:6px; }
+
+/* ============================= PHONE FRAME ============================= */
+.device{
+  position:relative;
+  width:394px;
+  max-width:100%;
+  height:832px;
+  max-height:92vh;
+  background:var(--ink-2);
+  border-radius:44px;
+  border:1px solid rgba(246,236,231,0.10);
+  box-shadow:
+    0 40px 90px -30px rgba(0,0,0,0.7),
+    0 0 0 8px rgba(0,0,0,0.35);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.device::before{
+  content:"";
+  position:absolute; inset:0;
+  pointer-events:none;
+  opacity:0.5;
+  background-image:
+    radial-gradient(rgba(255,61,104,0.14) 1px, transparent 1.4px),
+    radial-gradient(rgba(255,61,104,0.09) 1px, transparent 1.4px);
+  background-size: 26px 26px, 41px 41px;
+  background-position: 0 0, 13px 20px;
+  mix-blend-mode:screen;
+  z-index:0;
+}
+
+.grip{ flex:0 0 auto; display:flex; justify-content:center; padding:10px 0 4px; }
+.grip span{ width:36px; height:4px; border-radius:99px; background:rgba(246,236,231,0.22); }
+
+/* ============================= HEADER ============================= */
+.app-header{ position:relative; z-index:2; flex:0 0 auto; display:flex; align-items:center; gap:10px; padding:6px 18px 14px; }
+.app-header .back{
+  width:34px; height:34px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--surface); border:1px solid var(--line);
+  color:var(--cream); cursor:pointer; flex:0 0 auto;
+  visibility:hidden;
+}
+.app-header .back.show{ visibility:visible; }
+.app-header .back svg{ width:16px; height:16px; }
+.app-header h1{ font-family:var(--font-display); font-weight:600; font-size:19px; letter-spacing:-0.01em; margin:0; flex:1 1 auto; }
+.app-header .help{
+  width:34px; height:34px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--surface); border:1px solid var(--line);
+  color:var(--muted); font-family:var(--font-mono); font-size:13px;
+  cursor:pointer; flex:0 0 auto;
+}
+
+/* ============================= CONTENT ============================= */
+.app-body{ position:relative; z-index:1; flex:1 1 auto; overflow-y:auto; overflow-x:hidden; padding:2px 18px 110px; scrollbar-width:none; }
+.app-body::-webkit-scrollbar{ display:none; }
+
+.screen{ display:none; animation:rise 0.32s ease; }
+.screen.active{ display:block; }
+@keyframes rise{ from{ opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+/* ============================= TYPE HELPERS ============================= */
+.eyebrow{ font-family:var(--font-mono); font-size:11px; letter-spacing:0.10em; text-transform:uppercase; color:var(--muted); margin:0 0 6px; }
+h2.section-title{ font-family:var(--font-display); font-weight:600; font-size:16px; margin:26px 0 12px; color:var(--cream); }
+.section-title.first{ margin-top:6px; }
+p.hint{ font-size:12.5px; color:var(--muted); line-height:1.5; margin:6px 0 0; }
+
+/* ============================= CARD ============================= */
+.card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); padding:18px; }
+.card + .card{ margin-top:12px; }
+
+/* ============================= HERO (home) ============================= */
+.hero{
+  border-radius:var(--r-lg); padding:22px 20px 20px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255,122,89,0.35), transparent 55%),
+    linear-gradient(160deg, var(--berry-deep) 0%, #3a0d1b 55%, var(--surface) 100%);
+  border:1px solid rgba(255,61,104,0.25);
+  position:relative; overflow:hidden;
+}
+.hero-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.hero-user{ display:flex; align-items:center; gap:10px; }
+.avatar{
+  width:44px; height:44px; border-radius:50%;
+  background:linear-gradient(145deg, var(--berry), var(--berry-2));
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-weight:700; font-size:17px;
+  color:#2a0812; flex:0 0 auto;
+}
+.hero-user .name{ font-weight:700; font-size:14.5px; }
+.hero-user .sub{ font-size:11.5px; color:rgba(248,237,231,0.65); font-family:var(--font-mono); }
+.balance-chip{
+  font-family:var(--font-mono); font-size:12.5px; font-weight:500;
+  background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14);
+  padding:7px 12px; border-radius:99px; display:flex; align-items:center; gap:6px;
+  cursor:pointer; white-space:nowrap;
+}
+
+.hero-score{ margin-top:20px; }
+.hero-score .big{ font-family:var(--font-display); font-weight:700; font-size:44px; line-height:1; letter-spacing:-0.02em; }
+.hero-score .big small{ font-size:18px; font-weight:600; opacity:0.7; }
+.hero-score .level{ font-size:13px; margin-top:4px; color:rgba(248,237,231,0.75); }
+
+/* ============================= TRUST METER (signature) ============================= */
+.meter{ display:flex; gap:4px; margin-top:14px; }
+.meter .seed{ flex:1 1 0; height:9px; border-radius:5px 5px 5px 2px; background:rgba(255,255,255,0.10); transform:rotate(-3deg); }
+.meter .seed.on{ box-shadow:0 0 10px -2px currentColor; }
+.meter.sm{ gap:3px; margin-top:8px; }
+.meter.sm .seed{ height:6px; border-radius:4px 4px 4px 1px; }
+
+.score-good{ color:var(--score-good); }
+.score-ok{ color:var(--score-ok); }
+.score-warn{ color:var(--score-warn); }
+.score-bad{ color:var(--score-bad); }
+
+/* ============================= GRID TILES ============================= */
+.tiles{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+.tile{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md);
+  padding:15px 14px; cursor:pointer; text-align:left;
+  display:flex; flex-direction:column; gap:22px;
+  transition:border-color .15s ease, transform .15s ease;
+}
+.tile:active{ transform:scale(0.97); }
+.tile:hover{ border-color:var(--line-hi); }
+.tile .ic{ width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+.tile .label{ font-size:13.5px; font-weight:700; }
+.tile .desc{ font-size:11px; color:var(--muted); margin-top:2px; }
+.tile.wide{ grid-column:1 / -1; flex-direction:row; align-items:center; gap:12px; }
+.tile.wide .ic{ flex:0 0 auto; }
+
+.ic-pink{ background:rgba(255,61,104,0.16); color:var(--berry-2); }
+.ic-green{ background:rgba(79,208,122,0.16); color:var(--score-good); }
+.ic-gold{ background:rgba(232,193,74,0.16); color:var(--score-ok); }
+.ic-blue{ background:rgba(120,170,255,0.16); color:#8fb2ff; }
+
+/* ============================= ACTIVITY LIST ============================= */
+.activity{ display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+.act-row{
+  display:flex; align-items:center; gap:12px;
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md);
+  padding:12px 14px;
+}
+.act-row .sign{ width:30px; height:30px; border-radius:9px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; font-size:14px; }
+.act-row .sign.pos{ background:rgba(79,208,122,0.16); color:var(--score-good); }
+.act-row .sign.neg{ background:rgba(239,79,96,0.16); color:var(--score-bad); }
+.act-row .body{ flex:1 1 auto; min-width:0; }
+.act-row .title{ font-size:13px; font-weight:600; }
+.act-row .desc{ font-size:11.5px; color:var(--muted); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.act-row .when{ font-family:var(--font-mono); font-size:10.5px; color:var(--muted-2); flex:0 0 auto; }
+
+/* ============================= SEARCH / INPUTS ============================= */
+.search-bar{ display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md); padding:12px 14px; }
+.search-bar svg{ flex:0 0 auto; color:var(--muted); }
+.search-bar input{ border:none; background:none; outline:none; color:var(--cream); font-family:var(--font-body); font-size:14.5px; flex:1 1 auto; min-width:0; }
+.search-bar input::placeholder{ color:var(--muted-2); }
+
+.field{ margin-top:14px; }
+.field label{ display:block; font-size:11.5px; color:var(--muted); margin-bottom:7px; font-family:var(--font-mono); letter-spacing:0.03em; }
+.field input, .field textarea{
+  width:100%; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-sm);
+  padding:12px 13px; color:var(--cream); font-family:var(--font-body); font-size:14px; outline:none;
+  transition:border-color .15s ease;
+}
+.field input:focus, .field textarea:focus{ border-color:var(--berry); }
+.field textarea{ resize:none; min-height:90px; line-height:1.5; }
+.field .note{ font-size:11px; color:var(--muted-2); margin-top:6px; }
+
+/* ============================= BUTTONS ============================= */
+.btn{
+  appearance:none; border:none; cursor:pointer;
+  font-family:var(--font-body); font-weight:700; font-size:14px;
+  border-radius:14px; padding:14px 18px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  width:100%; transition:transform .12s ease, opacity .12s ease;
+}
+.btn:active{ transform:scale(0.98); }
+.btn-primary{ background:linear-gradient(135deg, var(--berry), var(--berry-2)); color:#2a0812; }
+.btn-ghost{ background:var(--surface); color:var(--cream); border:1px solid var(--line-hi); }
+.btn-outline{ background:transparent; color:var(--berry-2); border:1px solid rgba(255,61,104,0.4); }
+.btn[disabled]{ opacity:0.4; pointer-events:none; }
+.btn-row{ display:flex; gap:10px; margin-top:16px; }
+.btn-row .btn{ flex:1 1 0; }
+
+/* ============================= PILL TOGGLE (sign) ============================= */
+.pill-toggle{ display:flex; gap:10px; margin-top:14px; }
+.pill{ flex:1 1 0; border:1px solid var(--line); background:var(--surface); border-radius:16px; padding:18px 10px; text-align:center; cursor:pointer; }
+.pill .glyph{ font-size:22px; margin-bottom:6px; }
+.pill .txt{ font-size:12.5px; font-weight:700; }
+.pill.pos.active{ border-color:var(--score-good); background:rgba(79,208,122,0.10); }
+.pill.neg.active{ border-color:var(--score-bad); background:rgba(239,79,96,0.10); }
+
+/* ============================= STEPPER ============================= */
+.stepper{ display:flex; align-items:center; gap:6px; margin:4px 0 4px; }
+.stepper .dot{ flex:1 1 0; height:4px; border-radius:99px; background:var(--line-hi); }
+.stepper .dot.done{ background:linear-gradient(90deg, var(--berry), var(--berry-2)); }
+.step-label{ font-family:var(--font-mono); font-size:11px; color:var(--muted); margin:10px 0 2px; }
+
+/* ============================= UPLOAD ============================= */
+.dropzone{
+  margin-top:14px; border:1.5px dashed var(--line-hi); border-radius:var(--r-md);
+  padding:26px 14px; text-align:center; cursor:pointer;
+  color:var(--muted); background:rgba(255,255,255,0.02);
+}
+.dropzone .ic{ font-size:22px; margin-bottom:8px; }
+.dropzone .t1{ font-size:13px; font-weight:700; color:var(--cream); }
+.dropzone .t2{ font-size:11px; margin-top:3px; }
+.shots{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+.shot{
+  width:64px; height:64px; border-radius:12px; position:relative; overflow:hidden;
+  background:
+    repeating-linear-gradient(135deg, rgba(255,61,104,0.28) 0 8px, rgba(255,122,89,0.20) 8px 16px);
+  background-size:cover; background-position:center;
+  border:1px solid var(--line);
+}
+.shot .rm{
+  position:absolute; top:3px; right:3px; width:18px; height:18px; border-radius:50%;
+  background:rgba(19,10,13,0.75); color:#fff; font-size:11px; display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+}
+
+/* ============================= RESULT CARD (check) ============================= */
+.result-card{ margin-top:16px; }
+.result-head{ display:flex; align-items:center; gap:12px; }
+.result-head .name{ font-family:var(--font-display); font-weight:600; font-size:17px; }
+.result-head .stats{ font-size:11.5px; color:var(--muted); margin-top:2px; }
+
+.review-item{ border-top:1px solid var(--line); padding:14px 0; }
+.review-item:first-of-type{ border-top:none; padding-top:16px; }
+.review-item .top{ display:flex; align-items:center; gap:8px; }
+.review-item .tag{ font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:99px; }
+.tag.pos{ background:rgba(79,208,122,0.16); color:var(--score-good); }
+.tag.neg{ background:rgba(239,79,96,0.16); color:var(--score-bad); }
+.review-item .date{ font-family:var(--font-mono); font-size:10.5px; color:var(--muted-2); margin-left:auto; }
+.review-item .desc{ font-size:12.5px; color:var(--muted); line-height:1.55; margin-top:8px; border-left:2px solid var(--line-hi); padding-left:10px; }
+.review-item .shots{ margin-top:10px; }
+.review-item .shot{ width:48px; height:48px; border-radius:9px; }
+
+/* ============================= LEADERBOARD ============================= */
+.lb-row{
+  display:flex; align-items:center; gap:12px;
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md);
+  padding:12px 14px; margin-top:10px;
+}
+.lb-rank{
+  width:30px; height:30px; border-radius:9px; flex:0 0 auto;
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-mono); font-weight:600; font-size:12.5px;
+  background:rgba(255,255,255,0.05); color:var(--muted);
+}
+.lb-rank.gold{ background:rgba(232,193,74,0.18); color:#f0d675; }
+.lb-rank.silver{ background:rgba(200,200,210,0.16); color:#d9d9e2; }
+.lb-rank.bronze{ background:rgba(210,140,90,0.18); color:#e0a677; }
+.lb-body{ flex:1 1 auto; min-width:0; }
+.lb-name{ font-size:13.5px; font-weight:700; }
+.lb-sub{ font-size:11px; color:var(--muted); margin-top:2px; }
+
+/* ============================= WALLET ============================= */
+.wallet-hero{
+  border-radius:var(--r-lg); padding:22px 20px;
+  background:linear-gradient(155deg, #241016 0%, #3a0d1b 60%, var(--berry-deep) 130%);
+  border:1px solid rgba(255,61,104,0.22);
+}
+.wallet-hero .lbl{ font-family:var(--font-mono); font-size:11px; color:rgba(248,237,231,0.6); letter-spacing:0.06em; text-transform:uppercase; }
+.wallet-hero .amt{ font-family:var(--font-display); font-weight:700; font-size:38px; margin-top:8px; }
+.wallet-hero .amt small{ font-size:16px; font-weight:600; opacity:0.7; }
+.wallet-actions{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:16px; }
+.wallet-actions .wbtn{ background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); border-radius:14px; padding:12px 6px; text-align:center; cursor:pointer; }
+.wallet-actions .wbtn .ic{ font-size:16px; }
+.wallet-actions .wbtn .t{ font-size:11px; font-weight:700; margin-top:4px; }
+
+.tx-row{ display:flex; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--line); }
+.tx-row:first-of-type{ border-top:none; }
+.tx-ic{ width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:14px; flex:0 0 auto; }
+.tx-row .body{ flex:1 1 auto; min-width:0; }
+.tx-row .title{ font-size:13px; font-weight:600; }
+.tx-row .when{ font-family:var(--font-mono); font-size:10.5px; color:var(--muted-2); margin-top:2px; }
+.tx-amt{ font-family:var(--font-mono); font-size:13px; font-weight:600; flex:0 0 auto; }
+.tx-amt.pos{ color:var(--score-good); }
+.tx-amt.neg{ color:var(--score-bad); }
+
+.invoice-box{ margin-top:16px; background:var(--surface); border:1px dashed var(--line-hi); border-radius:var(--r-md); padding:16px; text-align:center; }
+.invoice-box .amt{ font-family:var(--font-mono); font-size:15px; font-weight:600; }
+.invoice-box .note{ font-size:11px; color:var(--muted); margin-top:6px; }
+
+/* ============================= GARANT ============================= */
+.garant-card{ display:flex; gap:14px; align-items:flex-start; }
+.garant-card .ic{ font-size:26px; }
+.garant-card .t1{ font-weight:700; font-size:14.5px; }
+.garant-card .t2{ font-size:12px; color:var(--muted); margin-top:4px; line-height:1.5; }
+.badge-soon{ font-family:var(--font-mono); font-size:9.5px; letter-spacing:0.05em; text-transform:uppercase; padding:3px 8px; border-radius:99px; background:rgba(255,255,255,0.08); color:var(--muted); margin-left:8px; }
+
+/* ============================= EMPTY STATE ============================= */
+.empty{ text-align:center; padding:46px 14px; color:var(--muted); }
+.empty .ic{ font-size:30px; margin-bottom:10px; }
+.empty .t1{ font-weight:700; color:var(--cream); font-size:14px; }
+.empty .t2{ font-size:12px; margin-top:6px; line-height:1.5; }
+
+/* ============================= TOAST ============================= */
+.toast{
+  position:absolute; left:50%; bottom:104px; transform:translate(-50%, 12px);
+  background:var(--cream); color:var(--ink); font-size:13px; font-weight:700;
+  padding:12px 18px; border-radius:14px; opacity:0; pointer-events:none;
+  transition:opacity .22s ease, transform .22s ease; z-index:20;
+  display:flex; align-items:center; gap:8px; max-width:88%; text-align:center;
+  box-shadow:0 14px 30px -12px rgba(0,0,0,0.5);
+}
+.toast.show{ opacity:1; transform:translate(-50%, 0); }
+
+/* ============================= TAB BAR ============================= */
+.tabbar{
+  position:absolute; left:0; right:0; bottom:0; z-index:5;
+  display:flex; align-items:center; justify-content:space-around;
+  padding:10px 10px calc(14px + env(safe-area-inset-bottom, 0px));
+  background:rgba(26,16,19,0.86);
+  backdrop-filter:blur(18px);
+  border-top:1px solid var(--line);
+}
+.tab{ display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none; color:var(--muted-2); cursor:pointer; font-family:var(--font-body); font-size:9.5px; font-weight:700; padding:4px 6px; }
+.tab svg{ width:20px; height:20px; }
+.tab.active{ color:var(--berry-2); }
+.tab-fab{
+  width:52px; height:52px; border-radius:50%; margin-top:-30px;
+  background:linear-gradient(135deg, var(--berry), var(--berry-2));
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 10px 24px -8px rgba(255,61,104,0.6);
+  border:4px solid var(--ink-2);
+  color:#2a0812; cursor:pointer; flex:0 0 auto;
+}
+.tab-fab svg{ width:22px; height:22px; }
+
+/* ============================= MISC ============================= */
+.row-between{ display:flex; align-items:center; justify-content:space-between; }
+.muted{ color:var(--muted); }
+.mono{ font-family:var(--font-mono); }
+.spin{ animation:spin 0.9s linear infinite; display:inline-block; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="device" id="device">
+
+  <div class="grip"><span></span></div>
+
+  <header class="app-header">
+    <button class="back" id="backBtn" aria-label="Назад">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <h1 id="headerTitle">Nexon</h1>
+    <button class="help" id="helpBtn" aria-label="Помощь">?</button>
+  </header>
+
+  <div class="app-body" id="appBody">
+
+    <!-- ===================== HOME ===================== -->
+    <section class="screen active" id="screen-home" data-tab="home">
+      <div class="hero">
+        <div class="hero-top">
+          <div class="hero-user">
+            <div class="avatar" id="heroAvatar">?</div>
+            <div>
+              <div class="name" id="heroName">Загрузка…</div>
+              <div class="sub" id="heroUsername">—</div>
+            </div>
+          </div>
+          <div class="balance-chip" data-nav="wallet" id="balanceChip">💳 —</div>
+        </div>
+
+        <div class="hero-score">
+          <div class="big score-good" id="heroScoreBig">—</div>
+          <div class="level" id="heroLevel">Загружаем рейтинг…</div>
+          <div class="meter" id="homeMeter"></div>
+        </div>
+      </div>
+
+      <h2 class="section-title">Быстрые действия</h2>
+      <div class="tiles">
+        <button class="tile" data-nav="check">
+          <div class="ic ic-pink">🔍</div>
+          <div><div class="label">Проверить продавца</div><div class="desc">Рейтинг и отзывы</div></div>
+        </button>
+        <button class="tile" data-nav="review">
+          <div class="ic ic-green">✍️</div>
+          <div><div class="label">Оставить отзыв</div><div class="desc">По сделке со скрином</div></div>
+        </button>
+        <button class="tile" data-nav="top">
+          <div class="ic ic-gold">📊</div>
+          <div><div class="label">Топ продавцов</div><div class="desc">Рейтинг недели</div></div>
+        </button>
+        <button class="tile" data-nav="wallet">
+          <div class="ic ic-blue">💳</div>
+          <div><div class="label">Кошелёк</div><div class="desc" id="walletTileDesc">—</div></div>
+        </button>
+        <button class="tile wide" data-nav="garant">
+          <div class="ic ic-pink">🛡️</div>
+          <div><div class="label">Гарант сделок</div><div class="desc">Живой гарант или автодеп</div></div>
+        </button>
+      </div>
+
+      <h2 class="section-title">Отзывы о вас</h2>
+      <div class="activity" id="homeActivity">
+        <div class="empty"><div class="ic">⏳</div><div class="t1">Загрузка…</div></div>
+      </div>
+    </section>
+
+    <!-- ===================== CHECK SELLER ===================== -->
+    <section class="screen" id="screen-check" data-tab="check">
+      <p class="eyebrow first">Проверка продавца</p>
+      <div class="search-bar">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="checkInput" placeholder="@username или Telegram ID">
+      </div>
+      <p class="hint">Если продавец не находится — попроси его один раз написать /start боту.</p>
+      <button class="btn btn-primary" style="margin-top:14px" id="checkBtn">Проверить</button>
+
+      <div id="checkResult"></div>
+    </section>
+
+    <!-- ===================== LEAVE REVIEW ===================== -->
+    <section class="screen" id="screen-review" data-tab="review">
+      <div class="stepper">
+        <div class="dot" id="dot1"></div>
+        <div class="dot" id="dot2"></div>
+        <div class="dot" id="dot3"></div>
+      </div>
+      <p class="step-label" id="stepLabel">Шаг 1 из 3 — тип отзыва</p>
+
+      <!-- step 1 -->
+      <div id="revStep1">
+        <h2 class="section-title first">Какой это был опыт?</h2>
+        <div class="pill-toggle">
+          <div class="pill pos" id="pillPos" data-sign="+">
+            <div class="glyph">✅</div>
+            <div class="txt">Положительный</div>
+          </div>
+          <div class="pill neg" id="pillNeg" data-sign="-">
+            <div class="glyph">❌</div>
+            <div class="txt">Отрицательный</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:22px" id="toStep2" disabled>Продолжить</button>
+      </div>
+
+      <!-- step 2 -->
+      <div id="revStep2" style="display:none">
+        <h2 class="section-title first">Кто продавец?</h2>
+        <div class="field">
+          <label>Username или Telegram ID</label>
+          <input id="revTarget" placeholder="@username / 123456789">
+        </div>
+        <p class="hint">Продавец должен хотя бы раз писать боту — иначе бот не сможет его найти.</p>
+        <div class="btn-row">
+          <button class="btn btn-ghost" id="back2to1">Назад</button>
+          <button class="btn btn-primary" id="toStep3">Продолжить</button>
+        </div>
+      </div>
+
+      <!-- step 3 -->
+      <div id="revStep3" style="display:none">
+        <h2 class="section-title first">Расскажи о сделке</h2>
+        <div class="field">
+          <label>Описание сделки</label>
+          <textarea id="revDesc" placeholder="Что покупал(а), когда, впечатления от сделки…"></textarea>
+          <div class="note">Минимум 3 символа</div>
+        </div>
+        <input type="file" id="photoInput" accept="image/*" multiple style="display:none">
+        <div class="dropzone" id="dropzone">
+          <div class="ic">📸</div>
+          <div class="t1">Прикрепи скриншот сделки</div>
+          <div class="t2">Один или несколько, обязательно</div>
+        </div>
+        <div class="shots" id="shotsWrap"></div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" id="back3to2">Назад</button>
+          <button class="btn btn-primary" id="submitReview">Сохранить отзыв</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TOP SELLERS ===================== -->
+    <section class="screen" id="screen-top" data-tab="top">
+      <p class="eyebrow first">Рейтинг</p>
+      <h2 class="section-title" style="margin-top:0">Топ продавцов клубники</h2>
+      <div id="lbList">
+        <div class="empty"><div class="ic">⏳</div><div class="t1">Загрузка…</div></div>
+      </div>
+    </section>
+
+    <!-- ===================== WALLET ===================== -->
+    <section class="screen" id="screen-wallet" data-tab="wallet">
+      <div class="wallet-hero">
+        <div class="lbl">Баланс</div>
+        <div class="amt" id="walletBalance">— <small>USDT</small></div>
+        <div class="wallet-actions">
+          <div class="wbtn" data-nav="deposit"><div class="ic">💰</div><div class="t">Пополнить</div></div>
+          <div class="wbtn" data-nav="withdraw"><div class="ic">💸</div><div class="t">Вывести</div></div>
+          <div class="wbtn" data-nav="transfer"><div class="ic">🔄</div><div class="t">Передать</div></div>
+        </div>
+      </div>
+      <h2 class="section-title">История</h2>
+      <div class="card" id="txList" style="padding:6px 16px;"></div>
+    </section>
+
+    <!-- ===================== DEPOSIT ===================== -->
+    <section class="screen" id="screen-deposit">
+      <p class="eyebrow first">Пополнение</p>
+      <h2 class="section-title" style="margin-top:0">Сколько пополняем?</h2>
+      <p class="hint" style="margin-top:0">Пополнение — только через <b>CryptoBot</b>, USDT в сети <b>TRC20</b>.</p>
+      <div class="field" style="margin-top:14px">
+        <label>Сумма, USDT</label>
+        <input id="depAmount" placeholder="10" inputmode="decimal">
+        <div class="note">Минимум — 1 USDT</div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:16px" id="depCreate">Создать счёт</button>
+      <div class="invoice-box" id="invoiceBox" style="display:none">
+        <div class="amt" id="invoiceAmt">10.00 USDT</div>
+        <div class="note">Счёт создан через CryptoBot. Оплачивайте в сети TRC20 — после оплаты баланс пополнится автоматически.</div>
+        <button class="btn btn-primary" style="margin-top:14px" id="invoicePayBtn">Оплатить</button>
+      </div>
+    </section>
+
+    <!-- ===================== WITHDRAW ===================== -->
+    <section class="screen" id="screen-withdraw">
+      <p class="eyebrow first">Вывод средств</p>
+      <div class="card" style="margin-top:0">
+        <div class="row-between">
+          <span class="muted" style="font-size:12.5px">Доступно</span>
+          <span class="mono" style="font-weight:600" id="wdBalance">— USDT</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Сумма вывода</label>
+        <input id="wdAmount" placeholder="0.00" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label>USDT-кошелёк — только сеть TRC20</label>
+        <input id="wdWallet" placeholder="T… (адрес TRON, 34 символа)">
+        <div class="note">Адрес начинается с «T» и содержит 34 символа. Другие сети (TON, ERC20 и т.д.) не принимаются.</div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:16px" id="wdSubmit">Создать заявку</button>
+      <p class="hint">Заявку обрабатывает администратор вручную.</p>
+    </section>
+
+    <!-- ===================== TRANSFER ===================== -->
+    <section class="screen" id="screen-transfer">
+      <p class="eyebrow first">Перевод пользователю</p>
+      <div class="field" style="margin-top:0">
+        <label>Telegram ID получателя</label>
+        <input id="trUser" placeholder="123456789">
+      </div>
+      <div class="field">
+        <label>Сумма, USDT</label>
+        <input id="trAmount" placeholder="0.00" inputmode="decimal">
+      </div>
+      <button class="btn btn-primary" style="margin-top:16px" id="trSubmit">Перевести</button>
+    </section>
+
+    <!-- ===================== GARANT ===================== -->
+    <section class="screen" id="screen-garant">
+      <p class="eyebrow first">Гарант сделок</p>
+      <h2 class="section-title" style="margin-top:0">Как хочешь провести сделку?</h2>
+      <div class="card garant-card" data-nav="garant-live" style="cursor:pointer">
+        <div class="ic">🧑‍💼</div>
+        <div>
+          <div class="t1">Живой гарант</div>
+          <div class="t2">Реальный человек сопровождает сделку между покупателем и продавцом от начала до конца.</div>
+        </div>
+      </div>
+      <div class="card garant-card">
+        <div class="ic">💰</div>
+        <div>
+          <div class="t1">Деп <span class="badge-soon">Скоро</span></div>
+          <div class="t2">Автоматический депозит-гарант: средства блокируются в боте до подтверждения обеими сторонами.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== GARANT LIVE ===================== -->
+    <section class="screen" id="screen-garant-live">
+      <p class="eyebrow first">Живой гарант</p>
+      <div class="card" style="text-align:center; padding-top:26px;">
+        <div class="avatar" style="width:60px;height:60px;font-size:22px;margin:0 auto 14px;" id="garantAvatar">?</div>
+        <div style="font-weight:700; font-size:16px;" id="garantUsername">Загрузка…</div>
+        <p class="hint" style="margin-top:10px;">Обращайся к гаранту для проведения безопасной сделки между покупателем и продавцом.</p>
+        <button class="btn btn-primary" style="margin-top:16px" id="garantWriteBtn">Написать гаранту</button>
+      </div>
+    </section>
+
+    <!-- ===================== HELP ===================== -->
+    <section class="screen" id="screen-help">
+      <p class="eyebrow first">Правила и помощь</p>
+      <div class="card">
+        <div class="t1" style="font-weight:700; margin-bottom:8px;">✍️ Как оставить отзыв</div>
+        <p class="hint" style="margin:0;">Кнопка «Оставить отзыв» на главной — мастер сам спросит тип отзыва, продавца, описание и скриншоты по шагам.</p>
+      </div>
+      <div class="card">
+        <div class="t1" style="font-weight:700; margin-bottom:8px;">⚠️ Правила</div>
+        <p class="hint" style="margin:0; line-height:1.7;">
+          📸 Скриншот сделки обязателен<br>
+          📝 Описание — минимум 3 символа<br>
+          🚫 Нельзя оставлять отзыв самому себе<br>
+          ⏰ Один отзыв об одном продавце — раз в сутки
+        </p>
+      </div>
+      <div class="card">
+        <div class="t1" style="font-weight:700; margin-bottom:8px;">🎨 Уровни доверия</div>
+        <p class="hint" style="margin:0; line-height:1.9;">
+          🟢 Проверенный — 80–100%<br>
+          🟡 Надёжный — 40–79%<br>
+          🟠 Сомнительный — −20–39%<br>
+          🔴 Мошенник — ниже −20%
+        </p>
+      </div>
+    </section>
+
+  </div>
+
+  <nav class="tabbar">
+    <button class="tab active" data-nav="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+      Главная
+    </button>
+    <button class="tab" data-nav="check">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      Проверка
+    </button>
+    <div class="tab-fab" data-nav="review">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    </div>
+    <button class="tab" data-nav="top">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+      Топ
+    </button>
+    <button class="tab" data-nav="wallet">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 14h2"/></svg>
+      Кошелёк
+    </button>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ============================================================
+   КОНФИГУРАЦИЯ
+   ============================================================ */
+// !!! ОБЯЗАТЕЛЬНО замените на реальный публичный HTTPS-адрес,
+// на котором крутится web-API из main.py (см. API_HOST/API_PORT
+// там же — обычно это адрес сервера бота за reverse-proxy с SSL).
+// Домен здесь должен совпадать с WEBAPP_ORIGIN на бэкенде.
+const API_BASE = "https://api.your-domain.com";
+
+const tg = window.Telegram ? window.Telegram.WebApp : null;
+if (tg) {
+  tg.ready();
+  tg.expand();
+}
+
+const ERROR_MESSAGES = {
+  unauthorized: "Не удалось подтвердить, что это вы — открой мини-апп через кнопку в боте.",
+  empty_query: "Введите @username или ID.",
+  not_found: "Продавец не найден.",
+  banned: "Аккаунт заблокирован.",
+  bad_sign: "Выберите тип отзыва.",
+  no_target: "Укажите продавца.",
+  description_too_short: "Опишите сделку подробнее (минимум 3 символа).",
+  no_photos: "Прикрепите хотя бы один скриншот.",
+  target_not_found: "Продавец не найден.",
+  self_review: "Нельзя оставить отзыв самому себе.",
+  rate_limited: "Отзыв об этом продавце уже оставлялся недавно.",
+  bad_amount: "Некорректная сумма.",
+  min_amount: "Минимум — 1 USDT.",
+  bad_request: "Проверьте введённые данные.",
+  insufficient_funds: "Недостаточно средств.",
+  self_transfer: "Нельзя перевести самому себе.",
+  photo_too_large: "Файл слишком большой (максимум 8 МБ).",
+  bad_wallet: "Это не похоже на адрес TRC20 (должен начинаться с «T», 34 символа).",
+};
+
+async function api(path, options = {}) {
+  const headers = Object.assign({}, options.headers, {
+    "X-Telegram-Init-Data": tg ? tg.initData : "",
+  });
+  if (options.body && !(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
+  const res = await fetch(API_BASE + path, { ...options, headers });
+  let data = null;
+  try { data = await res.json(); } catch (e) { /* пустой ответ, например photo */ }
+  if (!res.ok) {
+    const code = data && data.error;
+    const err = new Error(ERROR_MESSAGES[code] || "Что-то пошло не так, попробуйте позже.");
+    err.code = code;
+    throw err;
+  }
+  return data;
+}
+
+function photoSrc(p) {
+  return p.startsWith("http") ? p : API_BASE + p;
+}
+
+function escapeHtml(str) {
+  const d = document.createElement("div");
+  d.textContent = str || "";
+  return d.innerHTML;
+}
+
+/* ============================================================
+   HELPERS: рейтинг доверия (та же логика, что и trust_bar() в боте)
+   ============================================================ */
+function scoreClass(score) {
+  if (score >= 80) return "score-good";
+  if (score >= 40) return "score-ok";
+  if (score >= -20) return "score-warn";
+  return "score-bad";
+}
+function scoreLevel(score) {
+  if (score >= 80) return "🟢 Проверенный продавец";
+  if (score >= 40) return "🟡 Надёжный продавец";
+  if (score >= -20) return "🟠 Сомнительный продавец";
+  return "🔴 Мошенник";
+}
+function buildMeter(el, score, small) {
+  const cls = scoreClass(score);
+  const filled = Math.max(0, Math.min(10, Math.round((score + 100) / 20)));
+  el.className = "meter" + (small ? " sm" : "") + " " + cls;
+  el.innerHTML = "";
+  for (let i = 0; i < 10; i++) {
+    const s = document.createElement("div");
+    s.className = "seed" + (i < filled ? " on" : "");
+    el.appendChild(s);
+  }
+}
+
+/* ============================================================
+   КОНФИГ С БЭКЕНДА (не хардкодим username гаранта и т.п. во фронтенде)
+   ============================================================ */
+let serverConfig = null;
+
+async function loadConfig() {
+  try {
+    serverConfig = await api("/api/config");
+    if (serverConfig.garant_username) {
+      document.getElementById("garantUsername").textContent = "@" + serverConfig.garant_username;
+      document.getElementById("garantAvatar").textContent = serverConfig.garant_username.charAt(0).toUpperCase();
+    }
+    if (serverConfig.min_deposit) {
+      const note = document.querySelector("#screen-deposit .note");
+      if (note) note.textContent = `Минимум — ${serverConfig.min_deposit} USDT`;
+    }
+  } catch (e) {
+    document.getElementById("garantUsername").textContent = "Недоступно";
+  }
+}
+
+/* ============================================================
+   HOME — профиль, баланс, рейтинг и отзывы о себе
+   ============================================================ */
+let myId = null;
+
+async function loadHome() {
+  try {
+    const me = await api("/api/me");
+    myId = me.id;
+
+    document.getElementById("heroName").textContent = me.first_name || "Без имени";
+    document.getElementById("heroUsername").textContent = me.username ? "@" + me.username : `ID ${me.id}`;
+    document.getElementById("heroAvatar").textContent = (me.first_name || me.username || "?").charAt(0).toUpperCase();
+    document.getElementById("balanceChip").textContent = `💳 ${me.balance.toFixed(2)} USDT`;
+    document.getElementById("walletTileDesc").textContent = `${me.balance.toFixed(2)} USDT`;
+
+    const scoreBig = document.getElementById("heroScoreBig");
+    const meterEl = document.getElementById("homeMeter");
+    if (me.score === null || me.score === undefined) {
+      scoreBig.innerHTML = "—";
+      scoreBig.className = "big";
+      document.getElementById("heroLevel").textContent = "Пока нет отзывов о вас";
+      meterEl.innerHTML = "";
+    } else {
+      scoreBig.innerHTML = `${me.score}<small>%</small>`;
+      scoreBig.className = "big " + scoreClass(me.score);
+      document.getElementById("heroLevel").textContent = scoreLevel(me.score);
+      buildMeter(meterEl, me.score, false);
+    }
+
+    // "Отзывы о вас" переиспользует /api/check с собственным id
+    const detail = await api(`/api/check?q=${me.id}`);
+    renderActivity(detail.reviews || []);
+  } catch (e) {
+    showToast(e.message);
+    document.getElementById("homeActivity").innerHTML =
+      `<div class="empty"><div class="ic">😔</div><div class="t1">${escapeHtml(e.message)}</div></div>`;
+  }
+}
+
+function renderActivity(reviews) {
+  const el = document.getElementById("homeActivity");
+  if (!reviews.length) {
+    el.innerHTML = `<div class="empty"><div class="ic">🍓</div><div class="t1">Пока пусто</div><div class="t2">Здесь появятся отзывы о вас</div></div>`;
+    return;
+  }
+  el.innerHTML = "";
+  reviews.slice(0, 5).forEach((r) => {
+    const row = document.createElement("div");
+    row.className = "act-row";
+    const who = r.reviewer_username ? "@" + r.reviewer_username : (r.reviewer_name || "Аноним");
+    row.innerHTML = `
+      <div class="sign ${r.sign === "+" ? "pos" : "neg"}">${r.sign === "+" ? "✅" : "❌"}</div>
+      <div class="body">
+        <div class="title">${escapeHtml(who)}</div>
+        <div class="desc">${escapeHtml(r.description)}</div>
+      </div>
+      <div class="when">${escapeHtml((r.created_at || "").slice(0, 10))}</div>`;
+    el.appendChild(row);
+  });
+}
+
+/* ============================================================
+   ПРОВЕРКА ПРОДАВЦА
+   ============================================================ */
+document.getElementById("checkBtn").addEventListener("click", async () => {
+  const q = document.getElementById("checkInput").value.trim();
+  const wrap = document.getElementById("checkResult");
+  if (!q) { showToast("Введите @username или ID"); return; }
+  wrap.innerHTML = `<div class="empty"><div class="ic spin">⏳</div><div class="t1">Ищем…</div></div>`;
+  try {
+    const data = await api(`/api/check?q=${encodeURIComponent(q)}`);
+    renderCheckResult(data);
+  } catch (e) {
+    wrap.innerHTML = `<div class="empty"><div class="ic">😔</div><div class="t1">${escapeHtml(e.message)}</div></div>`;
+  }
+});
+
+function renderCheckResult(data) {
+  const wrap = document.getElementById("checkResult");
+  wrap.innerHTML = "";
+
+  if (data.banned) {
+    wrap.innerHTML = `<div class="card" style="margin-top:16px;text-align:center;">
+      <div style="font-size:28px;">🚫</div>
+      <div style="font-weight:700;margin-top:8px;">${data.username ? "@" + escapeHtml(data.username) : "Продавец"} заблокирован</div>
+      <p class="hint">Продавец в чёрном списке. Рекомендуем не совершать сделки.</p>
+    </div>`;
+    return;
+  }
+  if (data.no_reviews) {
+    wrap.innerHTML = `<div class="card" style="margin-top:16px;text-align:center;">
+      <div style="font-size:28px;">❔</div>
+      <div style="font-weight:700;margin-top:8px;">Отзывов не найдено</div>
+      <p class="hint">Этот продавец ещё не появлялся в базе.</p>
+    </div>`;
+    return;
+  }
+
+  const label = data.username ? "@" + escapeHtml(data.username) : `ID ${data.id}`;
+  const initial = (data.username || String(data.id)).charAt(0).toUpperCase();
+
+  const card = document.createElement("div");
+  card.className = "card result-card";
+  card.innerHTML = `
+    <div class="result-head">
+      <div class="avatar">${initial}</div>
+      <div>
+        <div class="name">${label}</div>
+        <div class="stats">${data.total} отзывов · ✅ ${data.positive} / ❌ ${data.negative}</div>
+      </div>
+    </div>
+    <div class="meter" id="resMeter"></div>
+    <div class="level" style="font-size:12.5px;margin-top:8px;color:var(--muted)">${data.score}% рейтинга доверия</div>
+    <div id="resReviews" style="margin-top:6px;"></div>`;
+  wrap.appendChild(card);
+  buildMeter(document.getElementById("resMeter"), data.score, false);
+
+  const list = document.getElementById("resReviews");
+  (data.reviews || []).forEach((r) => {
+    const item = document.createElement("div");
+    item.className = "review-item";
+    const shotsHtml = (r.photos || [])
+      .map((p) => `<div class="shot" style="background-image:url('${photoSrc(p)}')"></div>`)
+      .join("");
+    item.innerHTML = `
+      <div class="top">
+        <span class="tag ${r.sign === "+" ? "pos" : "neg"}">${r.sign === "+" ? "Положительный" : "Отрицательный"}</span>
+        <span class="date">${escapeHtml((r.created_at || "").slice(0, 10))}</span>
+      </div>
+      <div class="desc">${escapeHtml(r.description)}</div>
+      <div class="shots">${shotsHtml}</div>`;
+    list.appendChild(item);
+  });
+}
+
+/* ============================================================
+   ТОП ПРОДАВЦОВ
+   ============================================================ */
+async function loadLeaderboard() {
+  const el = document.getElementById("lbList");
+  el.innerHTML = `<div class="empty"><div class="ic spin">⏳</div><div class="t1">Загрузка…</div></div>`;
+  try {
+    const data = await api("/api/top?limit=10");
+    if (!data.users.length) {
+      el.innerHTML = `<div class="empty"><div class="ic">🍓</div><div class="t1">Пока пусто</div><div class="t2">Нужно минимум 2 отзыва, чтобы попасть в топ</div></div>`;
+      return;
+    }
+    el.innerHTML = "";
+    data.users.forEach((u, i) => {
+      const rankClass = i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
+      const rankLabel = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1;
+      const row = document.createElement("div");
+      row.className = "lb-row";
+      row.innerHTML = `
+        <div class="lb-rank ${rankClass}">${rankLabel}</div>
+        <div class="lb-body">
+          <div class="lb-name">${u.username ? "@" + escapeHtml(u.username) : "Без имени"}</div>
+          <div class="lb-sub">✅ ${u.positive} / ❌ ${u.negative} · всего ${u.total}</div>
+          <div class="meter sm"></div>
+        </div>`;
+      el.appendChild(row);
+      buildMeter(row.querySelector(".meter"), u.score, true);
+    });
+  } catch (e) {
+    el.innerHTML = `<div class="empty"><div class="ic">😔</div><div class="t1">${escapeHtml(e.message)}</div></div>`;
+  }
+}
+
+/* ============================================================
+   КОШЕЛЁК
+   ============================================================ */
+let lastKnownBalance = 0;
+
+async function loadWallet() {
+  document.getElementById("txList").innerHTML =
+    `<div class="empty" style="padding:22px 6px;"><div class="ic">🧾</div><div class="t1">История скоро появится</div><div class="t2">Пока показываем только текущий баланс</div></div>`;
+  try {
+    const data = await api("/api/wallet");
+    lastKnownBalance = data.balance;
+    document.getElementById("walletBalance").innerHTML = `${data.balance.toFixed(2)} <small>USDT</small>`;
+    document.getElementById("wdBalance").textContent = `${data.balance.toFixed(2)} USDT`;
+  } catch (e) {
+    showToast(e.message);
+  }
+}
+
+document.getElementById("depCreate").addEventListener("click", async () => {
+  const val = parseFloat((document.getElementById("depAmount").value || "0").replace(",", "."));
+  if (!val || val < 1) { showToast("❌ Минимум 1 USDT"); return; }
+  try {
+    const data = await api("/api/wallet/deposit", {
+      method: "POST",
+      body: JSON.stringify({ amount: val }),
+    });
+    document.getElementById("invoiceAmt").textContent = val.toFixed(2) + " USDT";
+    document.getElementById("invoiceBox").style.display = "block";
+    document.getElementById("invoicePayBtn").onclick = () => {
+      if (tg && tg.openLink) tg.openLink(data.pay_url);
+      else window.open(data.pay_url, "_blank");
+    };
+  } catch (e) {
+    showToast(e.message);
+  }
+});
+
+const TRC20_PATTERN = /^T[1-9A-HJ-NP-Za-km-z]{33}$/;
+
+document.getElementById("wdSubmit").addEventListener("click", async () => {
+  const amt = parseFloat((document.getElementById("wdAmount").value || "0").replace(",", "."));
+  const wallet = document.getElementById("wdWallet").value.trim();
+  if (!amt || amt <= 0) { showToast("❌ Введите сумму"); return; }
+  if (!wallet) { showToast("❌ Укажите кошелёк"); return; }
+  if (!TRC20_PATTERN.test(wallet)) { showToast(ERROR_MESSAGES.bad_wallet); return; }
+  try {
+    await api("/api/wallet/withdraw", {
+      method: "POST",
+      body: JSON.stringify({ amount: amt, wallet }),
+    });
+    showToast("✅ Заявка на вывод создана");
+    setTimeout(() => {
+      stack = ["wallet"];
+      renderScreen("wallet");
+      loadWallet();
+    }, 700);
+  } catch (e) {
+    showToast(e.message);
+  }
+});
+
+document.getElementById("trSubmit").addEventListener("click", async () => {
+  const idRaw = document.getElementById("trUser").value.trim();
+  const amt = parseFloat((document.getElementById("trAmount").value || "0").replace(",", "."));
+  if (!/^\d+$/.test(idRaw)) { showToast("❌ Нужен числовой Telegram ID"); return; }
+  if (!amt || amt <= 0) { showToast("❌ Введите сумму"); return; }
+  try {
+    await api("/api/wallet/transfer", {
+      method: "POST",
+      body: JSON.stringify({ target_id: parseInt(idRaw, 10), amount: amt }),
+    });
+    showToast("✅ Перевод выполнен");
+    setTimeout(() => {
+      stack = ["wallet"];
+      renderScreen("wallet");
+      loadWallet();
+    }, 700);
+  } catch (e) {
+    showToast(e.message);
+  }
+});
+
+/* ============================================================
+   ОСТАВИТЬ ОТЗЫВ (мастер + реальная загрузка фото)
+   ============================================================ */
+let revSign = null;
+let shots = []; // File[]
+
+function updateStepper(step) {
+  document.getElementById("dot1").classList.toggle("done", step >= 1);
+  document.getElementById("dot2").classList.toggle("done", step >= 2);
+  document.getElementById("dot3").classList.toggle("done", step >= 3);
+  document.getElementById("stepLabel").textContent =
+    step === 1 ? "Шаг 1 из 3 — тип отзыва" :
+    step === 2 ? "Шаг 2 из 3 — продавец" : "Шаг 3 из 3 — детали сделки";
+}
+function showRevStep(step) {
+  document.getElementById("revStep1").style.display = step === 1 ? "block" : "none";
+  document.getElementById("revStep2").style.display = step === 2 ? "block" : "none";
+  document.getElementById("revStep3").style.display = step === 3 ? "block" : "none";
+  updateStepper(step);
+}
+
+document.getElementById("pillPos").addEventListener("click", () => {
+  revSign = "+";
+  document.getElementById("pillPos").classList.add("active");
+  document.getElementById("pillNeg").classList.remove("active");
+  document.getElementById("toStep2").disabled = false;
+});
+document.getElementById("pillNeg").addEventListener("click", () => {
+  revSign = "-";
+  document.getElementById("pillNeg").classList.add("active");
+  document.getElementById("pillPos").classList.remove("active");
+  document.getElementById("toStep2").disabled = false;
+});
+document.getElementById("toStep2").addEventListener("click", () => showRevStep(2));
+document.getElementById("back2to1").addEventListener("click", () => showRevStep(1));
+document.getElementById("toStep3").addEventListener("click", () => {
+  if (!document.getElementById("revTarget").value.trim()) {
+    showToast("Укажите продавца");
+    return;
+  }
+  showRevStep(3);
+});
+document.getElementById("back3to2").addEventListener("click", () => showRevStep(2));
+
+const photoInput = document.getElementById("photoInput");
+document.getElementById("dropzone").addEventListener("click", () => photoInput.click());
+photoInput.addEventListener("change", () => {
+  Array.from(photoInput.files).forEach((f) => shots.push(f));
+  photoInput.value = "";
+  renderShots();
+});
+
+function renderShots() {
+  const wrap = document.getElementById("shotsWrap");
+  wrap.innerHTML = "";
+  shots.forEach((file, i) => {
+    const url = URL.createObjectURL(file);
+    const s = document.createElement("div");
+    s.className = "shot";
+    s.style.backgroundImage = `url('${url}')`;
+    s.innerHTML = `<div class="rm" data-i="${i}">✕</div>`;
+    wrap.appendChild(s);
+  });
+  wrap.querySelectorAll(".rm").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      shots.splice(Number(btn.dataset.i), 1);
+      renderShots();
+    });
+  });
+}
+
+document.getElementById("submitReview").addEventListener("click", async () => {
+  const target = document.getElementById("revTarget").value.trim();
+  const desc = document.getElementById("revDesc").value.trim();
+  if (!revSign) { showToast("Выберите тип отзыва"); return; }
+  if (!target) { showToast("Укажите продавца"); return; }
+  if (shots.length === 0) { showToast("📸 Прикрепи хотя бы один скриншот"); return; }
+  if (desc.length < 3) { showToast("📝 Опиши сделку подробнее"); return; }
+
+  const fd = new FormData();
+  fd.append("sign", revSign);
+  fd.append("target", target);
+  fd.append("description", desc);
+  shots.forEach((f) => fd.append("photos", f, f.name || "photo.jpg"));
+
+  const submitBtn = document.getElementById("submitReview");
+  submitBtn.disabled = true;
+  try {
+    await api("/api/review", { method: "POST", body: fd });
+    showToast("🍓 Отзыв сохранён!");
+    setTimeout(() => {
+      revSign = null;
+      shots = [];
+      document.getElementById("revDesc").value = "";
+      document.getElementById("revTarget").value = "";
+      document.getElementById("pillPos").classList.remove("active");
+      document.getElementById("pillNeg").classList.remove("active");
+      document.getElementById("toStep2").disabled = true;
+      renderShots();
+      showRevStep(1);
+      stack = ["home"];
+      renderScreen("home");
+      loadHome();
+    }, 700);
+  } catch (e) {
+    showToast(e.message);
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+/* ============================================================
+   ГАРАНТ
+   ============================================================ */
+document.getElementById("garantWriteBtn").addEventListener("click", () => {
+  const username = document.getElementById("garantUsername").textContent.replace("@", "");
+  const url = `https://t.me/${username}`;
+  if (tg && tg.openTelegramLink) tg.openTelegramLink(url);
+  else window.open(url, "_blank");
+});
+
+/* ============================================================
+   НАВИГАЦИЯ
+   ============================================================ */
+const titles = {
+  home: "Nexon", check: "Проверка продавца", review: "Оставить отзыв",
+  top: "Топ продавцов", wallet: "Кошелёк", deposit: "Пополнение",
+  withdraw: "Вывод средств", transfer: "Перевод", garant: "Гарант сделок",
+  "garant-live": "Живой гарант", help: "Правила и помощь",
+};
+const tabScreens = ["home", "check", "review", "top", "wallet"];
+let stack = ["home"];
+
+function renderScreen(id) {
+  document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
+  document.getElementById("screen-" + id).classList.add("active");
+  document.getElementById("headerTitle").textContent = titles[id] || "Nexon";
+  document.getElementById("backBtn").classList.toggle("show", stack.length > 1);
+  document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.nav === id));
+  document.getElementById("appBody").scrollTop = 0;
+}
+
+function onScreenShown(id) {
+  if (id === "top") loadLeaderboard();
+  if (id === "wallet") loadWallet();
+  if (id === "home") loadHome();
+}
+
+function go(id) {
+  stack.push(id);
+  renderScreen(id);
+  onScreenShown(id);
+}
+
+function goBack() {
+  if (stack.length > 1) {
+    stack.pop();
+    renderScreen(stack[stack.length - 1]);
+    onScreenShown(stack[stack.length - 1]);
+  }
+}
+
+document.getElementById("backBtn").addEventListener("click", goBack);
+document.getElementById("helpBtn").addEventListener("click", () => go("help"));
+
+document.querySelectorAll("[data-nav]").forEach((el) => {
+  el.addEventListener("click", () => {
+    const id = el.dataset.nav;
+    if (tabScreens.includes(id)) {
+      stack = [id];
+      renderScreen(id);
+      onScreenShown(id);
+    } else {
+      go(id);
+    }
+  });
+});
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+/* ============================================================
+   СТАРТ
+   ============================================================ */
+loadHome();
+loadConfig();
+</script>
+</body>
+</html>
