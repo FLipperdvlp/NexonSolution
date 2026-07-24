@@ -1,0 +1,153 @@
+2026-07-23 03:47:28,344 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-23 03:47:28,351 | INFO    | __main__ | 🌐 Web API для мини-аппа запущен на 0.0.0.0:8080
+2026-07-23 03:47:29,553 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:47:30,103 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-23 03:47:30,104 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-23 03:47:30,104 | INFO    | aiogram.dispatcher | Start polling
+2026-07-23 03:47:30,139 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-23 03:47:30,219 | INFO    | aiogram.event | Update id=543848865 is not handled. Duration 40 ms by bot id=8578283530
+2026-07-23 03:47:30,221 | INFO    | aiogram.event | Update id=543848869 is not handled. Duration 38 ms by bot id=8578283530
+2026-07-23 03:47:30,223 | INFO    | aiogram.event | Update id=543848868 is not handled. Duration 40 ms by bot id=8578283530
+2026-07-23 03:47:30,224 | INFO    | aiogram.event | Update id=543848867 is not handled. Duration 42 ms by bot id=8578283530
+2026-07-23 03:47:30,225 | INFO    | aiogram.event | Update id=543848864 is not handled. Duration 47 ms by bot id=8578283530
+2026-07-23 03:47:30,226 | INFO    | aiogram.event | Update id=543848866 is not handled. Duration 45 ms by bot id=8578283530
+2026-07-23 03:47:30,232 | INFO    | aiogram.event | Update id=543848871 is not handled. Duration 48 ms by bot id=8578283530
+2026-07-23 03:47:30,235 | INFO    | aiogram.event | Update id=543848870 is not handled. Duration 51 ms by bot id=8578283530
+2026-07-23 03:47:44,702 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:47:58,599 | INFO    | aiogram.event | Update id=543848872 is handled. Duration 180 ms by bot id=8578283530
+2026-07-23 03:47:59,787 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:48:00,856 | INFO    | aiogram.event | Update id=543848873 is handled. Duration 99 ms by bot id=8578283530
+2026-07-23 03:48:05,078 | INFO    | aiogram.event | Update id=543848874 is handled. Duration 83 ms by bot id=8578283530
+2026-07-23 03:48:05,882 | INFO    | aiogram.event | Update id=543848875 is handled. Duration 219 ms by bot id=8578283530
+2026-07-23 03:48:07,325 | INFO    | aiogram.event | Update id=543848876 is handled. Duration 87 ms by bot id=8578283530
+2026-07-23 03:48:09,999 | INFO    | aiogram.event | Update id=543848877 is handled. Duration 162 ms by bot id=8578283530
+2026-07-23 03:48:15,192 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:48:17,894 | INFO    | aiogram.event | Update id=543848878 is not handled. Duration 3 ms by bot id=8578283530
+2026-07-23 03:48:30,343 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:48:39,259 | INFO    | aiogram.event | Update id=543848879 is not handled. Duration 5 ms by bot id=8578283530
+2026-07-23 03:48:41,392 | INFO    | aiogram.event | Update id=543848880 is not handled. Duration 3 ms by bot id=8578283530
+2026-07-23 03:48:45,414 | INFO    | aiogram.event | Update id=543848881 is handled. Duration 196 ms by bot id=8578283530
+2026-07-23 03:48:45,610 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:48:48,305 | INFO    | aiogram.event | Update id=543848882 is handled. Duration 96 ms by bot id=8578283530
+2026-07-23 03:48:49,989 | INFO    | aiogram.event | Update id=543848883 is handled. Duration 342 ms by bot id=8578283530
+2026-07-23 03:48:53,970 | INFO    | aiogram.event | Update id=543848884 is handled. Duration 98 ms by bot id=8578283530
+2026-07-23 03:48:56,377 | INFO    | aiogram.event | Update id=543848885 is handled. Duration 119 ms by bot id=8578283530
+2026-07-23 03:49:00,707 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:49:16,071 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:49:16,682 | INFO    | aiogram.event | Update id=543848886 is handled. Duration 51 ms by bot id=8578283530
+2026-07-23 03:49:18,549 | INFO    | aiogram.event | Update id=543848887 is handled. Duration 65 ms by bot id=8578283530
+2026-07-23 03:49:20,181 | INFO    | aiogram.event | Update id=543848888 is handled. Duration 61 ms by bot id=8578283530
+2026-07-23 03:49:24,256 | INFO    | aiogram.event | Update id=543848889 is handled. Duration 105 ms by bot id=8578283530
+2026-07-23 03:49:31,240 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:49:46,839 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:50:01,966 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:50:17,054 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:50:32,329 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:50:47,433 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:51:02,702 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:51:17,805 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:51:33,020 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:51:48,133 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:52:03,216 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:52:18,375 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:52:21,026 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-23 03:52:21,031 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-23 03:52:21,031 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-23 03:52:21,284 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-23 03:52:21,799 | ERROR   | asyncio | Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x00000169FEC80E10>
+2026-07-23 03:52:21,802 | ERROR   | asyncio | Unclosed connector
+connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x00000169FECA8350>, 662391.7755909)])']
+connector: <aiohttp.connector.TCPConnector object at 0x00000169FEC80A50>
+2026-07-23 03:53:21,400 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-23 03:53:21,405 | INFO    | __main__ | 🌐 Web API для мини-аппа запущен на 0.0.0.0:8080
+2026-07-23 03:53:22,615 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:53:22,708 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-23 03:53:22,708 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-23 03:53:22,709 | INFO    | aiogram.dispatcher | Start polling
+2026-07-23 03:53:22,738 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-23 03:53:24,332 | INFO    | aiogram.event | Update id=543848890 is handled. Duration 380 ms by bot id=8578283530
+2026-07-23 03:53:37,711 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:53:52,792 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:54:07,906 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:54:23,015 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:54:38,216 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:54:53,411 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:55:09,018 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:55:24,397 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:55:39,525 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 03:55:53,490 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-23 03:55:53,495 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-23 03:55:53,496 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-23 03:55:53,755 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-23 03:55:53,992 | ERROR   | asyncio | Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x000001F8FB10CF50>
+2026-07-23 03:55:53,993 | ERROR   | asyncio | Unclosed connector
+connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x000001F8FB138350>, 662592.9261446)])']
+connector: <aiohttp.connector.TCPConnector object at 0x000001F8FB10CB90>
+2026-07-23 22:20:52,074 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-23 22:20:52,084 | INFO    | __main__ | 🌐 Web API для мини-аппа запущен на 0.0.0.0:8080
+2026-07-23 22:20:54,399 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-23 22:20:54,399 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-23 22:20:54,400 | INFO    | aiogram.dispatcher | Start polling
+2026-07-23 22:20:54,432 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-23 22:20:54,667 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 22:21:10,182 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 22:21:14,128 | INFO    | __main__ | Новый отзыв #3: - реп target_id=8732956317 
+2026-07-23 22:21:14,129 | INFO    | aiogram.event | Update id=543849051 is handled. Duration 325 ms by bot id=8578283530
+2026-07-23 22:21:25,269 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 22:21:25,297 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-23 22:21:25,299 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-23 22:21:25,299 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-23 22:21:25,551 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-23 22:21:25,780 | ERROR   | asyncio | Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x000002A75E3F0F50>
+2026-07-23 22:21:25,781 | ERROR   | asyncio | Unclosed connector
+connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x000002A75E4143B0>, 728940.9155449)])']
+connector: <aiohttp.connector.TCPConnector object at 0x000002A75E3F0B90>
+2026-07-23 22:22:16,269 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-23 22:22:16,273 | INFO    | __main__ | 🌐 Web API для мини-аппа запущен на 0.0.0.0:8080
+2026-07-23 22:22:17,973 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-23 22:22:17,974 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-23 22:22:17,975 | INFO    | aiogram.dispatcher | Start polling
+2026-07-23 22:22:18,005 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-23 22:22:18,085 | INFO    | aiogram.event | Update id=543849055 is not handled. Duration 20 ms by bot id=8578283530
+2026-07-23 22:22:18,478 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 22:22:33,581 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 22:22:38,559 | INFO    | aiogram.event | Update id=543849056 is not handled. Duration 18 ms by bot id=8578283530
+2026-07-23 22:22:48,721 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 22:23:03,852 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 22:23:18,996 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 22:23:34,435 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 22:23:49,644 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 22:24:04,908 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
+2026-07-23 22:24:09,477 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-23 22:24:09,479 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-23 22:24:09,479 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-23 22:24:09,731 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-23 22:24:10,037 | ERROR   | asyncio | Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x00000271062B0F50>
+2026-07-23 22:24:10,039 | ERROR   | asyncio | Unclosed connector
+connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x00000271062D4170>, 729100.5544357)])']
+connector: <aiohttp.connector.TCPConnector object at 0x00000271062B0B90>
+2026-07-23 22:24:21,363 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-23 22:24:21,366 | INFO    | __main__ | 🌐 Web API для мини-аппа запущен на 0.0.0.0:8080
+2026-07-23 22:24:22,877 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-23 22:24:22,878 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-23 22:24:22,878 | INFO    | aiogram.dispatcher | Start polling
+2026-07-23 22:24:22,911 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-23 22:43:37,698 | INFO    | aiogram.event | Update id=543849057 is not handled. Duration 48 ms by bot id=8578283530
+2026-07-23 22:45:44,989 | INFO    | aiogram.event | Update id=543849058 is not handled. Duration 30 ms by bot id=8578283530
+2026-07-23 22:45:53,010 | INFO    | aiogram.event | Update id=543849059 is not handled. Duration 83 ms by bot id=8578283530
+2026-07-23 23:06:10,199 | INFO    | aiogram.event | Update id=543849060 is not handled. Duration 26 ms by bot id=8578283530
+2026-07-23 23:08:02,636 | INFO    | aiogram.event | Update id=543849061 is not handled. Duration 22 ms by bot id=8578283530
+2026-07-23 23:20:03,139 | INFO    | aiogram.event | Update id=543849062 is not handled. Duration 32 ms by bot id=8578283530
+2026-07-23 23:47:21,204 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-23 23:47:21,233 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-23 23:47:21,236 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-23 23:47:21,528 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-23 23:47:23,881 | ERROR   | asyncio | Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x000002E4BD610F50>
+2026-07-23 23:47:23,883 | ERROR   | asyncio | Unclosed connector
+connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x000002E4BD577470>, 734083.5930562)])']
+connector: <aiohttp.connector.TCPConnector object at 0x000002E4BD610B90>

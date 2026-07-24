@@ -713,9 +713,16 @@ p.hint{ font-size:12.5px; color:var(--muted); line-height:1.5; margin:6px 0 0; }
 // на котором крутится web-API из main.py (см. API_HOST/API_PORT
 // там же — обычно это адрес сервера бота за reverse-proxy с SSL).
 // Домен здесь должен совпадать с WEBAPP_ORIGIN на бэкенде.
-const API_BASE = "https://api.your-domain.com";
+const API_BASE = "https://slackness-genetics-jumble.ngrok-free.dev";
 
-const tg = window.Telegram ? window.Telegram.WebApp : null;
+const tg = window.Telegram?.WebApp || null;
+console.log("TG:", tg);
+console.log("INIT:", tg?.initData);
+alert(
+  "TG=" + !!tg +
+  "\ninitData=" + (tg?.initData ? "YES" : "NO")
+);
+
 if (tg) {
   tg.ready();
   tg.expand();
@@ -743,23 +750,52 @@ const ERROR_MESSAGES = {
 };
 
 async function api(path, options = {}) {
-  const headers = Object.assign({}, options.headers, {
-    "X-Telegram-Init-Data": tg ? tg.initData : "",
-  });
-  if (options.body && !(options.body instanceof FormData)) {
-    headers["Content-Type"] = "application/json";
-  }
-  const res = await fetch(API_BASE + path, { ...options, headers });
-  let data = null;
-  try { data = await res.json(); } catch (e) { /* пустой ответ, например photo */ }
-  if (!res.ok) {
-    const code = data && data.error;
-    const err = new Error(ERROR_MESSAGES[code] || "Что-то пошло не так, попробуйте позже.");
-    err.code = code;
-    throw err;
-  }
-  return data;
+
+    const headers = {
+        ...(options.headers || {}),
+        "X-Telegram-Init-Data": tg?.initData || "",
+    };
+
+    if (
+        options.body &&
+        !(options.body instanceof FormData)
+    ) {
+        headers["Content-Type"] = "application/json";
+    }
+
+
+    const res = await fetch(
+        API_BASE + path,
+        {
+            ...options,
+            headers
+        }
+    );
+
+
+    const text = await res.text();
+
+    let data;
+
+    try {
+        data = JSON.parse(text);
+    } catch {
+        data = {
+            error: text
+        };
+    }
+
+
+    if (!res.ok) {
+        throw new Error(
+            data.error || 
+            "HTTP " + res.status
+        );
+    }
+
+    return data;
 }
+
 
 function photoSrc(p) {
   return p.startsWith("http") ? p : API_BASE + p;
@@ -1264,8 +1300,29 @@ function showToast(msg) {
 /* ============================================================
    СТАРТ
    ============================================================ */
-loadHome();
-loadConfig();
+window.addEventListener("load", async () => {
+
+    console.log("PAGE LOADED");
+
+    console.log(
+        "Telegram:",
+        window.Telegram
+    );
+
+    console.log(
+        "WebApp:",
+        window.Telegram?.WebApp
+    );
+
+    console.log(
+        "initData:",
+        window.Telegram?.WebApp?.initData
+    );
+
+    await loadConfig();
+    await loadHome();
+
+});
 </script>
 </body>
 </html>

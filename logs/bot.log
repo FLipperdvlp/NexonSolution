@@ -1,153 +1,203 @@
-2026-07-23 03:47:28,344 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
-2026-07-23 03:47:28,351 | INFO    | __main__ | 🌐 Web API для мини-аппа запущен на 0.0.0.0:8080
-2026-07-23 03:47:29,553 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:47:30,103 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
-2026-07-23 03:47:30,104 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
-2026-07-23 03:47:30,104 | INFO    | aiogram.dispatcher | Start polling
-2026-07-23 03:47:30,139 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
-2026-07-23 03:47:30,219 | INFO    | aiogram.event | Update id=543848865 is not handled. Duration 40 ms by bot id=8578283530
-2026-07-23 03:47:30,221 | INFO    | aiogram.event | Update id=543848869 is not handled. Duration 38 ms by bot id=8578283530
-2026-07-23 03:47:30,223 | INFO    | aiogram.event | Update id=543848868 is not handled. Duration 40 ms by bot id=8578283530
-2026-07-23 03:47:30,224 | INFO    | aiogram.event | Update id=543848867 is not handled. Duration 42 ms by bot id=8578283530
-2026-07-23 03:47:30,225 | INFO    | aiogram.event | Update id=543848864 is not handled. Duration 47 ms by bot id=8578283530
-2026-07-23 03:47:30,226 | INFO    | aiogram.event | Update id=543848866 is not handled. Duration 45 ms by bot id=8578283530
-2026-07-23 03:47:30,232 | INFO    | aiogram.event | Update id=543848871 is not handled. Duration 48 ms by bot id=8578283530
-2026-07-23 03:47:30,235 | INFO    | aiogram.event | Update id=543848870 is not handled. Duration 51 ms by bot id=8578283530
-2026-07-23 03:47:44,702 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:47:58,599 | INFO    | aiogram.event | Update id=543848872 is handled. Duration 180 ms by bot id=8578283530
-2026-07-23 03:47:59,787 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:48:00,856 | INFO    | aiogram.event | Update id=543848873 is handled. Duration 99 ms by bot id=8578283530
-2026-07-23 03:48:05,078 | INFO    | aiogram.event | Update id=543848874 is handled. Duration 83 ms by bot id=8578283530
-2026-07-23 03:48:05,882 | INFO    | aiogram.event | Update id=543848875 is handled. Duration 219 ms by bot id=8578283530
-2026-07-23 03:48:07,325 | INFO    | aiogram.event | Update id=543848876 is handled. Duration 87 ms by bot id=8578283530
-2026-07-23 03:48:09,999 | INFO    | aiogram.event | Update id=543848877 is handled. Duration 162 ms by bot id=8578283530
-2026-07-23 03:48:15,192 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:48:17,894 | INFO    | aiogram.event | Update id=543848878 is not handled. Duration 3 ms by bot id=8578283530
-2026-07-23 03:48:30,343 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:48:39,259 | INFO    | aiogram.event | Update id=543848879 is not handled. Duration 5 ms by bot id=8578283530
-2026-07-23 03:48:41,392 | INFO    | aiogram.event | Update id=543848880 is not handled. Duration 3 ms by bot id=8578283530
-2026-07-23 03:48:45,414 | INFO    | aiogram.event | Update id=543848881 is handled. Duration 196 ms by bot id=8578283530
-2026-07-23 03:48:45,610 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:48:48,305 | INFO    | aiogram.event | Update id=543848882 is handled. Duration 96 ms by bot id=8578283530
-2026-07-23 03:48:49,989 | INFO    | aiogram.event | Update id=543848883 is handled. Duration 342 ms by bot id=8578283530
-2026-07-23 03:48:53,970 | INFO    | aiogram.event | Update id=543848884 is handled. Duration 98 ms by bot id=8578283530
-2026-07-23 03:48:56,377 | INFO    | aiogram.event | Update id=543848885 is handled. Duration 119 ms by bot id=8578283530
-2026-07-23 03:49:00,707 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:49:16,071 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:49:16,682 | INFO    | aiogram.event | Update id=543848886 is handled. Duration 51 ms by bot id=8578283530
-2026-07-23 03:49:18,549 | INFO    | aiogram.event | Update id=543848887 is handled. Duration 65 ms by bot id=8578283530
-2026-07-23 03:49:20,181 | INFO    | aiogram.event | Update id=543848888 is handled. Duration 61 ms by bot id=8578283530
-2026-07-23 03:49:24,256 | INFO    | aiogram.event | Update id=543848889 is handled. Duration 105 ms by bot id=8578283530
-2026-07-23 03:49:31,240 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:49:46,839 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:50:01,966 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:50:17,054 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:50:32,329 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:50:47,433 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:51:02,702 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:51:17,805 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:51:33,020 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:51:48,133 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:52:03,216 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:52:18,375 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:52:21,026 | INFO    | aiogram.dispatcher | Polling stopped
-2026-07-23 03:52:21,031 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
-2026-07-23 03:52:21,031 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
-2026-07-23 03:52:21,284 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
-2026-07-23 03:52:21,799 | ERROR   | asyncio | Unclosed client session
-client_session: <aiohttp.client.ClientSession object at 0x00000169FEC80E10>
-2026-07-23 03:52:21,802 | ERROR   | asyncio | Unclosed connector
-connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x00000169FECA8350>, 662391.7755909)])']
-connector: <aiohttp.connector.TCPConnector object at 0x00000169FEC80A50>
-2026-07-23 03:53:21,400 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
-2026-07-23 03:53:21,405 | INFO    | __main__ | 🌐 Web API для мини-аппа запущен на 0.0.0.0:8080
-2026-07-23 03:53:22,615 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:53:22,708 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
-2026-07-23 03:53:22,708 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
-2026-07-23 03:53:22,709 | INFO    | aiogram.dispatcher | Start polling
-2026-07-23 03:53:22,738 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
-2026-07-23 03:53:24,332 | INFO    | aiogram.event | Update id=543848890 is handled. Duration 380 ms by bot id=8578283530
-2026-07-23 03:53:37,711 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:53:52,792 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:54:07,906 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:54:23,015 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:54:38,216 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:54:53,411 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:55:09,018 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:55:24,397 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:55:39,525 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 03:55:53,490 | INFO    | aiogram.dispatcher | Polling stopped
-2026-07-23 03:55:53,495 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
-2026-07-23 03:55:53,496 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
-2026-07-23 03:55:53,755 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
-2026-07-23 03:55:53,992 | ERROR   | asyncio | Unclosed client session
-client_session: <aiohttp.client.ClientSession object at 0x000001F8FB10CF50>
-2026-07-23 03:55:53,993 | ERROR   | asyncio | Unclosed connector
-connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x000001F8FB138350>, 662592.9261446)])']
-connector: <aiohttp.connector.TCPConnector object at 0x000001F8FB10CB90>
-2026-07-23 22:20:52,074 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
-2026-07-23 22:20:52,084 | INFO    | __main__ | 🌐 Web API для мини-аппа запущен на 0.0.0.0:8080
-2026-07-23 22:20:54,399 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
-2026-07-23 22:20:54,399 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
-2026-07-23 22:20:54,400 | INFO    | aiogram.dispatcher | Start polling
-2026-07-23 22:20:54,432 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
-2026-07-23 22:20:54,667 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 22:21:10,182 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 22:21:14,128 | INFO    | __main__ | Новый отзыв #3: - реп target_id=8732956317 
-2026-07-23 22:21:14,129 | INFO    | aiogram.event | Update id=543849051 is handled. Duration 325 ms by bot id=8578283530
-2026-07-23 22:21:25,269 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 22:21:25,297 | INFO    | aiogram.dispatcher | Polling stopped
-2026-07-23 22:21:25,299 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
-2026-07-23 22:21:25,299 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
-2026-07-23 22:21:25,551 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
-2026-07-23 22:21:25,780 | ERROR   | asyncio | Unclosed client session
-client_session: <aiohttp.client.ClientSession object at 0x000002A75E3F0F50>
-2026-07-23 22:21:25,781 | ERROR   | asyncio | Unclosed connector
-connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x000002A75E4143B0>, 728940.9155449)])']
-connector: <aiohttp.connector.TCPConnector object at 0x000002A75E3F0B90>
-2026-07-23 22:22:16,269 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
-2026-07-23 22:22:16,273 | INFO    | __main__ | 🌐 Web API для мини-аппа запущен на 0.0.0.0:8080
-2026-07-23 22:22:17,973 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
-2026-07-23 22:22:17,974 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
-2026-07-23 22:22:17,975 | INFO    | aiogram.dispatcher | Start polling
-2026-07-23 22:22:18,005 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
-2026-07-23 22:22:18,085 | INFO    | aiogram.event | Update id=543849055 is not handled. Duration 20 ms by bot id=8578283530
-2026-07-23 22:22:18,478 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 22:22:33,581 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 22:22:38,559 | INFO    | aiogram.event | Update id=543849056 is not handled. Duration 18 ms by bot id=8578283530
-2026-07-23 22:22:48,721 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 22:23:03,852 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 22:23:18,996 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 22:23:34,435 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 22:23:49,644 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 22:24:04,908 | ERROR   | __main__ | Ошибка при проверке платежей CryptoPay: 'NoneType' object is not iterable
-2026-07-23 22:24:09,477 | INFO    | aiogram.dispatcher | Polling stopped
-2026-07-23 22:24:09,479 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
-2026-07-23 22:24:09,479 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
-2026-07-23 22:24:09,731 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
-2026-07-23 22:24:10,037 | ERROR   | asyncio | Unclosed client session
-client_session: <aiohttp.client.ClientSession object at 0x00000271062B0F50>
-2026-07-23 22:24:10,039 | ERROR   | asyncio | Unclosed connector
-connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x00000271062D4170>, 729100.5544357)])']
-connector: <aiohttp.connector.TCPConnector object at 0x00000271062B0B90>
-2026-07-23 22:24:21,363 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
-2026-07-23 22:24:21,366 | INFO    | __main__ | 🌐 Web API для мини-аппа запущен на 0.0.0.0:8080
-2026-07-23 22:24:22,877 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
-2026-07-23 22:24:22,878 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
-2026-07-23 22:24:22,878 | INFO    | aiogram.dispatcher | Start polling
-2026-07-23 22:24:22,911 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
-2026-07-23 22:43:37,698 | INFO    | aiogram.event | Update id=543849057 is not handled. Duration 48 ms by bot id=8578283530
-2026-07-23 22:45:44,989 | INFO    | aiogram.event | Update id=543849058 is not handled. Duration 30 ms by bot id=8578283530
-2026-07-23 22:45:53,010 | INFO    | aiogram.event | Update id=543849059 is not handled. Duration 83 ms by bot id=8578283530
-2026-07-23 23:06:10,199 | INFO    | aiogram.event | Update id=543849060 is not handled. Duration 26 ms by bot id=8578283530
-2026-07-23 23:08:02,636 | INFO    | aiogram.event | Update id=543849061 is not handled. Duration 22 ms by bot id=8578283530
-2026-07-23 23:20:03,139 | INFO    | aiogram.event | Update id=543849062 is not handled. Duration 32 ms by bot id=8578283530
-2026-07-23 23:47:21,204 | INFO    | aiogram.dispatcher | Polling stopped
-2026-07-23 23:47:21,233 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
-2026-07-23 23:47:21,236 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
-2026-07-23 23:47:21,528 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
-2026-07-23 23:47:23,881 | ERROR   | asyncio | Unclosed client session
-client_session: <aiohttp.client.ClientSession object at 0x000002E4BD610F50>
-2026-07-23 23:47:23,883 | ERROR   | asyncio | Unclosed connector
-connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x000002E4BD577470>, 734083.5930562)])']
-connector: <aiohttp.connector.TCPConnector object at 0x000002E4BD610B90>
+2026-07-24 01:50:27,318 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 01:50:27,330 | INFO    | __main__ | 🌐 Web API для мини-аппа запущен на 0.0.0.0:8080
+2026-07-24 01:50:28,625 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-24 01:50:28,625 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-24 01:50:28,626 | INFO    | aiogram.dispatcher | Start polling
+2026-07-24 01:50:28,654 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 01:50:28,771 | INFO    | aiogram.event | Update id=543849063 is not handled. Duration 71 ms by bot id=8578283530
+2026-07-24 01:50:28,776 | INFO    | aiogram.event | Update id=543849064 is not handled. Duration 64 ms by bot id=8578283530
+2026-07-24 01:50:28,777 | INFO    | aiogram.event | Update id=543849066 is not handled. Duration 44 ms by bot id=8578283530
+2026-07-24 01:50:28,778 | INFO    | aiogram.event | Update id=543849065 is not handled. Duration 54 ms by bot id=8578283530
+2026-07-24 01:54:37,272 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-24 01:54:37,273 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-24 01:54:37,273 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-24 01:54:37,526 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 01:54:37,773 | ERROR   | asyncio | Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x0000022094780E10>
+2026-07-24 01:54:37,775 | ERROR   | asyncio | Unclosed connector
+connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x00000220947A4A10>, 741726.3062819)])']
+connector: <aiohttp.connector.TCPConnector object at 0x0000022094780A50>
+2026-07-24 01:54:57,961 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 01:54:57,968 | INFO    | __main__ | 🌐 Web API для мини-аппа запущен на 0.0.0.0:8080
+2026-07-24 01:54:59,452 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-24 01:54:59,453 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-24 01:54:59,453 | INFO    | aiogram.dispatcher | Start polling
+2026-07-24 01:54:59,482 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 01:56:03,872 | INFO    | aiogram.event | Update id=543849067 is handled. Duration 191 ms by bot id=8578283530
+2026-07-24 01:56:18,325 | INFO    | aiogram.event | Update id=543849068 is handled. Duration 129 ms by bot id=8578283530
+2026-07-24 01:56:29,573 | INFO    | aiogram.event | Update id=543849069 is handled. Duration 76 ms by bot id=8578283530
+2026-07-24 01:57:07,960 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-24 01:57:07,962 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-24 01:57:07,962 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-24 01:57:08,214 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 01:57:08,392 | ERROR   | asyncio | Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x000001F2AC590F50>
+2026-07-24 01:57:08,393 | ERROR   | asyncio | Unclosed connector
+connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x000001F2AC5B40B0>, 741876.640516)])']
+connector: <aiohttp.connector.TCPConnector object at 0x000001F2AC590B90>
+2026-07-24 02:11:55,408 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 02:11:55,412 | INFO    | __main__ | 🌐 Mini App API запущен 0.0.0.0:8080
+2026-07-24 02:11:56,371 | INFO    | aiogram.dispatcher | Start polling
+2026-07-24 02:11:56,417 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 02:12:12,346 | INFO    | aiogram.event | Update id=543849070 is handled. Duration 158 ms by bot id=8578283530
+2026-07-24 02:16:19,968 | INFO    | aiogram.event | Update id=543849071 is handled. Duration 81 ms by bot id=8578283530
+2026-07-24 02:22:58,034 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-24 02:22:58,042 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-24 02:22:58,043 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-24 02:22:58,307 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 02:22:59,286 | ERROR   | asyncio | Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x0000017CD2D18F50>
+2026-07-24 02:22:59,287 | ERROR   | asyncio | Unclosed connector
+connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x0000017CD2C8BE30>, 743427.9018252)])']
+connector: <aiohttp.connector.TCPConnector object at 0x0000017CD2D18B90>
+2026-07-24 02:23:13,870 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 02:23:13,873 | INFO    | __main__ | 🌐 Mini App API запущен 0.0.0.0:8080
+2026-07-24 02:23:15,322 | ERROR   | asyncio | Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x000002CD9BB35FD0>
+2026-07-24 02:24:02,301 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 02:24:02,304 | INFO    | __main__ | 🌐 Mini App API запущен 0.0.0.0:8080
+2026-07-24 02:24:03,450 | ERROR   | asyncio | Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x000001D4F1A55FD0>
+2026-07-24 02:29:53,996 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 02:29:54,001 | INFO    | __main__ | 🌐 Mini App API запущен 0.0.0.0:8080
+2026-07-24 02:29:55,233 | ERROR   | asyncio | Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x000001F5D3825FD0>
+2026-07-24 02:34:36,699 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 02:34:36,703 | INFO    | __main__ | 🌐 Mini App API запущен 0.0.0.0:8080
+2026-07-24 02:34:37,659 | ERROR   | asyncio | Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x0000023B84545FD0>
+2026-07-24 02:36:18,956 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 02:36:18,958 | INFO    | __main__ | 🌐 Mini App API запущен 0.0.0.0:8080
+2026-07-24 02:36:20,056 | ERROR   | asyncio | Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x0000014AF55C5FD0>
+2026-07-24 02:40:01,438 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 02:40:01,445 | INFO    | __main__ | 🌐 Mini App API запущен 127.0.0.1:8080
+2026-07-24 02:40:02,693 | ERROR   | asyncio | Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x000002031AD85FD0>
+2026-07-24 02:40:33,904 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 02:41:03,766 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 02:41:03,769 | INFO    | __main__ | 🌐 Mini App API запущен 127.0.0.1:8080
+2026-07-24 02:41:05,079 | ERROR   | asyncio | Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x0000014FC7925FD0>
+2026-07-24 02:44:24,012 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 02:44:24,016 | INFO    | __main__ | 🌐 Mini App API запущен 127.0.0.1:8080
+2026-07-24 02:44:24,994 | INFO    | aiogram.dispatcher | Start polling
+2026-07-24 02:44:25,026 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 02:44:36,276 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:01:44:36 +0100] "GET /api/stats HTTP/1.1" 401 373 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36"
+2026-07-24 02:44:36,757 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:01:44:36 +0100] "GET /favicon.ico HTTP/1.1" 405 387 "http://127.0.0.1:8080/api/stats" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36"
+2026-07-24 02:45:04,414 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:01:45:04 +0100] "GET / HTTP/1.1" 405 387 "-" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
+2026-07-24 02:45:37,453 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:01:45:37 +0100] "GET /api/stats HTTP/1.1" 401 373 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36"
+2026-07-24 02:45:37,855 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:01:45:37 +0100] "GET /favicon.ico HTTP/1.1" 405 387 "https://slackness-genetics-jumble.ngrok-free.dev/api/stats" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36"
+2026-07-24 02:51:17,263 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:01:51:17 +0100] "GET / HTTP/1.1" 405 387 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36"
+2026-07-24 02:51:17,612 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:01:51:17 +0100] "GET /favicon.ico HTTP/1.1" 405 387 "https://slackness-genetics-jumble.ngrok-free.dev/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36"
+2026-07-24 02:51:44,295 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:01:51:44 +0100] "OPTIONS /api/config HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
+2026-07-24 02:51:44,297 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:01:51:44 +0100] "OPTIONS /api/me HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
+2026-07-24 02:51:52,583 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:01:51:52 +0100] "OPTIONS /api/me HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 02:51:52,586 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:01:51:52 +0100] "OPTIONS /api/config HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 02:51:59,505 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:01:51:59 +0100] "OPTIONS /api/me HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
+2026-07-24 02:51:59,507 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:01:51:59 +0100] "OPTIONS /api/config HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
+2026-07-24 02:52:08,715 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:01:52:08 +0100] "OPTIONS /api/me HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 02:52:08,737 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:01:52:08 +0100] "OPTIONS /api/config HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 02:54:53,734 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-24 02:54:53,739 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-24 02:54:53,740 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-24 02:54:54,012 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 02:55:15,624 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 02:55:15,625 | INFO    | __main__ | API READY
+2026-07-24 02:55:15,630 | INFO    | __main__ | 🌐 Mini App API запущен 127.0.0.1:8080
+2026-07-24 02:55:16,863 | INFO    | aiogram.dispatcher | Start polling
+2026-07-24 02:55:16,892 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 02:55:25,707 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:01:55:25 +0100] "OPTIONS /api/me HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 02:55:25,711 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:01:55:25 +0100] "OPTIONS /api/config HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 02:57:57,086 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-24 02:57:57,087 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-24 02:57:57,087 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-24 02:57:57,342 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 03:02:20,496 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 03:02:20,497 | INFO    | __main__ | API READY
+2026-07-24 03:02:20,501 | INFO    | __main__ | 🌐 Mini App API запущен 127.0.0.1:8080
+2026-07-24 03:02:21,515 | INFO    | aiogram.dispatcher | Start polling
+2026-07-24 03:02:21,549 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 03:02:58,932 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:02:58 +0100] "OPTIONS /api/config HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 03:02:58,935 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:02:58 +0100] "OPTIONS /api/me HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 03:03:19,594 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:03:19 +0100] "GET / HTTP/1.1" 200 418 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36"
+2026-07-24 03:03:20,094 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:03:20 +0100] "GET /api/config HTTP/1.1" 200 388 "https://slackness-genetics-jumble.ngrok-free.dev/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36"
+2026-07-24 03:03:20,168 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:03:20 +0100] "GET /api/me HTTP/1.1" 401 373 "https://slackness-genetics-jumble.ngrok-free.dev/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36"
+2026-07-24 03:03:20,725 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:03:20 +0100] "GET /favicon.ico HTTP/1.1" 405 387 "https://slackness-genetics-jumble.ngrok-free.dev/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36"
+2026-07-24 03:06:58,454 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-24 03:06:58,455 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-24 03:06:58,456 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-24 03:06:58,709 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 03:07:09,402 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 03:07:09,402 | INFO    | __main__ | API READY
+2026-07-24 03:07:09,405 | INFO    | __main__ | 🌐 Mini App API запущен 0.0.0.0:8080
+2026-07-24 03:07:10,639 | INFO    | aiogram.dispatcher | Start polling
+2026-07-24 03:07:10,674 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 03:07:19,063 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:07:19 +0100] "OPTIONS /api/me HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 03:07:19,066 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:07:19 +0100] "OPTIONS /api/config HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 03:08:07,456 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-24 03:08:07,457 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-24 03:08:07,457 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-24 03:08:07,711 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 03:08:17,058 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 03:08:17,059 | INFO    | __main__ | API READY
+2026-07-24 03:08:17,061 | INFO    | __main__ | 🌐 Mini App API запущен 0.0.0.0:8080
+2026-07-24 03:08:18,049 | INFO    | aiogram.dispatcher | Start polling
+2026-07-24 03:08:18,079 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 03:08:22,483 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:08:22 +0100] "OPTIONS /api/me HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 03:08:22,484 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:08:22 +0100] "OPTIONS /api/config HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 03:09:11,417 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-24 03:09:11,419 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-24 03:09:11,420 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-24 03:09:11,677 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 03:11:58,296 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 03:11:58,297 | INFO    | __main__ | API READY
+2026-07-24 03:11:58,301 | INFO    | __main__ | 🌐 Mini App API запущен 0.0.0.0:8080
+2026-07-24 03:11:59,675 | INFO    | aiogram.dispatcher | Start polling
+2026-07-24 03:11:59,709 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 03:12:06,441 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:12:06 +0100] "OPTIONS /api/config HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 03:12:06,444 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:12:06 +0100] "OPTIONS /api/me HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 03:13:07,715 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:13:07 +0100] "OPTIONS /api/config HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
+2026-07-24 03:13:07,717 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:13:07 +0100] "OPTIONS /api/me HTTP/1.1" 200 290 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
+2026-07-24 03:13:25,728 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-24 03:13:25,730 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-24 03:13:25,731 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-24 03:13:25,990 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 03:19:05,517 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 03:19:05,517 | INFO    | __main__ | API READY
+2026-07-24 03:19:05,519 | INFO    | __main__ | 🌐 Mini App API запущен 0.0.0.0:8080
+2026-07-24 03:19:05,520 | INFO    | __main__ | 🚀 ON_STARTUP ВЫЗВАН
+2026-07-24 03:19:06,883 | INFO    | __main__ | ✅ WEBAPP кнопка установлена: https://effulgent-kataifi-b0cc37.netlify.app
+2026-07-24 03:19:06,889 | INFO    | aiogram.dispatcher | Start polling
+2026-07-24 03:19:06,920 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 03:19:52,868 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:19:52 +0100] "OPTIONS /api/me HTTP/1.1" 200 342 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 03:19:52,870 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:19:52 +0100] "OPTIONS /api/config HTTP/1.1" 200 342 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 03:20:07,460 | INFO    | aiogram.event | Update id=543849072 is not handled. Duration 18 ms by bot id=8578283530
+2026-07-24 03:20:08,309 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-24 03:20:08,310 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-24 03:20:08,310 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-24 03:20:08,566 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 03:22:56,092 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 03:22:56,092 | INFO    | __main__ | API READY
+2026-07-24 03:22:56,095 | INFO    | __main__ | 🌐 Mini App API запущен 0.0.0.0:8080
+2026-07-24 03:22:56,096 | INFO    | __main__ | 🚀 ON_STARTUP ВЫЗВАН
+2026-07-24 03:22:57,327 | INFO    | __main__ | ✅ WEBAPP кнопка установлена: https://effulgent-kataifi-b0cc37.netlify.app
+2026-07-24 03:22:57,327 | INFO    | aiogram.dispatcher | Start polling
+2026-07-24 03:22:57,360 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 03:23:02,295 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:23:02 +0100] "OPTIONS /api/me HTTP/1.1" 200 342 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 03:23:02,299 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:23:02 +0100] "OPTIONS /api/config HTTP/1.1" 200 342 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 03:28:09,476 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-24 03:28:09,477 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-24 03:28:09,478 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-24 03:28:09,731 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 03:28:19,596 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-24 03:28:19,601 | INFO    | __main__ | API READY
+2026-07-24 03:28:19,605 | INFO    | __main__ | 🌐 Mini App API запущен 0.0.0.0:8080
+2026-07-24 03:28:19,606 | INFO    | __main__ | 🚀 ON_STARTUP ВЫЗВАН
+2026-07-24 03:28:20,741 | INFO    | __main__ | ✅ WEBAPP кнопка установлена: https://effulgent-kataifi-b0cc37.netlify.app
+2026-07-24 03:28:20,741 | INFO    | aiogram.dispatcher | Start polling
+2026-07-24 03:28:20,774 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-24 03:28:27,567 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:28:27 +0100] "OPTIONS /api/me HTTP/1.1" 200 342 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 03:28:27,570 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:28:27 +0100] "OPTIONS /api/config HTTP/1.1" 200 342 "https://effulgent-kataifi-b0cc37.netlify.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+2026-07-24 03:29:50,455 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:29:50 +0100] "GET / HTTP/1.1" 405 364 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36"
+2026-07-24 03:29:50,921 | INFO    | aiohttp.access | 127.0.0.1 [24/Jul/2026:02:29:50 +0100] "GET /favicon.ico HTTP/1.1" 204 256 "https://slackness-genetics-jumble.ngrok-free.dev/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36"

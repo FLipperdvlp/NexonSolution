@@ -73,7 +73,7 @@ GARANT_USERNAME: str = os.getenv("GARANT_USERNAME", "gavrilovit")
 # Mini App / Web API конфигурация
 # ---------------------------------------------------------------------------
 # Адрес, где захостен nexon-miniapp.html (Netlify/Vercel/свой домен, обязательно HTTPS).
-WEBAPP_URL: str = os.getenv("WEBAPP_URL", "https://effulgent-kataifi-b0cc37.netlify.app/")
+WEBAPP_URL: str = os.getenv("WEBAPP_URL", "https://effulgent-kataifi-b0cc37.netlify.app")
 # Origin мини-аппа для CORS (по умолчанию берём из WEBAPP_URL без завершающего слэша).
 WEBAPP_ORIGIN: str = os.getenv("WEBAPP_ORIGIN", WEBAPP_URL.rstrip("/"))
 
@@ -2302,13 +2302,29 @@ async def channels_handler(message: types.Message) -> None:
 # который дёргает фронтенд (nexon-miniapp.html) через fetch(). Работает
 # в том же процессе и на том же event loop'е, что и поллинг бота.
 
-def validate_init_data(init_data: str, bot_token: str, max_age: int = 86400) -> Optional[dict]:
-    """
-    Проверяет подпись Telegram.WebApp.initData (см. документацию Telegram
-    Mini Apps). Возвращает распарсенные поля, если подпись верна и данные
-    не протухли, иначе None. НИКОГДА не доверяем user_id, присланному
-    в теле запроса напрямую — только тому, что подтверждено этой подписью.
-    """
+# ===========================================================================
+# ==================== WEB API ДЛЯ MINI APP ================================
+# ===========================================================================
+
+import hmac
+import hashlib
+import json
+import uuid
+from urllib.parse import parse_qsl
+from pathlib import Path
+from datetime import datetime
+
+
+# =========================
+# TELEGRAM MINI APP AUTH
+# =========================
+
+def validate_init_data(
+    init_data: str,
+    bot_token: str,
+    max_age: int = 86400
+) -> Optional[dict]:
+
     if not init_data:
         return None
     try:
@@ -2317,452 +2333,1111 @@ def validate_init_data(init_data: str, bot_token: str, max_age: int = 86400) -> 
         return None
 
     received_hash = parsed.pop("hash", None)
+
     if not received_hash:
         return None
 
-    data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(parsed.items()))
-    secret_key = hmac.new(b"WebAppData", bot_token.encode(), hashlib.sha256).digest()
-    calc_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+    data_check_string = "\n".join(
+        f"{k}={v}"
+        for k, v in sorted(parsed.items())
+    )
 
-    if not hmac.compare_digest(calc_hash, received_hash):
+    secret_key = hmac.new(
+        b"WebAppData",
+        bot_token.encode(),
+        hashlib.sha256
+    ).digest()
+
+    calculated_hash = hmac.new(
+        secret_key,
+        data_check_string.encode(),
+        hashlib.sha256
+    ).hexdigest()
+
+    if not hmac.compare_digest(
+        calculated_hash,
+        received_hash
+    ):
         return None
 
     try:
-        auth_date = int(parsed.get("auth_date", "0"))
+        auth_date = int(
+            parsed.get("auth_date", 0)
+        )
     except ValueError:
         return None
-    if max_age and (datetime.utcnow().timestamp() - auth_date) > max_age:
+
+    if (
+        max_age
+        and datetime.utcnow().timestamp() - auth_date > max_age
+    ):
         return None
 
     return parsed
 
 
-def get_webapp_user(request: web.Request) -> Optional[dict]:
-    init_data = request.headers.get("X-Telegram-Init-Data", "")
-    parsed = validate_init_data(init_data, BOT_TOKEN)
+def get_webapp_user(
+    request: web.Request
+):
+    init_data = request.headers.get(
+        "X-Telegram-Init-Data",
+        ""
+    )
+
+    parsed = validate_init_data(
+        init_data,
+        BOT_TOKEN
+    )
+
     if parsed is None:
         return None
+    
     user_raw = parsed.get("user")
+
     if not user_raw:
         return None
     try:
         return json.loads(user_raw)
-    except (TypeError, ValueError):
+    except Exception:
         return None
 
+# =========================
+# USER SYNC WITH DATABASE
+# =========================
 
-def require_auth(handler):
-    async def wrapper(request: web.Request):
-        user = get_webapp_user(request)
-        if user is None:
-            return web.json_response({"error": "unauthorized"}, status=401)
-        request["tg_user"] = user
-        return await handler(request)
-    return wrapper
-
-
-def photo_url(photo_id: str) -> str:
-    """
-    Отзывы могут содержать либо Telegram file_id (фото, отправленное боту
-    в чате/альбоме), либо "web:<filename>" (скриншот, загруженный прямо
-    через мини-апп). Приводим оба варианта к ссылке, которую фронтенд
-    сможет просто вставить в <img src="...">.
-    """
-    if photo_id.startswith("web:"):
-        return f"/uploads/{photo_id[4:]}"
-    return f"/api/photo/{photo_id}"
-
-
-def serialize_review(rev) -> dict:
-    return {
-        "id": get_review_id(rev),
-        "sign": rev["sign"],
-        "description": rev["description"] or "",
-        "created_at": str(rev["created_at"]),
-        "reviewer_username": rev["reviewer_username"] or "",
-        "reviewer_name": rev["reviewer_name"] or "",
-        "photos": [photo_url(p) for p in get_review_photo_ids(rev)],
-    }
-
-
-@web.middleware
-async def cors_middleware(request: web.Request, handler):
-    if request.method == "OPTIONS":
-        resp = web.Response()
-    else:
-        try:
-            resp = await handler(request)
-        except web.HTTPException as exc:
-            resp = exc
-    resp.headers["Access-Control-Allow-Origin"] = WEBAPP_ORIGIN
-    resp.headers["Access-Control-Allow-Headers"] = "Content-Type, X-Telegram-Init-Data"
-    resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    return resp
-
-
-async def api_me(request: web.Request) -> web.Response:
-    user = request["tg_user"]
+async def sync_user(user: dict):
     db.upsert_user(
         telegram_id=user["id"],
         username=user.get("username") or "",
-        first_name=user.get("first_name") or "",
+        first_name=user.get("first_name") or ""
     )
-    stats = db.get_user_stats(user["id"])
+
+# =========================
+# AUTH DECORATOR
+# =========================
+
+def require_auth(handler):
+    async def wrapper(
+        request: web.Request
+    ):
+
+        user = get_webapp_user(
+            request
+        )
+
+        if user is None:
+            return web.json_response(
+                {
+                    "error":
+                    "unauthorized"
+                },
+                status=401
+            )
+
+        await sync_user(user)
+        request["tg_user"] = user
+
+        return await handler(request)
+    return wrapper
+
+# =========================
+# CORS
+# =========================
+
+@web.middleware
+async def cors_middleware(request: web.Request, handler):
+
+    if request.method == "OPTIONS":
+        response = web.Response()
+    else:
+        try:
+            response = await handler(request)
+        except web.HTTPException as exc:
+            response = exc
+
+    origin = request.headers.get("Origin")
+
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+
+    response.headers["Access-Control-Allow-Headers"] = (
+        "Content-Type, X-Telegram-Init-Data"
+    )
+
+    response.headers["Access-Control-Allow-Methods"] = (
+        "GET, POST, OPTIONS"
+    )
+
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+
+    return response
+
+# ===========================================================================
+# PROFILE
+# ===========================================================================
+def require_auth(handler):
+
+    async def wrapper(request: web.Request):
+
+        init_data = request.headers.get(
+            "X-Telegram-Init-Data",
+            ""
+        )
+
+        logger.info(
+            f"INIT DATA LENGTH: {len(init_data)}"
+        )
+
+        user = get_webapp_user(request)
+
+        if user is None:
+            logger.error(
+                "❌ Telegram initData не прошёл проверку"
+            )
+
+            return web.json_response(
+                {
+                    "error": "unauthorized"
+                },
+                status=401
+            )
+
+        logger.info(
+            f"✅ USER AUTH: {user}"
+        )
+
+        request["tg_user"] = user
+
+        return await handler(request)
+
+    return wrapper
+
+async def api_me(
+    request: web.Request
+):
+    logger.info("🔥 /api/me called")
+    user = request["tg_user"]
+    await sync_user(user)
+    stats = db.get_user_stats(
+        user["id"]
+    )
+
     return web.json_response({
-        "id": user["id"],
-        "username": user.get("username") or "",
-        "first_name": user.get("first_name") or "",
-        "balance": db.get_balance(user["id"]),
-        "banned": db.is_banned(user["id"]),
-        "score": stats["score"] if stats else None,
-        "total": stats["total"] if stats else 0,
-        "positive": stats["positive"] if stats else 0,
-        "negative": stats["negative"] if stats else 0,
+        "id":
+            user["id"],
+        "username":
+            user.get("username") or "",
+        "first_name":
+            user.get("first_name") or "",
+        "balance":
+            db.get_balance(
+                user["id"]
+            ),
+        "banned":
+            db.is_banned(
+                user["id"]
+            ),
+        "score":
+            stats["score"]
+            if stats else None,
+        "total":
+            stats["total"]
+            if stats else 0,
+        "positive":
+            stats["positive"]
+            if stats else 0,
+        "negative":
+            stats["negative"]
+            if stats else 0
+
     })
 
+# ===========================================================================
+# CHECK USER
+# ===========================================================================
 
-async def api_check(request: web.Request) -> web.Response:
-    q = request.query.get("q", "").strip()
+async def api_check(
+    request: web.Request
+):
+    q = request.query.get(
+        "q",
+        ""
+    ).strip()
+
+
     if not q:
-        return web.json_response({"error": "empty_query"}, status=400)
 
+        return web.json_response(
+            {
+                "error":
+                "empty_query"
+            },
+            status=400
+        )
     target_id, username = await resolve_target(q)
+
     if target_id is None:
-        return web.json_response({"error": "not_found", "query": username}, status=404)
+        return web.json_response(
+            {
+                "error":
+                "not_found"
+            },
+            status=404
+        )
 
     if db.is_banned(target_id):
-        return web.json_response({"id": target_id, "username": username, "banned": True})
+        return web.json_response({
+            "id":
+                target_id,
+            "username":
+                username,
+            "banned":
+                True
 
-    stats = db.get_user_stats(target_id)
+        })
+    stats = db.get_user_stats(
+        target_id
+    )
+
     if stats is None:
         return web.json_response({
-            "id": target_id, "username": username, "banned": False, "no_reviews": True,
+
+            "id":
+                target_id,
+            "username":
+                username,
+            "banned":
+                False,
+            "no_reviews":
+                True
         })
 
-    reviews = db.get_user_reviews(target_id, limit=10)
+    reviews = db.get_user_reviews(
+        target_id,
+        limit=10
+    )
+
     return web.json_response({
-        "id": target_id,
-        "username": username,
-        "banned": False,
-        "score": stats["score"],
-        "total": stats["total"],
-        "positive": stats["positive"],
-        "negative": stats["negative"],
-        "reviews": [serialize_review(r) for r in reviews],
+
+        "id":
+            target_id,
+
+
+        "username":
+            username,
+        "banned":
+            False,
+        "score":
+            stats["score"],
+        "total":
+            stats["total"],
+        "positive":
+            stats["positive"],
+        "negative":
+            stats["negative"],
+        "reviews":
+            [
+                serialize_review(r)
+                for r in reviews
+            ]
     })
 
-
-async def api_top(request: web.Request) -> web.Response:
-    try:
-        limit = min(max(int(request.query.get("limit", 10)), 1), 50)
-    except ValueError:
-        limit = 10
-    users = db.get_top_users(limit=limit, min_reviews=2)
-    return web.json_response({"users": [dict(u) for u in users]})
+# ===========================================================================
+# REVIEWS + PHOTOS
+# ===========================================================================
 
 
-async def api_stats(request: web.Request) -> web.Response:
-    return web.json_response(db.get_global_stats())
+def photo_url(photo_id: str) -> str:
+    if photo_id.startswith("web:"):
+        return (
+            f"/uploads/{photo_id[4:]}"
+        )
 
-
-async def api_config(request: web.Request) -> web.Response:
-    """
-    Отдаёт мини-аппу параметры, которые реально хранятся/настроены на
-    бэкенде (не зашиты во фронтенде), чтобы страница «Гарант» и лимиты
-    депозита всегда совпадали с тем, что видит пользователь в самом боте.
-    """
-    return web.json_response({
-        "garant_username": GARANT_USERNAME,
-        "min_deposit": 1,
-    })
-
-
-async def api_photo(request: web.Request) -> web.Response:
-    """Проксирует фото из Telegram (по file_id), не светя токен бота фронтенду."""
-    file_id = request.match_info.get("file_id", "")
-    try:
-        tg_file = await bot.get_file(file_id)
-        buf = await bot.download_file(tg_file.file_path)
-    except TelegramAPIError:
-        raise web.HTTPNotFound()
-    return web.Response(
-        body=buf.read(),
-        content_type="image/jpeg",
-        headers={"Cache-Control": "public, max-age=86400"},
+    return (
+        f"/api/photo/{photo_id}"
     )
 
 
-async def api_add_review(request: web.Request) -> web.Response:
+def serialize_review(
+    rev
+):
+    return {
+        "id":
+            get_review_id(rev),
+        "sign":
+            rev["sign"],
+        "description":
+            rev["description"] or "",
+        "created_at":
+            str(
+                rev["created_at"]
+            ),
+        "reviewer_username":
+            rev["reviewer_username"]
+            or "",
+        "reviewer_name":
+            rev["reviewer_name"]
+            or "",
+        "photos":
+            [
+                photo_url(p)
+                for p in get_review_photo_ids(rev)
+            ]
+    }
+
+async def api_photo(
+    request: web.Request
+):
+    file_id = request.match_info.get(
+        "file_id",
+        ""
+    )
+
+    try:
+        tg_file = await bot.get_file(
+            file_id
+        )
+
+        buffer = await bot.download_file(
+            tg_file.file_path
+        )
+
+    except TelegramAPIError:
+        raise web.HTTPNotFound()
+
+    return web.Response(
+        body=buffer.read(),
+        content_type="image/jpeg",
+        headers={
+            "Cache-Control":
+            "public,max-age=86400"
+        }
+    )
+
+async def api_add_review(
+    request: web.Request
+):
     reviewer = request["tg_user"]
     reviewer_id = reviewer["id"]
 
-    db.upsert_user(
-        telegram_id=reviewer_id,
-        username=reviewer.get("username") or "",
-        first_name=reviewer.get("first_name") or "",
+    await sync_user(
+        reviewer
     )
 
-    if db.is_banned(reviewer_id):
-        return web.json_response({"error": "banned"}, status=403)
+    if db.is_banned(
+        reviewer_id
+    ):
+        return web.json_response(
+            {
+                "error":
+                "banned"
+            },
+            status=403
+        )
 
-    sign: Optional[str] = None
-    target_raw: Optional[str] = None
+    sign = None
+    target_raw = None
     description = ""
-    saved_files: list[str] = []
+    photos = []
+
 
     reader = await request.multipart()
+
     async for field in reader:
         if field.name == "sign":
-            sign = (await field.text()).strip()
+            sign = (
+                await field.text()
+            ).strip()
+
         elif field.name == "target":
-            target_raw = (await field.text()).strip()
+            target_raw = (
+                await field.text()
+            ).strip()
+
         elif field.name == "description":
-            description = (await field.text()).strip()
-        elif field.name == "photos" and field.filename:
-            filename = f"{uuid.uuid4().hex}.jpg"
-            path = UPLOAD_DIR / filename
+            description = (
+                await field.text()
+            ).strip()
+
+        elif (
+            field.name == "photos"
+            and field.filename
+        ):
+
+            filename = (
+                f"{uuid.uuid4().hex}.jpg"
+            )
+
+            path = (
+                UPLOAD_DIR /
+                filename
+            )
+
             size = 0
-            with open(path, "wb") as f:
+
+            with open(
+                path,
+                "wb"
+            ) as f:
                 while True:
-                    chunk = await field.read_chunk(1 << 16)
+                    chunk = await field.read_chunk(
+                        65536
+                    )
+
                     if not chunk:
                         break
+
                     size += len(chunk)
+
                     if size > MAX_PHOTO_BYTES:
-                        f.close()
-                        path.unlink(missing_ok=True)
-                        return web.json_response({"error": "photo_too_large"}, status=413)
+                        path.unlink(
+                            missing_ok=True
+                        )
+
+                        return web.json_response(
+                            {
+                                "error":
+                                "photo_too_large"
+                            },
+                            status=413
+                        )
                     f.write(chunk)
-            if size == 0:
-                path.unlink(missing_ok=True)
-            else:
-                saved_files.append(f"web:{filename}")
+            if size:
+                photos.append(
+                    f"web:{filename}"
+                )
 
-    if sign not in ("+", "-"):
-        return web.json_response({"error": "bad_sign"}, status=400)
+
+    if sign not in (
+        "+",
+        "-"
+    ):
+        return web.json_response(
+            {
+                "error":
+                "bad_sign"
+            },
+            status=400
+        )
+
+
     if not target_raw:
-        return web.json_response({"error": "no_target"}, status=400)
-    if len(description) < 3:
-        return web.json_response({"error": "description_too_short"}, status=400)
-    if not saved_files:
-        return web.json_response({"error": "no_photos"}, status=400)
+        return web.json_response(
+            {
+                "error":
+                "no_target"
+            },
+            status=400
+        )
 
-    target_id, target_username = await resolve_target(target_raw)
+
+    if len(description) < 3:
+        return web.json_response(
+            {
+                "error":
+                "description_short"
+            },
+            status=400
+        )
+
+
+    if not photos:
+        return web.json_response(
+            {
+                "error":
+                "no_photos"
+            },
+            status=400
+        )
+
+    target_id, target_username = await resolve_target(
+        target_raw
+    )
+
     if target_id is None:
-        return web.json_response({"error": "target_not_found"}, status=404)
+        return web.json_response(
+            {
+                "error":
+                "target_not_found"
+            },
+            status=404
+        )
+
+
     if target_id == reviewer_id:
-        return web.json_response({"error": "self_review"}, status=400)
-    if db.has_recent_review(reviewer_id, target_id, hours=0.03):
-        return web.json_response({"error": "rate_limited"}, status=429)
+        return web.json_response(
+            {
+                "error":
+                "self_review"
+            },
+            status=400
+        )
+
+    if db.has_recent_review(
+        reviewer_id,
+        target_id,
+        hours=0.03
+    ):
+
+        return web.json_response(
+            {
+                "error":
+                "rate_limit"
+            },
+            status=429
+        )
+
+    # добавляем цель в БД
+    try:
+        chat = await bot.get_chat(
+            target_id
+        )
+
+        db.upsert_user(
+            telegram_id=target_id,
+            username=chat.username or "",
+            first_name=chat.first_name or ""
+        )
+
+    except TelegramAPIError:
+        pass
+
 
     review_id = db.add_review(
         target_id=target_id,
         target_username=target_username,
         reviewer_id=reviewer_id,
-        reviewer_username=reviewer.get("username") or "",
-        reviewer_name=reviewer.get("first_name") or "",
+        reviewer_username=
+            reviewer.get("username")
+            or "",
+        reviewer_name=
+            reviewer.get("first_name")
+            or "",
         sign=sign,
         description=description,
-        photo_file_id=",".join(saved_files),
+        photo_file_id=
+            ",".join(photos),
+
         chat_id=0,
-        chat_title="Nexon Mini App",
+        chat_title=
+            "Nexon Mini App",
         message_id=0,
-        source="webapp",
+        source="webapp"
     )
+
+
     log_action(
-        reviewer_id, reviewer.get("username"), "НОВЫЙ ОТЗЫВ (mini app)",
-        details=f"review_id={review_id} цель=id={target_id} фото={len(saved_files)}",
+        reviewer_id,
+        reviewer.get("username"),
+        "НОВЫЙ ОТЗЫВ MINI APP",
+        details=
+        f"review={review_id} target={target_id}"
     )
-    return web.json_response({"ok": True, "review_id": review_id})
 
-
-async def api_wallet(request: web.Request) -> web.Response:
-    user = request["tg_user"]
-    return web.json_response({"balance": db.get_balance(user["id"])})
-
-
-async def api_deposit(request: web.Request) -> web.Response:
-    user = request["tg_user"]
-    try:
-        body = await request.json()
-        amount = float(body.get("amount", 0))
-    except (ValueError, TypeError, json.JSONDecodeError):
-        return web.json_response({"error": "bad_amount"}, status=400)
-    if amount < 1:
-        return web.json_response({"error": "min_amount"}, status=400)
-
-    invoice = await crypto.create_invoice(asset="USDT", amount=amount, payload=str(user["id"]))
-    db.save_invoice(
-        invoice_id=str(invoice.invoice_id),
-        telegram_id=user["id"],
-        amount=amount,
-        asset="USDT",
-    )
     return web.json_response({
-        "ok": True,
-        "pay_url": invoice.bot_invoice_url,
-        "invoice_id": str(invoice.invoice_id),
+        "ok":
+            True,
+        "review_id":
+            review_id
     })
 
+# ===========================================================================
+# TOP USERS
+# ===========================================================================
 
-async def api_withdraw(request: web.Request) -> web.Response:
+
+async def api_top(
+    request: web.Request
+):
+
+    try:
+        limit = int(
+            request.query.get(
+                "limit",
+                10
+            )
+        )
+
+    except ValueError:
+        limit = 10
+
+    limit = max(
+        1,
+        min(limit,50)
+    )
+
+    users = db.get_top_users(
+        limit=limit,
+        min_reviews=2
+    )
+
+    return web.json_response({
+        "users":
+            [
+                dict(u)
+                for u in users
+            ]
+    })
+
+# ===========================================================================
+# GLOBAL STATS
+# ===========================================================================
+
+async def api_stats(
+    request: web.Request
+):
+    return web.json_response(
+        db.get_global_stats()
+    )
+
+# ===========================================================================
+# WALLET
+# ===========================================================================
+
+
+async def api_wallet(
+    request: web.Request
+):
     user = request["tg_user"]
+    return web.json_response({
+        "balance":
+            db.get_balance(
+                user["id"]
+            )
+    })
+
+# ===========================================================================
+# DEPOSIT
+# ===========================================================================
+
+
+async def api_deposit(
+    request: web.Request
+):
+    user = request["tg_user"]
+
     try:
         body = await request.json()
-        amount = float(body.get("amount", 0))
-        wallet = (body.get("wallet") or "").strip()
-    except (ValueError, TypeError, json.JSONDecodeError):
-        return web.json_response({"error": "bad_request"}, status=400)
+        amount = float(
+            body.get(
+                "amount",
+                0
+            )
+        )
+
+    except Exception:
+        return web.json_response(
+            {
+                "error":
+                "bad_amount"
+            },
+            status=400
+        )
+
+    if amount < 1:
+        return web.json_response(
+            {
+                "error":
+                "min_amount"
+            },
+            status=400
+        )
+
+
+    invoice = await crypto.create_invoice(
+        asset="USDT",
+        amount=amount,
+        payload=str(
+            user["id"]
+        )
+    )
+
+    db.save_invoice(
+        invoice_id=
+            str(
+                invoice.invoice_id
+            ),
+        telegram_id=
+            user["id"],
+        amount=
+            amount,
+        asset="USDT"
+    )
+
+    return web.json_response({
+        "ok":
+            True,
+        "pay_url":
+            invoice.bot_invoice_url,
+        "invoice_id":
+            str(
+                invoice.invoice_id
+            )
+    })
+
+# ===========================================================================
+# WITHDRAW
+# ===========================================================================
+
+
+async def api_withdraw(
+    request: web.Request
+):
+    user = request["tg_user"]
+
+    try:
+        body = await request.json()
+        amount = float(
+            body.get(
+                "amount",
+                0
+            )
+        )
+
+        wallet = (
+            body.get(
+                "wallet",
+                ""
+            )
+            .strip()
+        )
+
+    except Exception:
+        return web.json_response(
+            {
+                "error":
+                "bad_request"
+            },
+            status=400
+        )
+
 
     if amount <= 0 or not wallet:
-        return web.json_response({"error": "bad_request"}, status=400)
-    if not is_valid_trc20_address(wallet):
-        return web.json_response({"error": "bad_wallet"}, status=400)
-    if not db.remove_balance(user["id"], amount):
-        return web.json_response({"error": "insufficient_funds"}, status=400)
+        return web.json_response(
+            {
+                "error":
+                "bad_request"
+            },
+            status=400
+        )
+
+
+    if not db.remove_balance(
+        user["id"],
+        amount
+    ):
+        return web.json_response(
+            {
+                "error":
+                "no_money"
+            },
+            status=400
+        )
+
 
     for admin_id in ADMIN_IDS:
         try:
             await bot.send_message(
                 admin_id,
-                "💸 <b>Заявка на вывод (mini app)</b>\n"
-                f"Пользователь: <code>{user['id']}</code>\n"
-                f"Сумма: <b>{amount:.2f} USDT</b>\n"
-                f"Кошелёк (TRC20): <code>{escape(wallet)}</code>",
+                (
+                    "💸 <b>Вывод средств</b>\n\n"
+                    f"ID: <code>{user['id']}</code>\n"
+                    f"Сумма: <b>{amount} USDT</b>\n"
+                    f"Кошелек:\n"
+                    f"<code>{escape(wallet)}</code>"
+                )
             )
         except TelegramAPIError:
             pass
 
     log_action(
-        user["id"], user.get("username"), "ЗАЯВКА НА ВЫВОД (mini app)",
-        details=f"сумма={amount} кошелёк={wallet}",
+        user["id"],
+        user.get("username"),
+        "WITHDRAW",
+        f"{amount} USDT {wallet}"
     )
-    return web.json_response({"ok": True})
+
+    return web.json_response({
+        "ok":
+            True
+    })
 
 
-async def api_transfer(request: web.Request) -> web.Response:
+# ===========================================================================
+# TRANSFER
+# ===========================================================================
+
+
+async def api_transfer(
+    request: web.Request
+):
     user = request["tg_user"]
+
+
     try:
         body = await request.json()
-        target_id = int(body.get("target_id"))
-        amount = float(body.get("amount", 0))
-    except (ValueError, TypeError, json.JSONDecodeError):
-        return web.json_response({"error": "bad_request"}, status=400)
+        target_id = int(
+            body.get(
+                "target_id"
+            )
+        )
+
+        amount = float(
+            body.get(
+                "amount",
+                0
+            )
+        )
+
+    except Exception:
+        return web.json_response(
+            {
+                "error":
+                "bad_request"
+            },
+            status=400
+        )
+
+    if target_id == user["id"]:
+        return web.json_response(
+            {
+                "error":
+                "self_transfer"
+            },
+            status=400
+        )
 
     if amount <= 0:
-        return web.json_response({"error": "bad_request"}, status=400)
-    if target_id == user["id"]:
-        return web.json_response({"error": "self_transfer"}, status=400)
-    if not db.remove_balance(user["id"], amount):
-        return web.json_response({"error": "insufficient_funds"}, status=400)
-
-    db.add_balance(target_id, amount)
-    log_action(
-        user["id"], user.get("username"), "ПЕРЕВОД (mini app)",
-        details=f"получатель={target_id} сумма={amount}",
-    )
-    return web.json_response({"ok": True})
-
-
-def build_web_app() -> web.Application:
-    app = web.Application(client_max_size=MAX_PHOTO_BYTES * 12, middlewares=[cors_middleware])
-
-    app.router.add_route("OPTIONS", "/{tail:.*}", lambda request: web.Response())
-
-    app.router.add_get("/api/me", require_auth(api_me))
-    app.router.add_get("/api/check", api_check)
-    app.router.add_get("/api/top", api_top)
-    app.router.add_get("/api/stats", api_stats)
-    app.router.add_get("/api/config", api_config)
-    app.router.add_get("/api/photo/{file_id}", api_photo)
-    app.router.add_post("/api/review", require_auth(api_add_review))
-    app.router.add_get("/api/wallet", require_auth(api_wallet))
-    app.router.add_post("/api/wallet/deposit", require_auth(api_deposit))
-    app.router.add_post("/api/wallet/withdraw", require_auth(api_withdraw))
-    app.router.add_post("/api/wallet/transfer", require_auth(api_transfer))
-
-    app.router.add_static("/uploads/", UPLOAD_DIR, show_index=False)
-    return app
-
-
-async def run_web_app() -> web.AppRunner:
-    app = build_web_app()
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, API_HOST, API_PORT)
-    await site.start()
-    logger.info(f"🌐 Web API для мини-аппа запущен на {API_HOST}:{API_PORT}")
-    return runner
-
-
-async def crypto_payments_loop() -> None:
-    """Раз в 15 секунд проверяет оплаченные CryptoPay-инвойсы и зачисляет баланс."""
-    while True:
-        try:
-            await check_crypto_payments()
-        except Exception as e:
-            logger.error(f"Ошибка при проверке платежей CryptoPay: {e}")
-        await asyncio.sleep(15)
-
-
-async def on_startup() -> None:
-    db.init()
-    await bot.set_chat_menu_button(
-        menu_button=types.MenuButtonWebApp(
-            text="Nexon",
-            web_app=WebAppInfo(url=WEBAPP_URL)
+        return web.json_response(
+            {
+                "error":
+                "bad_amount"
+            },
+            status=400
         )
+
+    if not db.remove_balance(
+        user["id"],
+        amount
+    ):
+
+        return web.json_response(
+            {
+                "error":
+                "no_money"
+            },
+            status=400
+        )
+
+    db.add_balance(
+        target_id,
+        amount
     )
 
-    await bot.set_my_commands(
-        [
-            types.BotCommand(command="start", description="🍓 Главное меню"),
-            types.BotCommand(command="rep",   description="✍️ Оставить отзыв"),
-            types.BotCommand(command="check", description="🔍 Проверить продавца"),
-            types.BotCommand(command="help",  description="❓ Как пользоваться"),
+    return web.json_response({
+        "ok":
+            True
+    })
+
+# ===========================================================================
+# WEB APPLICATION
+# ===========================================================================
+async def api_config(request):
+    return web.json_response({
+        "garant_username": "Glohelper",
+        "min_deposit": 1
+    })
+
+
+def build_web_app():
+    
+    app = web.Application(
+        client_max_size=MAX_PHOTO_BYTES * 12,
+        middlewares=[
+            cors_middleware
         ]
     )
 
-    admin_commands = [
-        types.BotCommand(command="start",   description="🍓 Главное меню"),
-        types.BotCommand(command="admin",   description="🛡️ Админ-панель"),
-        types.BotCommand(command="balance", description="💰 Баланс"),
-        types.BotCommand(command="balance", description="🔄 Перевод"),
-        types.BotCommand(command="balance", description="💳 Вывод"),
-        types.BotCommand(command="rep",     description="✍️ Оставить отзыв"),
-        types.BotCommand(command="check",   description="🔍 Проверить продавца"),
-        types.BotCommand(command="help",    description="❓ Как пользоваться"),
-    ]
-    for admin_id in ADMIN_IDS:
-        try:
-            await bot.set_my_commands(
-                admin_commands,
-                scope=types.BotCommandScopeChat(chat_id=admin_id),
-            )
-        except TelegramAPIError as e:
-            logger.warning(f"Не удалось задать команды для админа {admin_id}: {e}")
-
-    me = await bot.get_me()
-    logger.info(
-        f"🍓 Бот @{me.username} запущен! "
-        f"Администраторы: {ADMIN_IDS if ADMIN_IDS else 'не назначены'}"
+    app.router.add_get(
+        "/favicon.ico",
+        favicon
     )
-    logger.info(f"Логи пишутся в папку: {os.path.abspath(LOGS_DIR)}")
 
+    app.router.add_route(
+        "OPTIONS",
+        "/{tail:.*}",
+        lambda request: web.Response(status=200)
+    )
+
+    app.router.add_get(
+        "/api/config",
+        api_config
+    )
+
+    app.router.add_get(
+        "/api/me",
+        require_auth(api_me)
+    )
+
+    app.router.add_get(
+        "/api/check",
+        require_auth(api_check)
+    )
+
+    app.router.add_get(
+        "/api/top",
+        require_auth(api_top)
+    )
+
+    app.router.add_get(
+        "/api/stats",
+        require_auth(api_stats)
+    )
+
+    app.router.add_get(
+        "/api/photo/{file_id}",
+        api_photo
+    )
+
+    app.router.add_post(
+        "/api/review",
+        require_auth(api_add_review)
+    )
+
+    app.router.add_get(
+        "/api/wallet",
+        require_auth(api_wallet)
+    )
+
+    app.router.add_post(
+        "/api/wallet/deposit",
+        require_auth(api_deposit)
+    )
+
+    app.router.add_post(
+        "/api/wallet/withdraw",
+        require_auth(api_withdraw)
+    )
+
+    app.router.add_post(
+        "/api/wallet/transfer",
+        require_auth(api_transfer)
+    )
+
+
+    app.router.add_static(
+        "/uploads/",
+        UPLOAD_DIR,
+        show_index=False
+    )
+    return app
+async def favicon(request):
+    return web.Response(status=204)
+
+# ===========================================================================
+# START SERVER
+# ===========================================================================
+
+
+async def run_web_app():
+    logger.info(
+        "API READY"
+    )
+    app = build_web_app()
+    runner = web.AppRunner(
+        app
+    )
+    await runner.setup()
+
+    site = web.TCPSite(
+        runner,
+        API_HOST,
+        API_PORT
+    )
+
+    await site.start()
+
+    logger.info(
+        f"🌐 Mini App API запущен {API_HOST}:{API_PORT}"
+    )
+    return runner
+
+# ===========================================================================
+# CRYPTO PAYMENT LOOP
+# ===========================================================================
+
+
+async def crypto_payments_loop():
+    while True:
+        try:
+            await check_crypto_payments()
+
+        except Exception as e:
+            logger.error(
+                f"CryptoPay error: {e}"
+            )
+
+        await asyncio.sleep(15)
+
+
+# ===========================================================================
+# BOT STARTUP
+# ===========================================================================
+
+async def on_startup():
+    logger.info("🚀 ON_STARTUP ВЫЗВАН")
+
+    db.init()
+
+    await bot.set_chat_menu_button(
+        menu_button=types.MenuButtonWebApp(
+            text="Nexon",
+            web_app=WebAppInfo(
+                url=WEBAPP_URL
+            )
+        )
+    )
+
+    logger.info(
+        f"✅ WEBAPP кнопка установлена: {WEBAPP_URL}"
+    )
 
 async def main() -> None:
     db.init()
     dp.startup.register(on_startup)
-    logger.info("🍓 Nexon Reputation Bot стартует...")
+    logger.info(
+        "🍓 Nexon Reputation Bot стартует..."
+    )
+    # запускаем Mini App API
+    runner = await run_web_app()
+    # запускаем проверку платежей
+    asyncio.create_task(
+        crypto_payments_loop()
+    )
+    try:
+        # держим бота запущенным
+        await dp.start_polling(
+            bot
+        )
 
-    web_runner = await run_web_app()
-    asyncio.create_task(crypto_payments_loop())
+    finally:
+        await runner.cleanup()
+        await shutdown()
+
+async def shutdown():
+    try:
+        await bot.session.close()
+    except Exception:
+        pass
 
     try:
-        await dp.start_polling(bot)
-    finally:
-        await web_runner.cleanup()
+        await crypto.close()
+    except Exception:
+        pass
+
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(
+        main()
+    )
