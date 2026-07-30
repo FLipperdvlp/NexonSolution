@@ -89,7 +89,7 @@ async def register_user_middleware(handler, event: types.Message, data: dict):
 
 REP_PATTERN = re.compile(
     r"^\s*(?:@?(\w+)\s*([+\-])\s*реп\s*(.*)|([+\-])\s*реп\s+@?(\w+)\s*(.*))$",
-    re.IGNORECASE | re.DOTALL
+    re.IGNORECASE | re.DOTALL,
 )
 
 
@@ -680,7 +680,8 @@ async def check_command(message: types.Message, command: CommandObject) -> None:
     await send_reputation_card(message, identifier, source_message=message)
 
 
-@dp.message(F.text | F.caption)
+@dp.message(F.text.regexp(r"^\s*(?:@?\w+\s*[+\-]\s*реп|[+\-]\s*реп\s+@?\w+)"))
+@dp.message(F.caption.regexp(r"^\s*(?:@?\w+\s*[+\-]\s*реп|[+\-]\s*реп\s+@?\w+)"))
 async def reputation_handler(message: types.Message) -> None:
     text = get_target_text(message)
     parsed = parse_rep_message(text)
@@ -814,8 +815,8 @@ async def reputation_handler(message: types.Message) -> None:
     )
 
 
-@dp.channel_post(F.text.regexp(r"^[+\-]\s*реп\s+@?\w+"))
-@dp.channel_post(F.caption.regexp(r"^[+\-]\s*реп\s+@?\w+"))
+@dp.channel_post(F.text.regexp(r"^\s*(?:@?\w+\s*[+\-]\s*реп|[+\-]\s*реп\s+@?\w+)"))
+@dp.channel_post(F.caption.regexp(r"^\s*(?:@?\w+\s*[+\-]\s*реп|[+\-]\s*реп\s+@?\w+)"))
 async def channel_reputation_handler(message: types.Message) -> None:
     text = get_target_text(message)
     parsed = parse_rep_message(text)

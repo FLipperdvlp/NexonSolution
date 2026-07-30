@@ -2700,3 +2700,16 @@ TypeError: cannot unpack non-iterable NoneType object
 2026-07-30 19:45:33,112 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
 2026-07-30 19:45:33,113 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
 2026-07-30 19:45:33,373 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-30 19:48:59,689 | INFO    | handler.wallet | 🍓 Nexon Reputation Bot стартует...
+2026-07-30 19:49:01,256 | INFO    | handler.wallet | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-30 19:49:01,267 | INFO    | handler.wallet | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-30 19:49:01,267 | INFO    | aiogram.dispatcher | Start polling
+2026-07-30 19:49:01,298 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-30 19:49:01,611 | INFO    | aiogram.event | Update id=543850032 is handled. Duration 211 ms by bot id=8578283530
+2026-07-30 19:49:04,884 | INFO    | aiogram.event | Update id=543850033 is handled. Duration 314 ms by bot id=8578283530
+2026-07-30 19:49:05,845 | INFO    | aiogram.event | Update id=543850034 is handled. Duration 352 ms by bot id=8578283530
+2026-07-30 19:49:06,640 | INFO    | aiogram.event | Update id=543850035 is handled. Duration 95 ms by bot id=8578283530
+2026-07-30 19:54:37,244 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-30 19:54:37,247 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-30 19:54:37,247 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-30 19:54:37,506 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
