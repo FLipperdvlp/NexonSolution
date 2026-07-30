@@ -1,0 +1,241 @@
+2026-07-28 13:53:14,091 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-28 13:53:15,352 | WARNING | __main__ | Не удалось задать команды для админа 8372409305: Telegram server says - Bad Request: chat not found
+2026-07-28 13:53:15,383 | INFO    | __main__ | 🍓 Бот @testtt52bot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-28 13:53:15,384 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-28 13:53:15,384 | INFO    | aiogram.dispatcher | Start polling
+2026-07-28 13:53:15,413 | INFO    | aiogram.dispatcher | Run polling for bot @testtt52bot id=8863892337 - 'test'
+2026-07-28 13:54:01,047 | INFO    | aiogram.event | Update id=884577527 is handled. Duration 624 ms by bot id=8863892337
+2026-07-28 13:54:04,424 | INFO    | aiogram.event | Update id=884577528 is handled. Duration 224 ms by bot id=8863892337
+2026-07-28 13:54:06,565 | INFO    | aiogram.event | Update id=884577529 is handled. Duration 104 ms by bot id=8863892337
+2026-07-28 13:54:07,376 | INFO    | aiogram.event | Update id=884577530 is handled. Duration 99 ms by bot id=8863892337
+2026-07-28 13:54:08,243 | INFO    | aiogram.event | Update id=884577531 is handled. Duration 106 ms by bot id=8863892337
+2026-07-28 13:54:09,092 | INFO    | aiogram.event | Update id=884577532 is handled. Duration 211 ms by bot id=8863892337
+2026-07-28 13:54:10,015 | INFO    | aiogram.event | Update id=884577533 is handled. Duration 436 ms by bot id=8863892337
+2026-07-28 13:54:10,876 | INFO    | aiogram.event | Update id=884577534 is handled. Duration 215 ms by bot id=8863892337
+2026-07-28 13:54:15,585 | INFO    | aiogram.event | Update id=884577535 is handled. Duration 443 ms by bot id=8863892337
+2026-07-28 13:54:16,544 | INFO    | aiogram.event | Update id=884577536 is handled. Duration 95 ms by bot id=8863892337
+2026-07-28 13:54:17,787 | INFO    | aiogram.event | Update id=884577537 is handled. Duration 153 ms by bot id=8863892337
+2026-07-28 13:54:19,838 | INFO    | aiogram.event | Update id=884577538 is handled. Duration 97 ms by bot id=8863892337
+2026-07-28 13:54:21,257 | INFO    | aiogram.event | Update id=884577539 is handled. Duration 430 ms by bot id=8863892337
+2026-07-28 13:54:21,827 | INFO    | aiogram.event | Update id=884577540 is handled. Duration 121 ms by bot id=8863892337
+2026-07-28 13:54:23,541 | INFO    | aiogram.event | Update id=884577541 is handled. Duration 132 ms by bot id=8863892337
+2026-07-28 13:54:24,427 | INFO    | aiogram.event | Update id=884577542 is handled. Duration 216 ms by bot id=8863892337
+2026-07-28 13:54:25,231 | INFO    | aiogram.event | Update id=884577543 is handled. Duration 245 ms by bot id=8863892337
+2026-07-28 13:57:20,464 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-28 13:57:20,466 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-28 13:57:20,467 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8863892337)
+2026-07-28 13:57:20,724 | INFO    | aiogram.dispatcher | Polling stopped for bot @testtt52bot id=8863892337 - 'test'
+2026-07-28 13:57:36,531 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-28 13:57:38,009 | WARNING | __main__ | Не удалось задать команды для админа 8372409305: Telegram server says - Bad Request: chat not found
+2026-07-28 13:57:38,045 | INFO    | __main__ | 🍓 Бот @testtt52bot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-28 13:57:38,046 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-28 13:57:38,046 | INFO    | aiogram.dispatcher | Start polling
+2026-07-28 13:57:38,078 | INFO    | aiogram.dispatcher | Run polling for bot @testtt52bot id=8863892337 - 'test'
+2026-07-28 13:57:39,118 | INFO    | aiogram.event | Update id=884577544 is handled. Duration 246 ms by bot id=8863892337
+2026-07-28 13:57:40,363 | INFO    | aiogram.event | Update id=884577545 is handled. Duration 146 ms by bot id=8863892337
+2026-07-28 13:57:41,148 | INFO    | aiogram.event | Update id=884577546 is handled. Duration 102 ms by bot id=8863892337
+2026-07-28 13:57:42,684 | INFO    | aiogram.event | Update id=884577547 is handled. Duration 121 ms by bot id=8863892337
+2026-07-28 14:00:10,631 | INFO    | aiogram.event | Update id=884577548 is not handled. Duration 25 ms by bot id=8863892337
+2026-07-28 14:09:04,269 | INFO    | aiogram.event | Update id=884577549 is handled. Duration 151 ms by bot id=8863892337
+2026-07-28 14:09:09,664 | INFO    | aiogram.event | Update id=884577550 is handled. Duration 100 ms by bot id=8863892337
+2026-07-28 14:09:12,252 | INFO    | aiogram.event | Update id=884577551 is handled. Duration 384 ms by bot id=8863892337
+2026-07-28 14:09:12,786 | INFO    | aiogram.event | Update id=884577552 is handled. Duration 113 ms by bot id=8863892337
+2026-07-28 14:09:54,596 | INFO    | aiogram.event | Update id=884577553 is handled. Duration 99 ms by bot id=8863892337
+2026-07-28 14:09:57,589 | INFO    | aiogram.event | Update id=884577554 is handled. Duration 191 ms by bot id=8863892337
+2026-07-28 14:09:58,759 | INFO    | aiogram.event | Update id=884577555 is handled. Duration 332 ms by bot id=8863892337
+2026-07-28 14:10:01,214 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-28 14:10:01,216 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-28 14:10:01,216 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8863892337)
+2026-07-28 14:10:01,477 | INFO    | aiogram.dispatcher | Polling stopped for bot @testtt52bot id=8863892337 - 'test'
+2026-07-28 14:20:08,611 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-28 14:20:10,075 | WARNING | __main__ | Не удалось задать команды для админа 8372409305: Telegram server says - Bad Request: chat not found
+2026-07-28 14:20:10,108 | INFO    | __main__ | 🍓 Бот @testtt52bot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-28 14:20:10,108 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-28 14:20:10,109 | INFO    | aiogram.dispatcher | Start polling
+2026-07-28 14:20:10,138 | INFO    | aiogram.dispatcher | Run polling for bot @testtt52bot id=8863892337 - 'test'
+2026-07-28 14:20:10,361 | INFO    | aiogram.event | Update id=884577556 is handled. Duration 163 ms by bot id=8863892337
+2026-07-28 14:20:13,841 | INFO    | aiogram.event | Update id=884577557 is handled. Duration 145 ms by bot id=8863892337
+2026-07-28 14:20:26,104 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-28 14:20:26,108 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-28 14:20:26,110 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8863892337)
+2026-07-28 14:20:26,372 | INFO    | aiogram.dispatcher | Polling stopped for bot @testtt52bot id=8863892337 - 'test'
+2026-07-28 23:27:54,003 | INFO    | handler.wallet | 🍓 Nexon Reputation Bot стартует...
+2026-07-28 23:27:55,194 | WARNING | handler.wallet | Не удалось задать команды для админа 8372409305: Telegram server says - Bad Request: chat not found
+2026-07-28 23:27:55,234 | INFO    | handler.wallet | 🍓 Бот @testtt52bot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-28 23:27:55,234 | INFO    | handler.wallet | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-28 23:27:55,235 | INFO    | aiogram.dispatcher | Start polling
+2026-07-28 23:27:55,264 | INFO    | aiogram.dispatcher | Run polling for bot @testtt52bot id=8863892337 - 'test'
+2026-07-28 23:27:57,640 | INFO    | aiogram.event | Update id=884577558 is handled. Duration 173 ms by bot id=8863892337
+2026-07-28 23:28:01,146 | INFO    | aiogram.event | Update id=884577559 is handled. Duration 118 ms by bot id=8863892337
+2026-07-28 23:28:02,245 | INFO    | aiogram.event | Update id=884577560 is handled. Duration 90 ms by bot id=8863892337
+2026-07-28 23:28:03,380 | INFO    | aiogram.event | Update id=884577561 is handled. Duration 83 ms by bot id=8863892337
+2026-07-28 23:28:04,402 | INFO    | aiogram.event | Update id=884577562 is handled. Duration 105 ms by bot id=8863892337
+2026-07-28 23:28:04,989 | INFO    | aiogram.event | Update id=884577563 is handled. Duration 99 ms by bot id=8863892337
+2026-07-28 23:28:08,886 | INFO    | aiogram.event | Update id=884577564 is handled. Duration 254 ms by bot id=8863892337
+2026-07-28 23:28:11,605 | INFO    | aiogram.event | Update id=884577565 is handled. Duration 94 ms by bot id=8863892337
+2026-07-28 23:28:12,194 | INFO    | aiogram.event | Update id=884577566 is handled. Duration 105 ms by bot id=8863892337
+2026-07-28 23:28:12,753 | INFO    | aiogram.event | Update id=884577567 is handled. Duration 133 ms by bot id=8863892337
+2026-07-28 23:28:13,457 | INFO    | aiogram.event | Update id=884577568 is handled. Duration 97 ms by bot id=8863892337
+2026-07-28 23:28:14,372 | INFO    | aiogram.event | Update id=884577569 is handled. Duration 259 ms by bot id=8863892337
+2026-07-28 23:28:15,704 | INFO    | aiogram.event | Update id=884577570 is handled. Duration 92 ms by bot id=8863892337
+2026-07-28 23:28:16,675 | INFO    | aiogram.event | Update id=884577571 is handled. Duration 109 ms by bot id=8863892337
+2026-07-28 23:28:17,187 | INFO    | aiogram.event | Update id=884577572 is handled. Duration 111 ms by bot id=8863892337
+2026-07-28 23:28:17,894 | INFO    | aiogram.event | Update id=884577573 is handled. Duration 111 ms by bot id=8863892337
+2026-07-28 23:28:19,205 | INFO    | aiogram.event | Update id=884577574 is handled. Duration 102 ms by bot id=8863892337
+2026-07-28 23:28:19,939 | INFO    | aiogram.event | Update id=884577575 is handled. Duration 108 ms by bot id=8863892337
+2026-07-28 23:28:21,297 | INFO    | aiogram.event | Update id=884577576 is handled. Duration 142 ms by bot id=8863892337
+2026-07-28 23:28:21,902 | INFO    | aiogram.event | Update id=884577577 is handled. Duration 108 ms by bot id=8863892337
+2026-07-28 23:28:23,011 | INFO    | aiogram.event | Update id=884577578 is handled. Duration 103 ms by bot id=8863892337
+2026-07-28 23:28:26,840 | INFO    | aiogram.event | Update id=884577579 is handled. Duration 113 ms by bot id=8863892337
+2026-07-28 23:28:28,640 | INFO    | aiogram.event | Update id=884577580 is handled. Duration 94 ms by bot id=8863892337
+2026-07-28 23:28:29,964 | INFO    | aiogram.event | Update id=884577581 is handled. Duration 101 ms by bot id=8863892337
+2026-07-28 23:28:30,923 | INFO    | aiogram.event | Update id=884577582 is handled. Duration 86 ms by bot id=8863892337
+2026-07-28 23:28:31,903 | INFO    | aiogram.event | Update id=884577583 is handled. Duration 124 ms by bot id=8863892337
+2026-07-28 23:28:32,540 | INFO    | aiogram.event | Update id=884577584 is handled. Duration 103 ms by bot id=8863892337
+2026-07-28 23:28:33,505 | INFO    | aiogram.event | Update id=884577585 is handled. Duration 113 ms by bot id=8863892337
+2026-07-28 23:28:34,486 | INFO    | aiogram.event | Update id=884577586 is handled. Duration 147 ms by bot id=8863892337
+2026-07-28 23:28:35,290 | INFO    | aiogram.event | Update id=884577587 is handled. Duration 93 ms by bot id=8863892337
+2026-07-28 23:28:38,913 | INFO    | aiogram.event | Update id=884577588 is handled. Duration 88 ms by bot id=8863892337
+2026-07-28 23:28:39,630 | INFO    | aiogram.event | Update id=884577589 is handled. Duration 123 ms by bot id=8863892337
+2026-07-28 23:28:40,859 | INFO    | aiogram.event | Update id=884577590 is handled. Duration 159 ms by bot id=8863892337
+2026-07-28 23:30:18,861 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-28 23:30:18,863 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-28 23:30:18,863 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8863892337)
+2026-07-28 23:30:19,121 | INFO    | aiogram.dispatcher | Polling stopped for bot @testtt52bot id=8863892337 - 'test'
+2026-07-28 23:31:04,943 | INFO    | handler.wallet | 🍓 Nexon Reputation Bot стартует...
+2026-07-28 23:31:06,533 | WARNING | handler.wallet | Не удалось задать команды для админа 8372409305: Telegram server says - Bad Request: chat not found
+2026-07-28 23:31:06,565 | INFO    | handler.wallet | 🍓 Бот @testtt52bot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-28 23:31:06,565 | INFO    | handler.wallet | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-28 23:31:06,566 | INFO    | aiogram.dispatcher | Start polling
+2026-07-28 23:31:06,597 | INFO    | aiogram.dispatcher | Run polling for bot @testtt52bot id=8863892337 - 'test'
+2026-07-28 23:31:09,715 | INFO    | aiogram.event | Update id=884577591 is handled. Duration 475 ms by bot id=8863892337
+2026-07-28 23:31:10,750 | INFO    | aiogram.event | Update id=884577592 is handled. Duration 116 ms by bot id=8863892337
+2026-07-28 23:31:11,740 | INFO    | aiogram.event | Update id=884577593 is handled. Duration 95 ms by bot id=8863892337
+2026-07-28 23:31:32,170 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-28 23:31:32,171 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-28 23:31:32,172 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8863892337)
+2026-07-28 23:31:32,425 | INFO    | aiogram.dispatcher | Polling stopped for bot @testtt52bot id=8863892337 - 'test'
+2026-07-28 23:31:44,703 | INFO    | handler.wallet | 🍓 Nexon Reputation Bot стартует...
+2026-07-28 23:31:45,951 | WARNING | handler.wallet | Не удалось задать команды для админа 8372409305: Telegram server says - Bad Request: chat not found
+2026-07-28 23:31:45,981 | INFO    | handler.wallet | 🍓 Бот @testtt52bot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-28 23:31:45,982 | INFO    | handler.wallet | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-28 23:31:45,982 | INFO    | aiogram.dispatcher | Start polling
+2026-07-28 23:31:46,011 | INFO    | aiogram.dispatcher | Run polling for bot @testtt52bot id=8863892337 - 'test'
+2026-07-28 23:35:09,233 | INFO    | aiogram.event | Update id=884577594 is handled. Duration 299 ms by bot id=8863892337
+2026-07-28 23:35:10,988 | INFO    | aiogram.event | Update id=884577595 is handled. Duration 193 ms by bot id=8863892337
+2026-07-28 23:35:12,814 | INFO    | aiogram.event | Update id=884577596 is handled. Duration 128 ms by bot id=8863892337
+2026-07-28 23:35:15,781 | INFO    | aiogram.event | Update id=884577597 is handled. Duration 330 ms by bot id=8863892337
+2026-07-28 23:35:23,439 | INFO    | aiogram.event | Update id=884577598 is handled. Duration 102 ms by bot id=8863892337
+2026-07-28 23:35:25,002 | INFO    | aiogram.event | Update id=884577599 is handled. Duration 112 ms by bot id=8863892337
+2026-07-28 23:35:26,936 | INFO    | aiogram.event | Update id=884577600 is handled. Duration 99 ms by bot id=8863892337
+2026-07-28 23:35:28,028 | INFO    | aiogram.event | Update id=884577601 is handled. Duration 123 ms by bot id=8863892337
+2026-07-28 23:35:28,994 | INFO    | aiogram.event | Update id=884577602 is handled. Duration 160 ms by bot id=8863892337
+2026-07-28 23:35:29,948 | INFO    | aiogram.event | Update id=884577603 is handled. Duration 159 ms by bot id=8863892337
+2026-07-28 23:35:31,095 | INFO    | aiogram.event | Update id=884577604 is handled. Duration 373 ms by bot id=8863892337
+2026-07-28 23:35:32,054 | INFO    | aiogram.event | Update id=884577605 is handled. Duration 102 ms by bot id=8863892337
+2026-07-28 23:35:32,906 | INFO    | aiogram.event | Update id=884577606 is handled. Duration 134 ms by bot id=8863892337
+2026-07-28 23:35:36,744 | INFO    | aiogram.event | Update id=884577607 is handled. Duration 135 ms by bot id=8863892337
+2026-07-28 23:35:43,681 | INFO    | aiogram.event | Update id=884577608 is handled. Duration 100 ms by bot id=8863892337
+2026-07-28 23:35:57,475 | INFO    | aiogram.event | Update id=884577609 is not handled. Duration 26 ms by bot id=8863892337
+2026-07-28 23:35:57,478 | ERROR   | aiogram.event | Cause exception while process update id=884577609 by bot id=8863892337
+AttributeError: 'Database' object has no attribute 'conn'
+Traceback (most recent call last):
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 320, in _process_update
+    response = await self.feed_update(bot, update, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 164, in feed_update
+    response = await self.update.wrap_outer_middleware(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+    )
+    ^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\middlewares\error.py", line 27, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\middlewares\user_context.py", line 58, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\fsm\middleware.py", line 43, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\event\telegram.py", line 126, in trigger
+    return await wrapped_inner(event, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\event\handler.py", line 71, in call
+    return await wrapped()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 283, in _listen_update
+    return await self.propagate_event(update_type=update_type, event=event, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\router.py", line 165, in propagate_event
+    return await observer.wrap_outer_middleware(_wrapped, event=event, data=kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\bot1.py", line 87, in register_user_middleware
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\bot1.py", line 266, in album_collector_middleware
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\bot1.py", line 450, in block_channel_commands
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\router.py", line 157, in _wrapped
+    return await self._propagate_event(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\router.py", line 185, in _propagate_event
+    response = await observer.trigger(event, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\event\telegram.py", line 126, in trigger
+    return await wrapped_inner(event, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lp021\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiogram\dispatcher\event\handler.py", line 71, in call
+    return await wrapped()
+           ^^^^^^^^^^^^^^^
+  File "c:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\bot1.py", line 1510, in transfer_user
+    user = db.get_user_by_username(username)
+  File "c:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\db\database.py", line 25, in get_user_by_username
+    cursor = self.conn.execute(
+             ^^^^^^^^^
+AttributeError: 'Database' object has no attribute 'conn'. Did you mean: '_conn'?
+2026-07-28 23:38:17,455 | INFO    | aiogram.event | Update id=884577610 is handled. Duration 179 ms by bot id=8863892337
+2026-07-28 23:38:24,327 | INFO    | aiogram.event | Update id=884577611 is handled. Duration 210 ms by bot id=8863892337
+2026-07-28 23:38:25,562 | INFO    | aiogram.event | Update id=884577612 is handled. Duration 115 ms by bot id=8863892337
+2026-07-28 23:40:45,447 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-28 23:40:45,461 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-28 23:40:45,463 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8863892337)
+2026-07-28 23:40:45,773 | INFO    | aiogram.dispatcher | Polling stopped for bot @testtt52bot id=8863892337 - 'test'
+2026-07-28 23:42:49,940 | INFO    | handler.wallet | 🍓 Nexon Reputation Bot стартует...
+2026-07-28 23:42:52,860 | WARNING | handler.wallet | Не удалось задать команды для админа 8372409305: Telegram server says - Bad Request: chat not found
+2026-07-28 23:42:52,902 | INFO    | handler.wallet | 🍓 Бот @testtt52bot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-28 23:42:52,903 | INFO    | handler.wallet | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-28 23:42:52,903 | INFO    | aiogram.dispatcher | Start polling
+2026-07-28 23:42:52,934 | INFO    | aiogram.dispatcher | Run polling for bot @testtt52bot id=8863892337 - 'test'
+2026-07-28 23:42:53,349 | INFO    | aiogram.event | Update id=884577614 is handled. Duration 301 ms by bot id=8863892337
+2026-07-28 23:42:53,819 | INFO    | aiogram.event | Update id=884577613 is handled. Duration 808 ms by bot id=8863892337
+2026-07-28 23:43:01,121 | INFO    | aiogram.event | Update id=884577615 is handled. Duration 386 ms by bot id=8863892337
+2026-07-28 23:43:11,775 | INFO    | aiogram.event | Update id=884577616 is handled. Duration 96 ms by bot id=8863892337
+2026-07-28 23:43:14,675 | INFO    | aiogram.event | Update id=884577617 is handled. Duration 144 ms by bot id=8863892337
+2026-07-28 23:43:21,244 | INFO    | aiogram.event | Update id=884577618 is handled. Duration 156 ms by bot id=8863892337
+2026-07-28 23:43:34,844 | INFO    | aiogram.event | Update id=884577619 is handled. Duration 100 ms by bot id=8863892337
+2026-07-28 23:43:35,983 | INFO    | aiogram.event | Update id=884577620 is handled. Duration 115 ms by bot id=8863892337
+2026-07-28 23:43:38,942 | INFO    | aiogram.event | Update id=884577621 is handled. Duration 98 ms by bot id=8863892337
+2026-07-28 23:43:43,614 | INFO    | aiogram.event | Update id=884577622 is handled. Duration 128 ms by bot id=8863892337
+2026-07-28 23:43:45,221 | INFO    | aiogram.event | Update id=884577623 is handled. Duration 176 ms by bot id=8863892337
+2026-07-28 23:43:50,746 | INFO    | aiogram.event | Update id=884577624 is handled. Duration 91 ms by bot id=8863892337
+2026-07-28 23:43:54,354 | INFO    | aiogram.event | Update id=884577625 is handled. Duration 105 ms by bot id=8863892337
+2026-07-28 23:44:08,323 | INFO    | aiogram.event | Update id=884577626 is handled. Duration 106 ms by bot id=8863892337
+2026-07-28 23:44:09,178 | INFO    | aiogram.event | Update id=884577627 is handled. Duration 136 ms by bot id=8863892337
+2026-07-28 23:44:27,042 | INFO    | aiogram.event | Update id=884577628 is handled. Duration 102 ms by bot id=8863892337
+2026-07-28 23:44:29,216 | INFO    | aiogram.event | Update id=884577629 is handled. Duration 182 ms by bot id=8863892337
+2026-07-28 23:44:47,171 | INFO    | aiogram.event | Update id=884577630 is handled. Duration 606 ms by bot id=8863892337
+2026-07-28 23:44:55,892 | INFO    | aiogram.event | Update id=884577631 is handled. Duration 87 ms by bot id=8863892337
+2026-07-28 23:45:02,646 | INFO    | aiogram.event | Update id=884577632 is handled. Duration 96 ms by bot id=8863892337
+2026-07-28 23:45:04,246 | INFO    | aiogram.event | Update id=884577633 is handled. Duration 114 ms by bot id=8863892337
+2026-07-28 23:45:05,247 | INFO    | aiogram.event | Update id=884577634 is handled. Duration 111 ms by bot id=8863892337
+2026-07-28 23:49:29,182 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-28 23:49:29,187 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-28 23:49:29,187 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8863892337)
+2026-07-28 23:49:29,450 | INFO    | aiogram.dispatcher | Polling stopped for bot @testtt52bot id=8863892337 - 'test'

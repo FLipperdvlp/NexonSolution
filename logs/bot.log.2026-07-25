@@ -1,0 +1,17 @@
+2026-07-25 22:42:51,180 | INFO    | __main__ | 🍓 Nexon Reputation Bot стартует...
+2026-07-25 22:42:51,200 | INFO    | __main__ | 🌐 Mini App API запущен на 0.0.0.0:8080
+2026-07-25 22:42:53,060 | INFO    | __main__ | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-25 22:42:53,061 | INFO    | __main__ | ✅ WEBAPP кнопка установлена: https://effulgent-kataifi-b0cc37.netlify.app
+2026-07-25 22:42:53,062 | INFO    | __main__ | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-25 22:42:53,062 | INFO    | aiogram.dispatcher | Start polling
+2026-07-25 22:42:53,094 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-25 22:42:53,287 | INFO    | aiogram.event | Update id=543849220 is not handled. Duration 103 ms by bot id=8578283530
+2026-07-25 22:42:53,288 | INFO    | aiogram.event | Update id=543849219 is not handled. Duration 121 ms by bot id=8578283530
+2026-07-25 22:42:53,289 | INFO    | aiogram.event | Update id=543849221 is not handled. Duration 86 ms by bot id=8578283530
+2026-07-25 22:42:53,291 | INFO    | aiogram.event | Update id=543849222 is not handled. Duration 64 ms by bot id=8578283530
+2026-07-25 22:42:53,292 | INFO    | aiogram.event | Update id=543849223 is not handled. Duration 47 ms by bot id=8578283530
+2026-07-25 22:53:09,733 | INFO    | aiogram.event | Update id=543849224 is not handled. Duration 30 ms by bot id=8578283530
+2026-07-25 23:06:21,590 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-25 23:06:21,626 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-25 23:06:21,639 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-25 23:06:23,021 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'

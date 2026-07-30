@@ -21,6 +21,21 @@ class Database:
             ).fetchone()
             return float(row["balance"]) if row else 0.0
 
+    def get_user_by_username(self, username: str):
+        username = username.lstrip("@").lower()
+    
+        with self._conn() as conn:
+            row = conn.execute(
+                """
+                SELECT telegram_id AS user_id, username
+                FROM users
+                WHERE LOWER(username)=LOWER(?)
+                """,
+                (username,)
+            ).fetchone()
+    
+        return dict(row) if row else None
+
     def add_balance(self, telegram_id: int, amount: float):
         with self._conn() as conn:
 
@@ -181,7 +196,7 @@ class Database:
                 );
 
                 CREATE TABLE IF NOT EXISTS invoices (
-                    invoice_id INTEGER PRIMARY KEY,
+                    invoice_id TEXT PRIMARY KEY,
                     telegram_id INTEGER NOT NULL,
                     amount REAL NOT NULL,
                     asset TEXT NOT NULL,
