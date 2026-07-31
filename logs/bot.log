@@ -2713,3 +2713,36 @@ TypeError: cannot unpack non-iterable NoneType object
 2026-07-30 19:54:37,247 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
 2026-07-30 19:54:37,247 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
 2026-07-30 19:54:37,506 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-30 19:54:51,528 | INFO    | handler.wallet | 🍓 Nexon Reputation Bot стартует...
+2026-07-30 19:54:52,852 | INFO    | handler.wallet | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-30 19:54:52,853 | INFO    | handler.wallet | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-30 19:54:52,853 | INFO    | aiogram.dispatcher | Start polling
+2026-07-30 19:54:52,885 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-30 19:55:02,451 | INFO    | aiogram.event | Update id=543850036 is handled. Duration 209 ms by bot id=8578283530
+2026-07-30 19:55:05,569 | INFO    | aiogram.event | Update id=543850037 is handled. Duration 120 ms by bot id=8578283530
+2026-07-30 19:55:06,317 | INFO    | aiogram.event | Update id=543850038 is handled. Duration 98 ms by bot id=8578283530
+2026-07-30 19:55:07,936 | INFO    | aiogram.event | Update id=543850039 is handled. Duration 83 ms by bot id=8578283530
+2026-07-30 19:55:30,780 | INFO    | handler.wallet | Новый отзыв #13: + реп target_id=8732956317 
+2026-07-30 19:55:30,784 | INFO    | aiogram.event | Update id=543850040 is handled. Duration 280 ms by bot id=8578283530
+2026-07-30 19:55:37,271 | INFO    | aiogram.event | Update id=543850041 is handled. Duration 219 ms by bot id=8578283530
+2026-07-30 19:55:38,788 | INFO    | handler.wallet | Админ 6155527631 удалил отзыв #13
+2026-07-30 19:55:38,790 | INFO    | aiogram.event | Update id=543850042 is handled. Duration 121 ms by bot id=8578283530
+2026-07-30 19:58:26,437 | INFO    | handler.wallet | 🍓 Nexon Reputation Bot стартует...
+2026-07-30 19:58:29,175 | INFO    | handler.wallet | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-30 19:58:29,175 | INFO    | handler.wallet | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-30 19:58:29,175 | INFO    | aiogram.dispatcher | Start polling
+2026-07-30 19:58:29,448 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-30 20:03:11,915 | INFO    | aiogram.event | Update id=543850043 is not handled. Duration 33 ms by bot id=8578283530
+2026-07-30 20:48:33,980 | INFO    | aiogram.event | Update id=543850044 is not handled. Duration 26 ms by bot id=8578283530
+2026-07-30 20:56:10,064 | INFO    | aiogram.event | Update id=543850045 is not handled. Duration 15 ms by bot id=8578283530
+2026-07-30 20:56:36,872 | INFO    | aiogram.event | Update id=543850046 is not handled. Duration 15 ms by bot id=8578283530
+2026-07-30 20:59:09,028 | INFO    | aiogram.event | Update id=543850047 is not handled. Duration 11 ms by bot id=8578283530
+2026-07-30 21:03:13,295 | INFO    | aiogram.event | Update id=543850048 is not handled. Duration 15 ms by bot id=8578283530
+2026-07-30 21:04:58,130 | INFO    | aiogram.event | Update id=543850049 is not handled. Duration 11 ms by bot id=8578283530
+2026-07-30 21:29:11,383 | INFO    | aiogram.event | Update id=543850050 is not handled. Duration 16 ms by bot id=8578283530
+2026-07-30 21:47:42,802 | INFO    | aiogram.event | Update id=543850051 is not handled. Duration 39 ms by bot id=8578283530
+2026-07-30 21:54:25,826 | INFO    | aiogram.event | Update id=543850052 is not handled. Duration 14 ms by bot id=8578283530
+2026-07-30 22:03:14,716 | INFO    | aiogram.event | Update id=543850053 is not handled. Duration 15 ms by bot id=8578283530
+2026-07-30 23:03:15,184 | INFO    | aiogram.event | Update id=543850054 is not handled. Duration 12 ms by bot id=8578283530
+2026-07-30 23:29:12,176 | INFO    | aiogram.event | Update id=543850055 is not handled. Duration 15 ms by bot id=8578283530
+2026-07-30 23:39:07,347 | INFO    | aiogram.event | Update id=543850056 is not handled. Duration 11 ms by bot id=8578283530

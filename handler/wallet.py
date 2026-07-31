@@ -5,7 +5,8 @@ from aiogram.exceptions import TelegramAPIError
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-
+from bot import LOGS_DIR, WithdrawState, crypto  # добавили crypto
+import uuid
 from aiogram import Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import (
@@ -98,23 +99,18 @@ def log_action(
 
 
 
-@dp.callback_query(F.data=="withdraw")
-async def withdraw_callback( callback: CallbackQuery, state: FSMContext ):
-    balance = db.get_balance(
-        callback.from_user.id
-    )
-    await state.set_state(
-        WithdrawState.waiting_amount
-    )
+@dp.callback_query(F.data == "withdraw")
+async def withdraw_callback(callback: CallbackQuery, state: FSMContext):
+    balance = db.get_balance(callback.from_user.id)
+    await state.set_state(WithdrawState.waiting_amount)
     await callback.message.edit_text(
         f"""
 💸 <b>Вывод средств</b>
 
-Вывод — только на кошелёк USDT в сети <b>TRC20</b>.
+Средства зачисляются прямо на ваш баланс в <b>@CryptoBot</b>.
+Оттуда вы сможете вывести их на любой кошелёк USDT (сеть TRC20) через сам @CryptoBot.
 
-Ваш баланс:
-<b>{balance:.2f} USDT</b>
-
+Ваш баланс: <b>{balance:.2f} USDT</b>
 
 Введите сумму вывода:
         """,
@@ -122,40 +118,96 @@ async def withdraw_callback( callback: CallbackQuery, state: FSMContext ):
     )
     await callback.answer()
 
-@dp.message(WithdrawState.waiting_amount)
-async def withdraw_amount(
-    message: types.Message,
-    state:FSMContext
-):
+async def send_crypto_withdrawal(user_id: int, amount: float) -> tuple[bool, str]:
+    """Отправляет USDT пользователю на его баланс в @CryptoBot."""
+    spend_id = f"wd_{user_id}_{uuid.uuid4().hex[:12]}"
     try:
-        amount=float(message.text)
-    except:
-        await message.answer(
-            "❌ Введите число"
+        await crypto.transfer(
+            user_id=user_id,
+            asset="USDT",
+            amount=round(amount, 2),
+            spend_id=spend_id,
+            comment="Вывод средств из бота",
         )
-        return
-    balance=db.get_balance(
-        message.from_user.id
-    )
-    if amount > balance:
-        await message.answer(
-            "❌ Недостаточно средств"
-        )
-        return
-    await state.update_data(
-        amount=amount
-    )
-    await state.set_state(
-        WithdrawState.waiting_wallet
-    )
-    await message.answer(
-        """
-            💳 Отправьте ваш USDT-кошелёк в сети <b>TRC20</b> (адрес TRON, начинается с «T»):
+        return True, spend_id
+    except Exception as e:
+        logger.error(f"Ошибка CryptoBot transfer для {user_id}: {e}")
+        return False, str(e)
 
-            Например:
-            TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        """
+
+@dp.message(WithdrawState.waiting_amount)
+async def withdraw_amount(message: types.Message, state: FSMContext):
+    try:
+        amount = float((message.text or "").replace(",", "."))
+    except ValueError:
+        await message.answer("❌ Введите число")
+        return
+
+    if amount < 1:
+        await message.answer("❌ Минимальная сумма вывода — 1 USDT")
+        return
+
+    balance = db.get_balance(message.from_user.id)
+    if amount > balance:
+        await message.answer("❌ Недостаточно средств")
+        return
+
+    # списываем баланс сразу, чтобы нельзя было вывести дважды
+    if not db.remove_balance(message.from_user.id, amount):
+        await message.answer("❌ Ошибка списания баланса")
+        return
+
+    await message.answer("⏳ Отправляю средства через CryptoBot...")
+
+    ok, info = await send_crypto_withdrawal(message.from_user.id, amount)
+
+    if not ok:
+        db.add_balance(message.from_user.id, amount)  # возвращаем деньги
+        await message.answer(
+            "❌ <b>Не удалось отправить средства</b>\n\n"
+            "Возможные причины:\n"
+            "• вы ни разу не открывали @CryptoBot (нажмите там /start)\n"
+            "• в приложении CryptoBot не включены переводы (Security → Transfers)\n"
+            "• на балансе приложения в CryptoBot недостаточно средств\n\n"
+            "Баланс возвращён. Попробуйте позже или обратитесь к администратору.",
+            reply_markup=back_kb(),
+        )
+        for admin_id in ADMIN_IDS:
+            try:
+                await bot.send_message(
+                    admin_id,
+                    f"⚠️ Ошибка автовывода: user={message.from_user.id} "
+                    f"(@{escape(message.from_user.username or '-')}), "
+                    f"сумма={amount} USDT, ошибка: {escape(info)}",
+                )
+            except TelegramAPIError:
+                pass
+        await state.clear()
+        return
+
+    log_action(
+        message.from_user.id,
+        message.from_user.username,
+        "ВЫВОД (авто, через CryptoBot transfer)",
+        details=(
+            f"сумма={amount} USDT spend_id={info} "
+            f"баланс_после={db.get_balance(message.from_user.id):.2f}"
+        ),
+        chat=message.chat,
     )
+
+    await message.answer(
+        f"""
+✅ <b>Средства отправлены!</b>
+
+Сумма: <b>{amount} USDT</b>
+
+Деньги зачислены на ваш баланс в @CryptoBot.
+Чтобы получить их на кошелёк TRC20, откройте @CryptoBot → Wallet → Withdraw → USDT → сеть TRC20.
+        """,
+        reply_markup=back_kb(),
+    )
+    await state.clear()
 
 @dp.message(WithdrawState.waiting_wallet)
 async def withdraw_wallet(
