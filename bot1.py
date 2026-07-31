@@ -18,6 +18,7 @@ from aiogram.types import (
 from aiohttp import web
 from dotenv import load_dotenv
 from aiocryptopay import AioCryptoPay, Networks
+from concurrent_log_handler import ConcurrentRotatingFileHandler
 
 from keyboards.main_menu import *
 from keyboards.admin     import *
@@ -56,9 +57,9 @@ os.makedirs(LOGS_DIR, exist_ok=True)
 LOG_FORMAT = "%(asctime)s | %(levelname)-7s | %(name)s | %(message)s"
 formatter = logging.Formatter(LOG_FORMAT)
 
-bot_file_handler = TimedRotatingFileHandler(
+bot_file_handler = ConcurrentRotatingFileHandler(
     filename=os.path.join(LOGS_DIR, "bot.log"),
-    when="midnight",
+    maxBytes=10 * 1024 * 1024,   # например, 10 МБ на файл
     backupCount=14,
     encoding="utf-8",
 )
