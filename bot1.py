@@ -14,11 +14,15 @@ from aiogram.types import (
     CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    MenuButtonDefault,
 )
 from aiohttp import web
 from dotenv import load_dotenv
 from aiocryptopay import AioCryptoPay, Networks
 from concurrent_log_handler import ConcurrentRotatingFileHandler
+
+
+
 
 from keyboards.main_menu import *
 from keyboards.admin     import *
@@ -41,8 +45,11 @@ if not BOT_TOKEN:
         "❌ BOT_TOKEN не задан! Создай файл .env и укажи BOT_TOKEN=<твой токен>"
     )
 
-CRYPTO_TOKEN = os.getenv("CRYPTO_TOKEN", "604330:AAdwUH5U4qdjhITyvkkkL26BEC9Kxh4Bfwr")
-
+CRYPTO_TOKEN = os.getenv("CRYPTO_TOKEN")
+if not CRYPTO_TOKEN:
+    raise ValueError(
+        "❌ CRYPTO_TOKEN не задан! Укажи его в файле .env (CRYPTO_TOKEN=<токен из @CryptoBot>)"
+    )
 crypto = AioCryptoPay(
     token=CRYPTO_TOKEN,
     network=Networks.MAIN_NET
@@ -159,6 +166,20 @@ async def notify_admins_withdrawal(wd_id: str) -> None:
             logger.warning(f"Не удалось уведомить админа {admin_id} о заявке {wd_id}: {e}")
     wd["notified"] = notified
     _save_withdrawals()
+
+
+async def notify_admins_deposit(user_id: int, username: str, amount: float, invoice_id: str) -> None:
+    text = (
+        f"💰 <b>Заявка на пополнение</b>\n\n"
+        f"👤 Пользователь: {display_name(user_id, username)} (id={user_id})\n"
+        f"💵 Сумма: {amount:.2f} USDT\n"
+        f"🆔 Invoice: <code>{invoice_id}</code>"
+    )
+    for admin_id in ADMIN_IDS:
+        try:
+            await bot.send_message(admin_id, text)
+        except TelegramAPIError as e:
+            logger.warning(f"Не удалось уведомить админа {admin_id} о пополнении: {e}")
 
 
 async def _refresh_admin_notifications(wd: dict) -> None:
@@ -1460,7 +1481,7 @@ async def deposit_callback(
             Пополнение — только через <b>CryptoBot</b>, USDT в сети <b>TRC20</b>.
             Введите сумму в USDT:
             Минимальная сумма:
-            <b>1 USDT</b>
+            <b>0.5 USDT</b>
         """,
         reply_markup=back_kb()
     )
@@ -1606,6 +1627,18 @@ async def check_crypto_payments():
         )
         db.mark_invoice_paid(invoice_id)
 
+        try:
+            await bot.send_message(
+                data["telegram_id"],
+                f"✅ <b>Оплата прошла успешно!</b>\n\n"
+                f"Баланс пополнен на <b>{float(data['amount']):.2f} USDT</b>.\n"
+                f"Текущий баланс: <b>{db.get_balance(data['telegram_id']):.2f} USDT</b>",
+            )
+        except TelegramAPIError as e:
+            logger.warning(
+                f"Не удалось уведомить пользователя {data['telegram_id']} об оплате: {e}"
+            )
+
 
 @dp.message(DepositState.waiting_amount)
 async def process_deposit_amount(
@@ -1621,9 +1654,9 @@ async def process_deposit_amount(
             "❌ Введите только число\n\nНапример: 10"
         )
         return
-    if amount < 1:
+    if amount < 0:
         await message.answer(
-            "❌ Минимальное пополнение 1 USDT"
+            "❌ Минимальное пополнение 0.5 USDT"
         )
         return
     invoice = await crypto.create_invoice(
@@ -1644,6 +1677,14 @@ async def process_deposit_amount(
         details=f"сумма={amount:.2f} USDT invoice_id={invoice.invoice_id}",
         chat=message.chat,
     )
+
+    await notify_admins_deposit(
+        message.from_user.id,
+        message.from_user.username or "",
+        amount,
+        str(invoice.invoice_id),
+    )
+
     await message.answer(
         f"""
             💰 <b>Счёт создан</b>
@@ -1775,27 +1816,6 @@ async def admin_ban_callback(callback: CallbackQuery, state: FSMContext) -> None
         reply_markup=admin_cancel_kb(),
     )
     await callback.answer()
-
-@dp.callback_query(F.data == "stats")
-async def stats_callback(callback: CallbackQuery) -> None:
-    s = db.get_global_stats()
-
-    stats_text = (
-        "📈 <b>Статистика nexon бота</b>\n\n"
-        f"👥 <b>Пользователей:</b> {s['users']}\n"
-        f"📝 <b>Всего отзывов:</b> {s['total_reviews']}\n"
-        f"   ✅ Положительных: {s['positive']}\n"
-        f"   ❌ Отрицательных: {s['negative']}\n"
-        f"💬 <b>Активных чатов:</b> {s['chats']}\n"
-        f"📡 <b>Мониторируемых каналов:</b> {s['channels']}\n\n"
-        f"🍓 <i>Помогаем делать бизнес честным!</i>"
-    )
-
-    kb = admin_panel_kb() if is_admin(callback.from_user.id) else back_kb()
-    await callback.message.edit_text(stats_text, reply_markup=kb)
-    await callback.answer()
-
-
 
 
 @dp.message(AdminState.waiting_ban_target)
@@ -2021,6 +2041,8 @@ async def crypto_payments_loop() -> None:
 
 async def on_startup() -> None:
     db.init()
+
+    await bot.set_chat_menu_button(menu_button=MenuButtonDefault())
 
     await bot.set_my_commands(
         [

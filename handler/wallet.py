@@ -1,23 +1,23 @@
+import os
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from typing import Optional
+import uuid
 from aiogram.exceptions import TelegramAPIError
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from bot import LOGS_DIR, WithdrawState, crypto  # добавили crypto
-import uuid
-from aiogram import Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.context import FSMContext
 from aiogram.types import (
     CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
-from bot import LOGS_DIR, WithdrawState
+
+from bot import LOGS_DIR, WithdrawState, crypto
 from checks.checks import *
 from keyboards.back import *
-from aiogram.fsm.context import FSMContext
 from db.database import Database
 
 BOT_TOKEN: str = os.getenv("BOT_TOKEN", "8578283530:AAEUajtwik66P-ReEfPA_j8ge36zClfoN-M")
@@ -98,6 +98,19 @@ def log_action(
     action_logger.info(line)
 
 
+async def notify_admins_withdraw_request(user_id: int, username: str, amount: float) -> None:
+    text = (
+        f"💸 <b>Пользователь запросил вывод</b>\n\n"
+        f"👤 Пользователь: <code>{user_id}</code>"
+        f" (@{escape(username or '-')})\n"
+        f"💵 Сумма: <b>{amount:.2f} USDT</b>"
+    )
+    for admin_id in ADMIN_IDS:
+        try:
+            await bot.send_message(admin_id, text)
+        except TelegramAPIError as e:
+            logger.warning(f"Не удалось уведомить админа {admin_id} о запросе вывода: {e}")
+
 
 @dp.callback_query(F.data == "withdraw")
 async def withdraw_callback(callback: CallbackQuery, state: FSMContext):
@@ -143,7 +156,7 @@ async def withdraw_amount(message: types.Message, state: FSMContext):
         await message.answer("❌ Введите число")
         return
 
-    if amount < 1:
+    if amount < 0:
         await message.answer("❌ Минимальная сумма вывода — 1 USDT")
         return
 
@@ -151,6 +164,13 @@ async def withdraw_amount(message: types.Message, state: FSMContext):
     if amount > balance:
         await message.answer("❌ Недостаточно средств")
         return
+
+    # уведомляем админов о самом факте запроса на вывод — сразу, до попытки отправки
+    await notify_admins_withdraw_request(
+        message.from_user.id,
+        message.from_user.username or "",
+        amount,
+    )
 
     # списываем баланс сразу, чтобы нельзя было вывести дважды
     if not db.remove_balance(message.from_user.id, amount):
@@ -167,7 +187,6 @@ async def withdraw_amount(message: types.Message, state: FSMContext):
             "❌ <b>Не удалось отправить средства</b>\n\n"
             "Возможные причины:\n"
             "• вы ни разу не открывали @CryptoBot (нажмите там /start)\n"
-            "• в приложении CryptoBot не включены переводы (Security → Transfers)\n"
             "• на балансе приложения в CryptoBot недостаточно средств\n\n"
             "Баланс возвращён. Попробуйте позже или обратитесь к администратору.",
             reply_markup=back_kb(),
@@ -195,6 +214,19 @@ async def withdraw_amount(message: types.Message, state: FSMContext):
         ),
         chat=message.chat,
     )
+
+    for admin_id in ADMIN_IDS:
+        try:
+            await bot.send_message(
+                admin_id,
+                "💸 <b>Вывод средств выполнен (авто)</b>\n\n"
+                f"Пользователь: <code>{message.from_user.id}</code>"
+                f" (@{escape(message.from_user.username or '-')})\n"
+                f"Сумма: <b>{amount} USDT</b>\n"
+                f"Статус: ✅ отправлено через CryptoBot",
+            )
+        except TelegramAPIError:
+            pass
 
     await message.answer(
         f"""

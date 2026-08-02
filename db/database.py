@@ -135,15 +135,6 @@ class Database:
     
             return row and row["status"] == "paid"
 
-
-
-
-
-
-
-
-
-
     def init(self) -> None:
         with self._conn() as conn:
             conn.executescript(
@@ -217,9 +208,6 @@ class Database:
                 """
             )
 
-
-
-    
     def get_reviews_by_username(self, username: str):
         username = username.lstrip("@").lower()
     

@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexon Group Solution — программы, скрипты, Telegram-боты, приём крипты</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --bg-0:#080a10;
+    --bg-1:#0d1119;
+    --bg-2:#131826;
+    --bg-panel:#11151f;
+    --line:#212739;
+    --line-soft:#191e2c;
+    --blue:#2f6fff;
+    --cyan:#34d8ff;
+    --violet:#4b3fe4;
+    --gold:#ffb648;
+    --text-0:#eef1f8;
+    --text-1:#aab2c5;
+    --text-2:#6b7488;
+    --grad-brand: linear-gradient(135deg, var(--cyan) 0%, var(--blue) 55%, var(--violet) 100%);
+    --grad-gold: linear-gradient(135deg, #ffe29a 0%, var(--gold) 60%, #ff8a3d 100%);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg-0);
+    color:var(--text-0);
+    font-family:'Inter', sans-serif;
+    line-height:1.5;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background:
+      radial-gradient(ellipse 900px 500px at 85% -5%, rgba(52,216,255,0.10), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 10% 10%, rgba(75,63,228,0.12), transparent 60%);
+    pointer-events:none; z-index:0;
+  }
+  h1,h2,h3,.display{ font-family:'Chakra Petch', sans-serif; letter-spacing:-0.01em; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  a{ color:inherit; text-decoration:none; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 32px; position:relative; z-index:1; }
+  section{ position:relative; z-index:1; }
+  ::selection{ background:var(--blue); color:#fff; }
+
+  a:focus-visible, button:focus-visible{
+    outline:2px solid var(--cyan); outline-offset:3px; border-radius:4px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; }
+  }
+
+  /* ---------- reveal on scroll ---------- */
+  .reveal{ opacity:0; transform:translateY(28px); transition:opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+  .reveal-stagger > *{ opacity:0; transform:translateY(22px); transition:opacity 0.6s ease, transform 0.6s ease; }
+  .reveal-stagger.in > *{ opacity:1; transform:translateY(0); }
+  .reveal-stagger.in > *:nth-child(1){ transition-delay:0.03s; }
+  .reveal-stagger.in > *:nth-child(2){ transition-delay:0.10s; }
+  .reveal-stagger.in > *:nth-child(3){ transition-delay:0.17s; }
+  .reveal-stagger.in > *:nth-child(4){ transition-delay:0.24s; }
+  .reveal-stagger.in > *:nth-child(5){ transition-delay:0.31s; }
+  .reveal-stagger.in > *:nth-child(6){ transition-delay:0.38s; }
+
+  /* ---------- NAV ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(8,10,16,0.72);
+    backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line-soft);
+  }
+  nav{
+    max-width:1180px; margin:0 auto; padding:16px 32px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{
+    width:34px; height:34px; border-radius:9px; position:relative; flex-shrink:0;
+    background:var(--grad-brand);
+    box-shadow:0 0 18px -4px rgba(52,216,255,0.6);
+  }
+  .brand-mark::after{
+    content:""; position:absolute; inset:8px; border-radius:4px;
+    background:var(--bg-0); clip-path:polygon(0 0,100% 0,100% 60%,60% 60%,60% 100%,0 100%);
+  }
+  .brand-text{ font-family:'Chakra Petch',sans-serif; font-weight:600; font-size:16px; letter-spacing:0.02em; line-height:1.15; }
+  .brand-text span{ display:block; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:400; color:var(--text-2); letter-spacing:0.14em; margin-top:2px; }
+  .nav-links{ display:flex; gap:32px; align-items:center; }
+  .nav-links a{
+    font-size:14px; color:var(--text-1); font-weight:500; transition:color 0.2s ease; position:relative;
+  }
+  .nav-links a:hover{ color:var(--text-0); }
+  .nav-cta{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--grad-brand); color:#050810; font-weight:600; font-size:13.5px;
+    padding:10px 18px; border-radius:8px; border:none; cursor:pointer;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.06) inset;
+    transition:transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .nav-cta:hover{ transform:translateY(-1px); box-shadow:0 6px 20px -6px rgba(47,111,255,0.6); }
+  .nav-mobile-hide{ display:flex; }
+  @media (max-width:860px){ .nav-mobile-hide{ display:none; } }
+
+  /* ---------- HERO ---------- */
+  .hero{ padding:88px 0 70px; position:relative; }
+  .hero-grid{ display:grid; grid-template-columns:1.05fr 0.95fr; gap:40px; align-items:center; }
+  @media (max-width:960px){ .hero-grid{ grid-template-columns:1fr; } }
+
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cyan);
+    border:1px solid rgba(52,216,255,0.25); background:rgba(52,216,255,0.06);
+    padding:6px 12px; border-radius:100px; margin-bottom:22px;
+  }
+  .eyebrow::before{ content:""; width:6px; height:6px; border-radius:50%; background:var(--cyan); box-shadow:0 0 8px var(--cyan); animation:pulse 2s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
+
+  .hero h1{
+    font-size:clamp(32px, 4.4vw, 54px); font-weight:600; line-height:1.08; letter-spacing:-0.02em;
+    margin-bottom:22px;
+  }
+  .hero h1 em{ font-style:normal; background:var(--grad-brand); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .hero p.lead{ font-size:17px; color:var(--text-1); max-width:520px; margin-bottom:32px; }
+
+  .hero-actions{ display:flex; gap:14px; flex-wrap:wrap; margin-bottom:36px; }
+  .btn-primary{
+    background:var(--grad-brand); color:#050810; font-weight:600; font-size:14.5px;
+    padding:14px 26px; border-radius:9px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:10px;
+    transition:transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 10px 28px -8px rgba(47,111,255,0.55); }
+  .btn-secondary{
+    background:transparent; color:var(--text-0); font-weight:500; font-size:14.5px;
+    padding:14px 24px; border-radius:9px; border:1px solid var(--line); cursor:pointer;
+    transition:border-color 0.2s ease, background 0.2s ease;
+  }
+  .btn-secondary:hover{ border-color:var(--cyan); background:rgba(52,216,255,0.05); }
+
+  .stack-row{ display:flex; flex-wrap:wrap; gap:10px; }
+  .chip{
+    font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-2);
+    border:1px solid var(--line); padding:6px 12px; border-radius:6px;
+  }
+
+  /* ---------- HERO VISUAL STAGE (CSS/SVG) ---------- */
+  .hero-stage{
+    position:relative; height:460px; border-radius:16px; overflow:hidden;
+    background:radial-gradient(ellipse at 50% 45%, rgba(47,111,255,0.10), transparent 65%);
+    border:1px solid var(--line-soft);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .hero-stage::before{
+    content:""; position:absolute; inset:0;
+    background-image:
+      linear-gradient(rgba(52,216,255,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(52,216,255,0.06) 1px, transparent 1px);
+    background-size:34px 34px;
+    -webkit-mask-image:radial-gradient(ellipse 70% 70% at 50% 50%, #000 20%, transparent 75%);
+            mask-image:radial-gradient(ellipse 70% 70% at 50% 50%, #000 20%, transparent 75%);
+    animation:gridDrift 22s linear infinite;
+  }
+  @keyframes gridDrift{ from{ background-position:0 0, 0 0; } to{ background-position:34px 34px, 34px 34px; } }
+
+  .core-visual{
+    position:relative; width:340px; height:340px;
+    --tiltX:0deg; --tiltY:0deg;
+    transform:perspective(900px) rotateX(var(--tiltX)) rotateY(var(--tiltY));
+    transition:transform 0.3s ease-out;
+  }
+  .core-ring{ position:absolute; inset:0; border-radius:50%; border:1px solid rgba(52,216,255,0.35); }
+  .core-ring.r1{ inset:0; animation:spin 18s linear infinite; border-color:rgba(52,216,255,0.4); border-style:dashed; }
+  .core-ring.r2{ inset:34px; animation:spin 26s linear infinite reverse; border-color:rgba(75,63,228,0.45); }
+  .core-ring.r3{ inset:68px; animation:spin 14s linear infinite; border-color:rgba(255,182,72,0.25); border-style:dotted; }
+  @keyframes spin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
+
+  .core-glow{
+    position:absolute; left:50%; top:50%; width:120px; height:120px; margin:-60px 0 0 -60px;
+    border-radius:26px; background:var(--grad-brand); transform:rotate(45deg);
+    box-shadow:0 0 60px -6px rgba(47,111,255,0.65), 0 0 120px -20px rgba(75,63,228,0.5);
+    animation:coreFloat 5s ease-in-out infinite;
+  }
+  .core-glow::after{
+    content:""; position:absolute; inset:14px; border-radius:14px; background:var(--bg-0); opacity:0.85;
+  }
+  @keyframes coreFloat{ 0%,100%{ transform:rotate(45deg) translateY(0); } 50%{ transform:rotate(45deg) translateY(-8px); } }
+
+  .core-orbit{ position:absolute; inset:0; }
+  .core-orbit.o1{ animation:spin 9s linear infinite; }
+  .core-orbit.o2{ animation:spin 11s linear infinite reverse; }
+  .core-node{
+    position:absolute; top:2px; left:50%; width:11px; height:11px; margin-left:-5.5px;
+    border-radius:4px; transform:rotate(45deg); box-shadow:0 0 10px 1px currentColor;
+  }
+  .core-node.n1{ color:var(--cyan); background:var(--cyan); }
+  .core-node.n2{ color:var(--violet); background:var(--violet); top:auto; bottom:2px; }
+  .core-node.n3{ color:var(--gold); background:var(--gold); }
+  .core-node.n4{ color:#3ddc84; background:#3ddc84; top:auto; bottom:2px; }
+
+  .hero-stage-hud{
+    position:absolute; left:18px; bottom:18px; z-index:2; pointer-events:none;
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-2);
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .hero-stage-hud b{ color:var(--cyan); }
+  .hero-stage-badge{
+    position:absolute; top:16px; right:16px; z-index:2;
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-1);
+    border:1px solid var(--line); background:rgba(8,10,16,0.55); backdrop-filter:blur(6px);
+    padding:6px 10px; border-radius:100px; display:flex; align-items:center; gap:6px;
+  }
+  .hero-stage-badge::before{ content:""; width:6px; height:6px; border-radius:50%; background:#3ddc84; box-shadow:0 0 6px #3ddc84; }
+
+  /* ---------- SECTION HEADS ---------- */
+  .section-head{ max-width:600px; margin-bottom:52px; }
+  .section-tag{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cyan); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:14px; display:block; }
+  .section-head h2{ font-size:clamp(26px,3vw,36px); font-weight:600; letter-spacing:-0.01em; margin-bottom:14px; }
+  .section-head p{ color:var(--text-1); font-size:15.5px; }
+
+  /* ---------- SERVICES ---------- */
+  .services{ padding:100px 0; border-top:1px solid var(--line-soft); }
+  .service-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line-soft); border:1px solid var(--line-soft); border-radius:14px; overflow:hidden; }
+  @media (max-width:860px){ .service-grid{ grid-template-columns:1fr; } }
+  .service-card{
+    background:var(--bg-1); padding:34px 30px; transition:background 0.25s ease;
+    position:relative;
+  }
+  .service-card:hover{ background:var(--bg-2); }
+  .service-fn{
+    font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--cyan); margin-bottom:18px; display:block;
+  }
+  .service-fn .fn-name{ color:var(--text-0); }
+  .service-card h3{ font-size:19px; font-weight:600; margin-bottom:10px; font-family:'Inter',sans-serif; letter-spacing:-0.01em; }
+  .service-card p{ font-size:14px; color:var(--text-1); line-height:1.6; }
+
+  /* ---------- CRYPTO PAYMENTS ---------- */
+  .crypto{ padding:100px 0; border-top:1px solid var(--line-soft); background:var(--bg-1); }
+  .crypto-grid{ display:grid; grid-template-columns:0.95fr 1.05fr; gap:56px; align-items:center; }
+  @media (max-width:960px){ .crypto-grid{ grid-template-columns:1fr; } }
+  .coin-stage{
+    position:relative; height:380px; border-radius:16px; overflow:hidden;
+    background:radial-gradient(ellipse at 50% 50%, rgba(255,182,72,0.08), transparent 65%);
+    border:1px solid var(--line-soft);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ping{
+    position:absolute; width:170px; height:170px; border-radius:50%;
+    border:1px solid rgba(255,182,72,0.5); opacity:0;
+    animation:pingOut 3.6s ease-out infinite;
+  }
+  .ping.p2{ animation-delay:1.2s; }
+  .ping.p3{ animation-delay:2.4s; }
+  @keyframes pingOut{ 0%{ width:170px; height:170px; opacity:0.55; } 100%{ width:340px; height:340px; opacity:0; } }
+
+  .coin{
+    position:relative; width:150px; height:150px; border-radius:50%;
+    background:var(--grad-gold);
+    box-shadow:0 0 50px -6px rgba(255,182,72,0.55), inset 0 0 0 6px rgba(255,255,255,0.18), inset 0 0 30px rgba(0,0,0,0.25);
+    display:flex; align-items:center; justify-content:center;
+    animation:coinBob 4.5s ease-in-out infinite;
+  }
+  .coin span{
+    font-family:'JetBrains Mono',monospace; font-weight:600; font-size:44px; color:#2a1a02;
+    text-shadow:0 1px 0 rgba(255,255,255,0.3);
+  }
+  @keyframes coinBob{ 0%,100%{ transform:translateY(0) rotate(0deg); } 50%{ transform:translateY(-10px) rotate(4deg); } }
+
+  .net-orbit{ position:absolute; inset:0; }
+  .net-orbit.no1{ animation:spin 20s linear infinite; }
+  .net-orbit.no2{ animation:spin 28s linear infinite reverse; }
+  .net-node{
+    position:absolute; width:7px; height:7px; border-radius:50%; background:var(--cyan);
+    box-shadow:0 0 8px var(--cyan);
+  }
+  .crypto-feature-list{ display:flex; flex-direction:column; gap:22px; margin-top:8px; }
+  .crypto-feature{ display:flex; gap:16px; }
+  .crypto-feature-icon{
+    flex-shrink:0; width:40px; height:40px; border-radius:10px;
+    background:linear-gradient(135deg, rgba(255,182,72,0.16), rgba(52,216,255,0.10));
+    border:1px solid var(--line); display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono',monospace; font-size:15px; color:var(--gold);
+  }
+  .crypto-feature h4{ font-size:15.5px; font-weight:600; margin-bottom:5px; }
+  .crypto-feature p{ font-size:13.5px; color:var(--text-1); line-height:1.6; }
+
+  .flow-strip{
+    display:flex; align-items:center; gap:0; margin-top:44px; flex-wrap:wrap;
+    border:1px solid var(--line-soft); border-radius:14px; background:var(--bg-panel); overflow:hidden;
+  }
+  .flow-step{ flex:1 1 0; min-width:150px; padding:20px 18px; position:relative; }
+  .flow-step:not(:last-child)::after{
+    content:"→"; position:absolute; right:-2px; top:50%; transform:translateY(-50%);
+    color:var(--text-2); font-size:14px; z-index:2;
+  }
+  @media (max-width:720px){ .flow-step:not(:last-child)::after{ content:"↓"; right:auto; left:18px; top:auto; bottom:-2px; transform:none; } }
+  .flow-step .mono{ font-size:11px; color:var(--cyan); letter-spacing:0.08em; text-transform:uppercase; display:block; margin-bottom:6px; }
+  .flow-step p{ font-size:13.5px; color:var(--text-0); font-weight:500; }
+
+  /* ---------- CATALOG ---------- */
+  .catalog{ padding:100px 0; border-top:1px solid var(--line-soft); }
+  .catalog-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+  @media (max-width:900px){ .catalog-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:640px){ .catalog-grid{ grid-template-columns:1fr; } }
+  .product-card{
+    border:1px solid var(--line); border-radius:14px; padding:26px; background:var(--bg-panel);
+    display:flex; flex-direction:column; gap:14px; transition:border-color 0.25s ease, transform 0.25s ease;
+  }
+  .product-card:hover{ border-color:rgba(52,216,255,0.35); transform:translateY(-4px); }
+  .product-tag{
+    align-self:flex-start; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-2);
+    border:1px solid var(--line); padding:4px 10px; border-radius:100px; letter-spacing:0.05em; text-transform:uppercase;
+  }
+  .product-card h3{ font-size:17px; font-weight:600; }
+  .product-card p{ font-size:13.5px; color:var(--text-1); line-height:1.6; flex-grow:1; }
+  .product-price-row{ display:flex; align-items:center; justify-content:space-between; padding-top:10px; border-top:1px solid var(--line-soft); }
+  .product-price{ font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:600; color:var(--text-0); }
+  .product-price span{ color:var(--text-2); font-size:12px; font-weight:400; }
+  .buy-btn{
+    font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600; color:var(--bg-0);
+    background:var(--grad-gold); padding:8px 14px; border-radius:7px; border:none; cursor:pointer;
+    transition:transform 0.2s ease;
+  }
+  .buy-btn:hover{ transform:translateY(-1px); }
+
+  /* ---------- PROCESS ---------- */
+  .process{ padding:100px 0; border-top:1px solid var(--line-soft); }
+  .steps{ display:grid; grid-template-columns:repeat(5,1fr); gap:0; position:relative; }
+  @media (max-width:960px){ .steps{ grid-template-columns:1fr; gap:28px; } }
+  .steps::before{
+    content:""; position:absolute; top:20px; left:0; right:0; height:1px;
+    background:linear-gradient(90deg, transparent, var(--line), var(--line), transparent);
+  }
+  @media (max-width:960px){ .steps::before{ display:none; } }
+  .step{ padding-right:20px; position:relative; }
+  .step-num{
+    font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--bg-0);
+    width:40px; height:40px; border-radius:50%; background:var(--grad-brand);
+    display:flex; align-items:center; justify-content:center; font-weight:600; margin-bottom:20px; position:relative; z-index:1;
+  }
+  .step h3{ font-size:16px; font-weight:600; margin-bottom:8px; font-family:'Inter',sans-serif; }
+  .step p{ font-size:13.5px; color:var(--text-1); line-height:1.55; }
+
+  /* ---------- TECH BAND ---------- */
+  .tech-band{ padding:60px 0; border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); background:var(--bg-1); }
+  .tech-band .wrap{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:24px; }
+  .tech-label{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-2); letter-spacing:0.1em; text-transform:uppercase; }
+  .tech-list{ display:flex; gap:14px; flex-wrap:wrap; }
+  .tech-list span{
+    font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text-1);
+    border:1px solid var(--line); padding:8px 14px; border-radius:7px;
+  }
+
+  /* ---------- WHY ---------- */
+  .why{ padding:100px 0; }
+  .why-grid{ display:grid; grid-template-columns:0.9fr 1.1fr; gap:60px; align-items:start; }
+  @media (max-width:900px){ .why-grid{ grid-template-columns:1fr; gap:40px; } }
+  .why-list{ display:flex; flex-direction:column; gap:28px; }
+  .why-item{ display:flex; gap:18px; }
+  .why-icon{
+    flex-shrink:0; width:38px; height:38px; border-radius:9px; border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; background:var(--bg-panel);
+  }
+  .why-item h4{ font-size:15.5px; font-weight:600; margin-bottom:6px; }
+  .why-item p{ font-size:13.5px; color:var(--text-1); line-height:1.6; }
+
+  /* ---------- PARTNERS ---------- */
+  .partners{ padding:100px 0; border-top:1px solid var(--line-soft); background:var(--bg-1); position:relative; overflow:hidden; }
+  .partners::before{
+    content:""; position:absolute; right:-120px; top:-120px; width:420px; height:420px; border-radius:50%;
+    background:radial-gradient(circle, rgba(75,63,228,0.16), transparent 70%); pointer-events:none;
+  }
+  .partners-grid{ display:grid; grid-template-columns:1fr 1fr; gap:44px; }
+  @media (max-width:900px){ .partners-grid{ grid-template-columns:1fr; gap:34px; } }
+  .partners-col{ border:1px solid var(--line); border-radius:14px; padding:28px; background:var(--bg-panel); }
+  .partners-col h3{
+    font-family:'Chakra Petch',sans-serif; font-size:17px; font-weight:600; margin-bottom:20px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .partners-col h3::before{ content:""; width:8px; height:8px; border-radius:2px; background:var(--grad-brand); transform:rotate(45deg); flex-shrink:0; }
+  .partners-list{ display:flex; flex-direction:column; gap:16px; }
+  .partners-list li{ display:flex; gap:12px; font-size:13.5px; color:var(--text-1); line-height:1.6; list-style:none; }
+  .partners-list li::before{ content:"→"; color:var(--cyan); flex-shrink:0; font-family:'JetBrains Mono',monospace; }
+  .partners-list li b{ color:var(--text-0); font-weight:600; }
+  .partners-cta{ margin-top:36px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+  .partners-cta p{ font-size:13px; color:var(--text-2); font-family:'JetBrains Mono',monospace; }
+
+  /* ---------- BLACK HOLE (signature moment) ---------- */
+  .singularity{ padding:110px 0; border-top:1px solid var(--line-soft); overflow:hidden; position:relative; background:#050710; }
+  .singularity-grid{ display:grid; grid-template-columns:0.95fr 1.05fr; gap:56px; align-items:center; }
+  @media (max-width:960px){ .singularity-grid{ grid-template-columns:1fr; } }
+
+  .bh-stage{
+    position:relative; height:440px; display:flex; align-items:center; justify-content:center;
+    perspective:1000px;
+  }
+  .bh-stage::before{
+    content:""; position:absolute; inset:0; border-radius:50%;
+    background:radial-gradient(circle, rgba(75,63,228,0.16), transparent 68%);
+  }
+
+  .bh-svg{ position:absolute; width:400px; height:400px; animation:bhSwirl 34s linear infinite; }
+  .bh-spiral{ fill:none; stroke-width:1.4; opacity:0.16; }
+  .bh-spiral-flow{ fill:none; stroke-width:2.6; stroke-linecap:round; filter:drop-shadow(0 0 4px currentColor); }
+  .bh-spiral-flow.s0{ color:var(--cyan); stroke:var(--cyan); stroke-dasharray:10 34; animation:spiralFlow 2.6s linear infinite; }
+  .bh-spiral-flow.s1{ color:var(--gold); stroke:var(--gold); stroke-dasharray:8 30; animation:spiralFlow 3.1s linear infinite; }
+  .bh-spiral-flow.s2{ color:var(--violet); stroke:var(--violet); stroke-dasharray:12 28; animation:spiralFlow 2.3s linear infinite; }
+  @keyframes spiralFlow{ to{ stroke-dashoffset:-880; } }
+  @keyframes bhSwirl{ to{ transform:rotate(360deg); } }
+
+  /* volumetric core: layered shading to read as a lit sphere, not a flat circle */
+  .bh-photon-ring{
+    position:absolute; width:172px; height:172px; border-radius:50%;
+    background:conic-gradient(from 0deg,
+      rgba(255,255,255,0.9), rgba(52,216,255,0.55), rgba(75,63,228,0.55),
+      rgba(255,182,72,0.6), rgba(255,255,255,0.9));
+    -webkit-mask:radial-gradient(circle, transparent 60%, #000 63%, #000 68%, transparent 71%);
+            mask:radial-gradient(circle, transparent 60%, #000 63%, #000 68%, transparent 71%);
+    filter:blur(3px);
+    animation:bhSpin 7s linear infinite;
+    z-index:1;
+  }
+  @keyframes bhSpin{ to{ transform:rotate(360deg); } }
+
+  .bh-core{
+    position:relative; width:124px; height:124px; border-radius:50%; z-index:2;
+    background:
+      radial-gradient(circle at 32% 28%, rgba(140,110,255,0.55), transparent 40%),
+      radial-gradient(circle at 68% 74%, #000 0%, #050310 55%, #0d0620 100%);
+    box-shadow:
+      inset -14px -14px 30px rgba(0,0,0,0.85),
+      inset 10px 10px 22px rgba(130,100,255,0.22),
+      0 0 46px 12px rgba(75,63,228,0.55),
+      0 0 100px 34px rgba(52,216,255,0.16);
+    animation:bhPulse 4s ease-in-out infinite;
+  }
+  @keyframes bhPulse{
+    0%,100%{ box-shadow:inset -14px -14px 30px rgba(0,0,0,0.85), inset 10px 10px 22px rgba(130,100,255,0.22), 0 0 46px 12px rgba(75,63,228,0.55), 0 0 100px 34px rgba(52,216,255,0.16); }
+    50%{ box-shadow:inset -14px -14px 30px rgba(0,0,0,0.85), inset 10px 10px 22px rgba(255,182,72,0.2), 0 0 60px 18px rgba(255,182,72,0.4), 0 0 120px 40px rgba(75,63,228,0.26); }
+  }
+
+  .bh-quote{
+    font-family:'Chakra Petch',sans-serif; font-size:clamp(20px,2.1vw,26px); font-weight:600;
+    line-height:1.4; letter-spacing:-0.01em; margin-bottom:18px;
+  }
+  .bh-quote em{ font-style:normal; background:var(--grad-brand); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .singularity-log{
+    display:flex; flex-direction:column; gap:6px; margin-top:26px;
+    font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-2);
+  }
+  .singularity-log b{ color:var(--cyan); }
+
+  /* ---------- CTA ---------- */
+  .cta{ padding:110px 0; border-top:1px solid var(--line-soft); text-align:center; position:relative; overflow:hidden; }
+  .cta::before{
+    content:""; position:absolute; left:50%; top:50%; width:800px; height:400px;
+    background:radial-gradient(ellipse, rgba(47,111,255,0.14), transparent 65%);
+    transform:translate(-50%,-50%); pointer-events:none;
+  }
+  .cta h2{ font-size:clamp(28px,4vw,42px); font-weight:600; letter-spacing:-0.01em; margin-bottom:18px; }
+  .cta p{ color:var(--text-1); font-size:16px; max-width:480px; margin:0 auto 36px; }
+
+  /* ---------- FOOTER ---------- */
+  footer{ padding:48px 0 40px; border-top:1px solid var(--line-soft); }
+  .foot-grid{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:20px; }
+  .foot-brand{ display:flex; align-items:center; gap:10px; }
+  .foot-brand span{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-2); }
+  .foot-links{ display:flex; gap:26px; }
+  .foot-links a{ font-size:13.5px; color:var(--text-1); transition:color 0.2s ease; }
+  .foot-links a:hover{ color:var(--cyan); }
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">NEXON GROUP<span>SOLUTION</span></div>
+    </div>
+    <div class="nav-links nav-mobile-hide">
+      <a href="#services">Услуги</a>
+      <a href="#crypto">Крипто-платежи</a>
+      <a href="#catalog">Каталог</a>
+      <a href="#process">Процесс</a>
+      <a href="#partners">Партнёрство</a>
+      <a href="#contact">Контакты</a>
+    </div>
+    <a href="https://t.me/your_handle" class="nav-cta">Написать в Telegram →</a>
+  </nav>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow">разработка · автоматизация · приём крипты</span>
+        <h1>Программы, боты и <em>приём платежей в крипте</em>, которые берут рутину на себя</h1>
+        <p class="lead">Nexon Group Solution пишет код под задачу и подключает оплату в USDT — от Telegram-ботов и скриптов автоматизации до готовых цифровых продуктов с мгновенной доставкой.</p>
+        <div class="hero-actions">
+          <a href="https://t.me/your_handle" class="btn-primary">Обсудить проект в Telegram</a>
+          <a href="#crypto" class="btn-secondary">Как работает приём крипты</a>
+        </div>
+        <div class="stack-row">
+          <span class="chip">Python</span>
+          <span class="chip">Node.js</span>
+          <span class="chip">Telegram Bot API</span>
+          <span class="chip">CryptoBot / USDT TRC20</span>
+          <span class="chip">PostgreSQL</span>
+          <span class="chip">Docker</span>
+        </div>
+      </div>
+
+      <div class="hero-stage reveal" id="heroStage">
+        <div class="hero-stage-badge">live</div>
+        <div class="hero-stage-hud"><b>nexon-core</b> · сборка модулей в реальном времени</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="services reveal" id="services">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-tag">Услуги</span>
+        <h2>Пять модулей, из которых собирается решение</h2>
+        <p>Берём отдельную задачу или ведём проект целиком — от идеи до техподдержки.</p>
+      </div>
+      <div class="service-grid reveal-stagger">
+        <div class="service-card">
+          <span class="service-fn">nexon.<span class="fn-name">custom_software</span>()</span>
+          <h3>Программы под задачу</h3>
+          <p>Десктоп- и веб-приложения, внутренние инструменты, интеграции между вашими сервисами и API.</p>
+        </div>
+        <div class="service-card">
+          <span class="service-fn">nexon.<span class="fn-name">scripts</span>()</span>
+          <h3>Скрипты и автоматизация</h3>
+          <p>Парсинг данных, рассылки, синхронизация таблиц и сервисов, задачи по расписанию — без ручной работы.</p>
+        </div>
+        <div class="service-card">
+          <span class="service-fn">nexon.<span class="fn-name">telegram_bots</span>()</span>
+          <h3>Боты для Telegram</h3>
+          <p>От простых уведомлений до сценариев с оплатой, базой данных, каталогом и админ-панелью.</p>
+        </div>
+        <div class="service-card">
+          <span class="service-fn">nexon.<span class="fn-name">crypto_payments</span>()</span>
+          <h3>Приём платежей в крипте</h3>
+          <p>Подключаем оплату в USDT (TRC20) через CryptoBot: пополнение баланса, покупки, автоматический вывод.</p>
+        </div>
+        <div class="service-card">
+          <span class="service-fn">nexon.<span class="fn-name">bot_admin</span>()</span>
+          <h3>Администрирование ботов</h3>
+          <p>Мониторинг, обновления, устранение сбоев и масштабирование бота под растущую нагрузку.</p>
+        </div>
+        <div class="service-card">
+          <span class="service-fn">nexon.<span class="fn-name">support</span>()</span>
+          <h3>Сопровождение</h3>
+          <p>После запуска остаёмся на связи: дорабатываем функциональность и реагируем на изменения бизнеса.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CRYPTO PAYMENTS -->
+  <section class="crypto" id="crypto">
+    <div class="wrap crypto-grid">
+      <div class="coin-stage reveal" id="coinStage"></div>
+      <div class="reveal">
+        <span class="section-tag">Крипто-платежи</span>
+        <h2 style="font-size:clamp(24px,2.8vw,32px); font-weight:600; margin-bottom:14px;">Оплата в USDT — без банков и посредников</h2>
+        <p style="color:var(--text-1); font-size:15px; margin-bottom:8px;">Встраиваем приём и вывод криптовалюты прямо в вашего бота или сайт: пользователь пополняет баланс, покупает продукт или услугу, а средства зачисляются мгновенно.</p>
+
+        <div class="crypto-feature-list">
+          <div class="crypto-feature">
+            <div class="crypto-feature-icon">$</div>
+            <div>
+              <h4>USDT, сеть TRC20</h4>
+              <p>Низкие комиссии сети TRON и быстрое подтверждение — то, чем пользуются большинство Telegram-магазинов.</p>
+            </div>
+          </div>
+          <div class="crypto-feature">
+            <div class="crypto-feature-icon">⇄</div>
+            <div>
+              <h4>Приём через CryptoBot</h4>
+              <p>Счета на пополнение и автоматические переводы через Crypto Pay API — без хранения приватных ключей на вашей стороне.</p>
+            </div>
+          </div>
+          <div class="crypto-feature">
+            <div class="crypto-feature-icon">⚡</div>
+            <div>
+              <h4>Мгновенная доставка товара</h4>
+              <p>После оплаты бот сам выдаёт доступ, файл или лицензию — без ручной проверки платежей.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-strip">
+          <div class="flow-step"><span class="mono">01</span><p>Пользователь пополняет баланс</p></div>
+          <div class="flow-step"><span class="mono">02</span><p>Счёт создаётся в CryptoBot</p></div>
+          <div class="flow-step"><span class="mono">03</span><p>Оплата в USDT TRC20</p></div>
+          <div class="flow-step"><span class="mono">04</span><p>Бот подтверждает и выдаёт товар</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATALOG -->
+  <section class="catalog reveal" id="catalog">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-tag">Каталог решений</span>
+        <h2>Готовые программы и боты — оплата в USDT</h2>
+        <p>Часть проектов оформляем как отдельные продукты: покупаете доступ прямо в Telegram, оплата в крипте.</p>
+      </div>
+      <div class="catalog-grid reveal-stagger">
+        <div class="product-card">
+          <span class="product-tag">Telegram-бот</span>
+          <h3>Бот-магазин с оплатой в крипте</h3>
+          <p>Каталог товаров, корзина, приём USDT через CryptoBot, автоматическая выдача цифрового товара.</p>
+          <div class="product-price-row">
+            <div class="product-price">от 120 <span>USDT</span></div>
+            <button class="buy-btn">Купить →</button>
+          </div>
+        </div>
+        <div class="product-card">
+          <span class="product-tag">Скрипт</span>
+          <h3>Автосбор и синхронизация данных</h3>
+          <p>Парсер + выгрузка в таблицу или базу данных по расписанию, уведомления в Telegram.</p>
+          <div class="product-price-row">
+            <div class="product-price">от 60 <span>USDT</span></div>
+            <button class="buy-btn">Купить →</button>
+          </div>
+        </div>
+        <div class="product-card">
+          <span class="product-tag">Модуль</span>
+          <h3>Приём крипто-платежей «под ключ»</h3>
+          <p>Готовая интеграция CryptoBot: пополнение, баланс, автоматический вывод в USDT TRC20.</p>
+          <div class="product-price-row">
+            <div class="product-price">от 90 <span>USDT</span></div>
+            <button class="buy-btn">Купить →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROCESS -->
+  <section class="process reveal" id="process">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-tag">Как строим работу</span>
+        <h2>Пять шагов от заявки до поддержки</h2>
+        <p>Прозрачный процесс без скрытых этапов — вы знаете, что происходит на каждом шаге.</p>
+      </div>
+      <div class="steps reveal-stagger">
+        <div class="step"><div class="step-num">01</div><h3>Заявка</h3><p>Пишете в Telegram или через форму, кратко описываете задачу.</p></div>
+        <div class="step"><div class="step-num">02</div><h3>Анализ</h3><p>Разбираем задачу, предлагаем решение, сроки и стоимость.</p></div>
+        <div class="step"><div class="step-num">03</div><h3>Разработка</h3><p>Пишем и тестируем программу, скрипт или бота.</p></div>
+        <div class="step"><div class="step-num">04</div><h3>Запуск</h3><p>Разворачиваем решение и подключаем оплату, если нужна.</p></div>
+        <div class="step"><div class="step-num">05</div><h3>Поддержка</h3><p>Администрируем, дорабатываем, устраняем сбои.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH BAND -->
+  <div class="tech-band">
+    <div class="wrap">
+      <span class="tech-label">Стек, с которым работаем</span>
+      <div class="tech-list">
+        <span>Python</span><span>Node.js</span><span>aiogram / Telegraf</span><span>CryptoBot API</span><span>PostgreSQL / MongoDB</span><span>Redis</span><span>Docker</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHY -->
+  <section class="why reveal" id="why">
+    <div class="wrap why-grid">
+      <div class="section-head" style="margin-bottom:0;">
+        <span class="section-tag">Подход</span>
+        <h2>Код, за которым потом не страшно возвращаться</h2>
+        <p>Мы не просто сдаём проект — мы остаёмся рядом с ним.</p>
+      </div>
+      <div class="why-list">
+        <div class="why-item">
+          <div class="why-icon">🛠️</div>
+          <div><h4>Пишем поддерживаемый код</h4><p>Структура и документация, в которых разберётся не только автор — важно, если команда меняется.</p></div>
+        </div>
+        <div class="why-item">
+          <div class="why-icon">🔒</div>
+          <div><h4>Отвечаем за стабильность бота и платежей</h4><p>Мониторим работу после запуска, включая приём крипты, и реагируем на сбои.</p></div>
+        </div>
+        <div class="why-item">
+          <div class="why-icon">💬</div>
+          <div><h4>Объясняем простыми словами</h4><p>Рассказываем, что и зачем делаем, без лишнего технического жаргона — на любом этапе.</p></div>
+        </div>
+        <div class="why-item">
+          <div class="why-icon">⚙️</div>
+          <div><h4>Растём вместе с проектом</h4><p>Начинаем с малого — MVP-бота или скрипта — и дорабатываем по мере роста задач.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTNERS -->
+  <section class="partners reveal" id="partners">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-tag">Партнёрство</span>
+        <h2>Мы — команда разработки, и мы открыты к сотрудничеству</h2>
+        <p>Nexon Group Solution работает как agentство полного цикла. Когда проектов больше, чем рук в штате, мы подключаем проверенные команды и студии — и делимся с ними потоком заказов на постоянной основе.</p>
+      </div>
+      <div class="partners-grid">
+        <div class="partners-col">
+          <h3>Что получают партнёры</h3>
+          <ul class="partners-list">
+            <li><b>Стабильный поток заказов</b> — передаём часть входящих проектов на аутсорс проверенным командам.</li>
+            <li><b>Прозрачные условия</b> — фиксируем объём работы, сроки и оплату до старта, без переговоров задним числом.</li>
+            <li><b>Оплата в USDT или фиате</b> — на выбор партнёра, без задержек по этапам.</li>
+            <li><b>Совместное сопровождение</b> — после запуска остаёмся на связи с клиентом и командой вместе.</li>
+          </ul>
+        </div>
+        <div class="partners-col">
+          <h3>Кого мы ищем</h3>
+          <ul class="partners-list">
+            <li><b>Команды и студии</b> с портфолио на Python, Node.js или Telegram-ботах.</li>
+            <li><b>Специалистов по интеграции оплат</b> — CryptoBot, USDT TRC20, платёжные API.</li>
+            <li><b>Тех, кто соблюдает дедлайны</b> и готов работать по чёткому ТЗ.</li>
+            <li><b>Партнёров вдолгую</b> — нам важны не разовые проекты, а постоянное сотрудничество.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="partners-cta">
+        <a href="https://t.me/NexonSolution" class="btn-primary">Предложить сотрудничество →</a>
+        <p>расскажите о команде и портфолио — ответим в тот же день</p>
+      </div>
+    </div>
+  </section>
+
+  
+  <!-- SINGULARITY (signature visual) -->
+  <section class="singularity reveal">
+    <div class="wrap singularity-grid">
+      <div class="bh-stage">
+        <svg class="bh-svg" viewBox="0 0 400 400">
+          <path class="bh-spiral" stroke="#34d8ff" d="M 390.0,200.0 L 384.9,220.1 L 377.8,239.2 L 368.8,257.0 L 358.2,273.4 L 346.2,288.1 L 332.9,301.3 L 318.6,312.6 L 303.4,322.2 L 287.7,329.8 L 271.6,335.6 L 255.3,339.6 L 239.0,341.7 L 222.9,342.0 L 207.2,340.6 L 192.1,337.6 L 177.8,333.0 L 164.3,327.1 L 151.8,319.9 L 140.3,311.5 L 130.1,302.2 L 121.2,292.0 L 113.5,281.2 L 107.3,269.8 L 102.4,258.1 L 98.8,246.2 L 96.7,234.2 L 95.8,222.4 L 96.3,210.7 L 97.9,199.4 L 100.7,188.6 L 104.6,178.4 L 109.5,168.9 L 115.2,160.1 L 121.7,152.2 L 128.9,145.2 L 136.6,139.1 L 144.8,134.1 L 153.3,130.0 L 162.0,126.9 L 170.7,124.8 L 179.5,123.8 L 188.1,123.7 L 196.5,124.5 L 204.6,126.1 L 212.4,128.6 L 219.6,131.8 L 226.3,135.8 L 232.4,140.3 L 237.8,145.3 L 242.6,150.8 L 246.7,156.7 L 250.0,162.8 L 252.6,169.1 L 254.5,175.5 L 255.6,181.9 L 256.0,188.3 L 255.8,194.6 L 254.8,200.6 L 253.3,206.4 L 251.2,211.9 L 248.5,217.0 L 245.4,221.7 L 241.9,225.9 L 238.0,229.7 L 233.9,232.9 L 229.5,235.6 L 224.9,237.8 L 220.2,239.4 L 215.5,240.5 L 210.8,241.0 L 206.1,241.1 L 201.6,240.6 L 197.3,239.7 L 193.1,238.3 L 189.3,236.6 L 185.7,234.4 L 182.4,232.0 L 179.5,229.3 L 176.9,226.3 L 174.8,223.1 L 173.0,219.8 L 171.6,216.5 L 170.7,213.0 L 170.1,209.5 L 169.9,206.1 L 170.0,202.7 L 170.5,199.5 L 171.4,196.4 L 172.5,193.4 L 174.0,190.7 L 175.7,188.2 L 177.6,185.9 L 179.7,183.9 L 181.9,182.2 L 184.3,180.8 L 186.7,179.6 L 189.3,178.8 L 191.8,178.2 L 194.3,177.9 L 196.8,177.9 L 199.3,178.2 L 201.6,178.7 L 203.8,179.4 L 205.9,180.4 L 207.8,181.5 L 209.5,182.9 L 211.1,184.3 L 212.5,185.9 L 213.6,187.6 L 214.6,189.4"></path>
+          <path class="bh-spiral" stroke="#ffb648" d="M 105.1,364.6 L 90.2,350.1 L 77.2,334.4 L 66.3,317.8 L 57.4,300.4 L 50.6,282.6 L 45.9,264.5 L 43.2,246.4 L 42.5,228.6 L 43.7,211.1 L 46.7,194.2 L 51.5,178.1 L 57.8,163.0 L 65.6,148.9 L 74.6,136.0 L 84.8,124.5 L 95.9,114.3 L 107.8,105.5 L 120.3,98.3 L 133.2,92.6 L 146.4,88.4 L 159.7,85.7 L 172.9,84.6 L 185.8,84.8 L 198.4,86.4 L 210.5,89.3 L 222.0,93.4 L 232.7,98.6 L 242.6,104.8 L 251.5,111.9 L 259.5,119.7 L 266.4,128.2 L 272.2,137.1 L 276.9,146.5 L 280.5,156.1 L 283.0,165.8 L 284.4,175.5 L 284.7,185.1 L 284.0,194.5 L 282.3,203.6 L 279.7,212.2 L 276.3,220.3 L 272.1,227.9 L 267.2,234.8 L 261.7,240.9 L 255.7,246.4 L 249.3,251.0 L 242.5,254.9 L 235.6,257.9 L 228.5,260.1 L 221.3,261.5 L 214.2,262.1 L 207.3,261.9 L 200.5,261.0 L 194.0,259.4 L 187.9,257.2 L 182.1,254.4 L 176.8,251.0 L 172.1,247.2 L 167.8,243.0 L 164.1,238.4 L 161.0,233.5 L 158.5,228.5 L 156.6,223.3 L 155.3,218.1 L 154.6,212.9 L 154.4,207.7 L 154.9,202.7 L 155.8,197.8 L 157.2,193.2 L 159.1,188.8 L 161.4,184.8 L 164.0,181.1 L 167.0,177.8 L 170.2,174.9 L 173.7,172.4 L 177.3,170.4 L 181.1,168.8 L 184.9,167.6 L 188.7,166.9 L 192.6,166.6 L 196.3,166.7 L 199.9,167.2 L 203.4,168.1 L 206.7,169.3 L 209.8,170.8 L 212.6,172.7 L 215.2,174.7 L 217.4,177.0 L 219.4,179.5 L 221.0,182.1 L 222.4,184.8 L 223.4,187.6 L 224.1,190.4 L 224.4,193.2 L 224.5,196.0 L 224.3,198.7 L 223.7,201.3 L 223.0,203.8 L 221.9,206.1 L 220.7,208.3 L 219.3,210.3 L 217.7,212.0 L 215.9,213.6 L 214.0,214.9 L 212.1,216.0 L 210.1,216.8 L 208.0,217.4 L 205.9,217.8 L 203.9,218.0 L 201.9,217.9"></path>
+          <path class="bh-spiral" stroke="#4b3fe4" d="M 104.9,35.5 L 124.9,29.9 L 144.9,26.5 L 164.8,25.3 L 184.3,26.3 L 203.1,29.3 L 221.1,34.3 L 238.1,41.0 L 254.0,49.3 L 268.5,59.1 L 281.6,70.1 L 293.1,82.3 L 303.1,95.3 L 311.4,109.1 L 318.1,123.4 L 323.0,137.9 L 326.3,152.7 L 327.9,167.3 L 327.9,181.8 L 326.4,195.8 L 323.4,209.3 L 319.1,222.2 L 313.6,234.2 L 306.9,245.3 L 299.2,255.4 L 290.6,264.4 L 281.4,272.3 L 271.5,279.0 L 261.2,284.4 L 250.6,288.7 L 239.8,291.6 L 229.1,293.4 L 218.4,293.9 L 207.9,293.4 L 197.8,291.7 L 188.1,289.0 L 179.0,285.3 L 170.5,280.8 L 162.8,275.5 L 155.8,269.5 L 149.6,263.0 L 144.3,255.9 L 139.9,248.5 L 136.3,240.8 L 133.7,233.0 L 132.0,225.1 L 131.2,217.2 L 131.2,209.4 L 132.1,201.9 L 133.7,194.6 L 136.1,187.7 L 139.1,181.3 L 142.7,175.3 L 146.9,169.9 L 151.5,165.1 L 156.5,160.9 L 161.8,157.3 L 167.4,154.4 L 173.1,152.2 L 178.9,150.7 L 184.7,149.7 L 190.4,149.5 L 196.0,149.8 L 201.5,150.8 L 206.6,152.2 L 211.5,154.2 L 216.1,156.7 L 220.2,159.6 L 224.0,162.8 L 227.3,166.3 L 230.1,170.1 L 232.5,174.1 L 234.3,178.3 L 235.7,182.5 L 236.6,186.8 L 237.0,191.0 L 237.0,195.2 L 236.5,199.2 L 235.6,203.1 L 234.3,206.8 L 232.7,210.2 L 230.7,213.4 L 228.4,216.3 L 225.9,218.9 L 223.2,221.1 L 220.4,223.0 L 217.4,224.6 L 214.3,225.8 L 211.2,226.6 L 208.1,227.0 L 205.0,227.2 L 202.0,227.0 L 199.1,226.5 L 196.3,225.6 L 193.7,224.6 L 191.2,223.2 L 189.0,221.7 L 187.0,219.9 L 185.2,218.0 L 183.7,216.0 L 182.5,213.8 L 181.5,211.6 L 180.8,209.3 L 180.3,207.0 L 180.1,204.7 L 180.1,202.5 L 180.4,200.3 L 180.9,198.2 L 181.6,196.2 L 182.5,194.4 L 183.6,192.7"></path>
+          <path class="bh-spiral-flow s0" d="M 390.0,200.0 L 384.9,220.1 L 377.8,239.2 L 368.8,257.0 L 358.2,273.4 L 346.2,288.1 L 332.9,301.3 L 318.6,312.6 L 303.4,322.2 L 287.7,329.8 L 271.6,335.6 L 255.3,339.6 L 239.0,341.7 L 222.9,342.0 L 207.2,340.6 L 192.1,337.6 L 177.8,333.0 L 164.3,327.1 L 151.8,319.9 L 140.3,311.5 L 130.1,302.2 L 121.2,292.0 L 113.5,281.2 L 107.3,269.8 L 102.4,258.1 L 98.8,246.2 L 96.7,234.2 L 95.8,222.4 L 96.3,210.7 L 97.9,199.4 L 100.7,188.6 L 104.6,178.4 L 109.5,168.9 L 115.2,160.1 L 121.7,152.2 L 128.9,145.2 L 136.6,139.1 L 144.8,134.1 L 153.3,130.0 L 162.0,126.9 L 170.7,124.8 L 179.5,123.8 L 188.1,123.7 L 196.5,124.5 L 204.6,126.1 L 212.4,128.6 L 219.6,131.8 L 226.3,135.8 L 232.4,140.3 L 237.8,145.3 L 242.6,150.8 L 246.7,156.7 L 250.0,162.8 L 252.6,169.1 L 254.5,175.5 L 255.6,181.9 L 256.0,188.3 L 255.8,194.6 L 254.8,200.6 L 253.3,206.4 L 251.2,211.9 L 248.5,217.0 L 245.4,221.7 L 241.9,225.9 L 238.0,229.7 L 233.9,232.9 L 229.5,235.6 L 224.9,237.8 L 220.2,239.4 L 215.5,240.5 L 210.8,241.0 L 206.1,241.1 L 201.6,240.6 L 197.3,239.7 L 193.1,238.3 L 189.3,236.6 L 185.7,234.4 L 182.4,232.0 L 179.5,229.3 L 176.9,226.3 L 174.8,223.1 L 173.0,219.8 L 171.6,216.5 L 170.7,213.0 L 170.1,209.5 L 169.9,206.1 L 170.0,202.7 L 170.5,199.5 L 171.4,196.4 L 172.5,193.4 L 174.0,190.7 L 175.7,188.2 L 177.6,185.9 L 179.7,183.9 L 181.9,182.2 L 184.3,180.8 L 186.7,179.6 L 189.3,178.8 L 191.8,178.2 L 194.3,177.9 L 196.8,177.9 L 199.3,178.2 L 201.6,178.7 L 203.8,179.4 L 205.9,180.4 L 207.8,181.5 L 209.5,182.9 L 211.1,184.3 L 212.5,185.9 L 213.6,187.6 L 214.6,189.4"></path>
+          <path class="bh-spiral-flow s1" d="M 105.1,364.6 L 90.2,350.1 L 77.2,334.4 L 66.3,317.8 L 57.4,300.4 L 50.6,282.6 L 45.9,264.5 L 43.2,246.4 L 42.5,228.6 L 43.7,211.1 L 46.7,194.2 L 51.5,178.1 L 57.8,163.0 L 65.6,148.9 L 74.6,136.0 L 84.8,124.5 L 95.9,114.3 L 107.8,105.5 L 120.3,98.3 L 133.2,92.6 L 146.4,88.4 L 159.7,85.7 L 172.9,84.6 L 185.8,84.8 L 198.4,86.4 L 210.5,89.3 L 222.0,93.4 L 232.7,98.6 L 242.6,104.8 L 251.5,111.9 L 259.5,119.7 L 266.4,128.2 L 272.2,137.1 L 276.9,146.5 L 280.5,156.1 L 283.0,165.8 L 284.4,175.5 L 284.7,185.1 L 284.0,194.5 L 282.3,203.6 L 279.7,212.2 L 276.3,220.3 L 272.1,227.9 L 267.2,234.8 L 261.7,240.9 L 255.7,246.4 L 249.3,251.0 L 242.5,254.9 L 235.6,257.9 L 228.5,260.1 L 221.3,261.5 L 214.2,262.1 L 207.3,261.9 L 200.5,261.0 L 194.0,259.4 L 187.9,257.2 L 182.1,254.4 L 176.8,251.0 L 172.1,247.2 L 167.8,243.0 L 164.1,238.4 L 161.0,233.5 L 158.5,228.5 L 156.6,223.3 L 155.3,218.1 L 154.6,212.9 L 154.4,207.7 L 154.9,202.7 L 155.8,197.8 L 157.2,193.2 L 159.1,188.8 L 161.4,184.8 L 164.0,181.1 L 167.0,177.8 L 170.2,174.9 L 173.7,172.4 L 177.3,170.4 L 181.1,168.8 L 184.9,167.6 L 188.7,166.9 L 192.6,166.6 L 196.3,166.7 L 199.9,167.2 L 203.4,168.1 L 206.7,169.3 L 209.8,170.8 L 212.6,172.7 L 215.2,174.7 L 217.4,177.0 L 219.4,179.5 L 221.0,182.1 L 222.4,184.8 L 223.4,187.6 L 224.1,190.4 L 224.4,193.2 L 224.5,196.0 L 224.3,198.7 L 223.7,201.3 L 223.0,203.8 L 221.9,206.1 L 220.7,208.3 L 219.3,210.3 L 217.7,212.0 L 215.9,213.6 L 214.0,214.9 L 212.1,216.0 L 210.1,216.8 L 208.0,217.4 L 205.9,217.8 L 203.9,218.0 L 201.9,217.9"></path>
+          <path class="bh-spiral-flow s2" d="M 104.9,35.5 L 124.9,29.9 L 144.9,26.5 L 164.8,25.3 L 184.3,26.3 L 203.1,29.3 L 221.1,34.3 L 238.1,41.0 L 254.0,49.3 L 268.5,59.1 L 281.6,70.1 L 293.1,82.3 L 303.1,95.3 L 311.4,109.1 L 318.1,123.4 L 323.0,137.9 L 326.3,152.7 L 327.9,167.3 L 327.9,181.8 L 326.4,195.8 L 323.4,209.3 L 319.1,222.2 L 313.6,234.2 L 306.9,245.3 L 299.2,255.4 L 290.6,264.4 L 281.4,272.3 L 271.5,279.0 L 261.2,284.4 L 250.6,288.7 L 239.8,291.6 L 229.1,293.4 L 218.4,293.9 L 207.9,293.4 L 197.8,291.7 L 188.1,289.0 L 179.0,285.3 L 170.5,280.8 L 162.8,275.5 L 155.8,269.5 L 149.6,263.0 L 144.3,255.9 L 139.9,248.5 L 136.3,240.8 L 133.7,233.0 L 132.0,225.1 L 131.2,217.2 L 131.2,209.4 L 132.1,201.9 L 133.7,194.6 L 136.1,187.7 L 139.1,181.3 L 142.7,175.3 L 146.9,169.9 L 151.5,165.1 L 156.5,160.9 L 161.8,157.3 L 167.4,154.4 L 173.1,152.2 L 178.9,150.7 L 184.7,149.7 L 190.4,149.5 L 196.0,149.8 L 201.5,150.8 L 206.6,152.2 L 211.5,154.2 L 216.1,156.7 L 220.2,159.6 L 224.0,162.8 L 227.3,166.3 L 230.1,170.1 L 232.5,174.1 L 234.3,178.3 L 235.7,182.5 L 236.6,186.8 L 237.0,191.0 L 237.0,195.2 L 236.5,199.2 L 235.6,203.1 L 234.3,206.8 L 232.7,210.2 L 230.7,213.4 L 228.4,216.3 L 225.9,218.9 L 223.2,221.1 L 220.4,223.0 L 217.4,224.6 L 214.3,225.8 L 211.2,226.6 L 208.1,227.0 L 205.0,227.2 L 202.0,227.0 L 199.1,226.5 L 196.3,225.6 L 193.7,224.6 L 191.2,223.2 L 189.0,221.7 L 187.0,219.9 L 185.2,218.0 L 183.7,216.0 L 182.5,213.8 L 181.5,211.6 L 180.8,209.3 L 180.3,207.0 L 180.1,204.7 L 180.1,202.5 L 180.4,200.3 L 180.9,198.2 L 181.6,196.2 L 182.5,194.4 L 183.6,192.7"></path>
+        </svg>
+        <div class="bh-photon-ring"></div>
+        <div class="bh-core"></div>
+      </div>
+      <div>
+        <span class="section-tag">Безопасность данных</span>
+        <p class="bh-quote">Всё, что попадает к нам — заявки, доступы, данные платежей — <em>затягивается внутрь и остаётся там</em>.</p>
+        <p style="color:var(--text-1); font-size:15px; max-width:460px;">Информация не выходит наружу ни при каких условиях: ни третьим лицам, ни партнёрам без вашего согласия, ни тем более взломщикам. У защищённого контура есть только один поток — внутрь.</p>
+        <div class="singularity-log">
+          <div><b>[in]</b> заявка.zip — принята в контур</div>
+          <div><b>[secure]</b> доступ к данным — ограничен</div>
+          <div><b>[locked]</b> периметр — закрыт по умолчанию, исходящих нет</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta reveal" id="contact">
+    <div class="wrap">
+      <h2>Опишите задачу — ответим в тот же день</h2>
+      <p>Расскажите, что нужно автоматизировать, какого бота хотите получить или как принять оплату в крипте.</p>
+      <a href="https://t.me/NexonSolution" class="btn-primary">Написать в Telegram →</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div class="foot-brand">
+      <div class="brand-mark" style="width:24px;height:24px;"></div>
+      <span>© 2026 NEXON GROUP SOLUTION</span>
+    </div>
+    <div class="foot-links">
+      <a href="#services">Услуги</a>
+      <a href="#crypto">Крипто-платежи</a>
+      <a href="#catalog">Каталог</a>
+      <a href="#partners">Партнёрство</a>
+      <a href="https://t.me/your_handle">Telegram</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ---------------- Scroll reveal ---------------- */
+(function(){
+  var els = document.querySelectorAll('.reveal, .reveal-stagger');
+  if (!('IntersectionObserver' in window)){ els.forEach(function(e){ e.classList.add('in'); }); return; }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting){ entry.target.classList.add('in'); io.unobserve(entry.target); }
+    });
+  }, { threshold: 0.15 });
+  els.forEach(function(e){ io.observe(e); });
+})();
+
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- Hero 3D scene: rotating tech/crypto core ---------------- */
+(function(){
+  var container = document.getElementById('heroStage');
+  if (!container || typeof THREE === 'undefined') return;
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+  camera.position.set(0, 0.4, 6.2);
+
+  var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  container.appendChild(renderer.domElement);
+
+  var group = new THREE.Group();
+  scene.add(group);
+
+  // outer wireframe icosahedron shell
+  var shellGeo = new THREE.IcosahedronGeometry(1.9, 1);
+  var shellMat = new THREE.MeshBasicMaterial({ color: 0x34d8ff, wireframe: true, transparent: true, opacity: 0.55 });
+  var shell = new THREE.Mesh(shellGeo, shellMat);
+  group.add(shell);
+
+  // inner core: octahedron solid, brand colored
+  var coreGeo = new THREE.OctahedronGeometry(1.05, 0);
+  var coreMat = new THREE.MeshStandardMaterial({ color: 0x2f6fff, emissive: 0x142a66, metalness: 0.6, roughness: 0.25 });
+  var core = new THREE.Mesh(coreGeo, coreMat);
+  group.add(core);
+
+  // orbiting ring
+  var ringGeo = new THREE.TorusGeometry(2.5, 0.012, 8, 128);
+  var ringMat = new THREE.MeshBasicMaterial({ color: 0x4b3fe4, transparent: true, opacity: 0.7 });
+  var ring1 = new THREE.Mesh(ringGeo, ringMat);
+  ring1.rotation.x = Math.PI / 2.4;
+  group.add(ring1);
+  var ring2 = new THREE.Mesh(ringGeo, ringMat.clone());
+  ring2.rotation.x = Math.PI / 3.1;
+  ring2.rotation.y = Math.PI / 5;
+  ring2.scale.setScalar(0.8);
+  group.add(ring2);
+
+  // small orbiting nodes representing modules (bot / script / crypto / program)
+  var nodeGeo = new THREE.IcosahedronGeometry(0.11, 0);
+  var nodeColors = [0x34d8ff, 0xffb648, 0x4b3fe4, 0x3ddc84];
+  var nodes = [];
+  for (var i = 0; i < 4; i++){
+    var mat = new THREE.MeshBasicMaterial({ color: nodeColors[i] });
+    var node = new THREE.Mesh(nodeGeo, mat);
+    var angle = (i / 4) * Math.PI * 2;
+    node.userData = { angle: angle, radius: 2.9, speed: 0.35 + i * 0.05, y: Math.sin(i) * 0.4 };
+    scene.add(node);
+    nodes.push(node);
+  }
+
+  // particle field
+  var particleCount = 220;
+  var positions = new Float32Array(particleCount * 3);
+  for (var p = 0; p < particleCount; p++){
+    var r = 3.4 + Math.random() * 2.2;
+    var theta = Math.random() * Math.PI * 2;
+    var phi = Math.acos((Math.random() * 2) - 1);
+    positions[p*3]   = r * Math.sin(phi) * Math.cos(theta);
+    positions[p*3+1] = r * Math.sin(phi) * Math.sin(theta) * 0.6;
+    positions[p*3+2] = r * Math.cos(phi);
+  }
+  var particleGeo = new THREE.BufferGeometry();
+  particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  var particleMat = new THREE.PointsMaterial({ color: 0x9fd8ff, size: 0.028, transparent: true, opacity: 0.7 });
+  var particles = new THREE.Points(particleGeo, particleMat);
+  scene.add(particles);
+
+  // lights
+  scene.add(new THREE.AmbientLight(0x334066, 1.1));
+  var pl1 = new THREE.PointLight(0x34d8ff, 2.2, 12); pl1.position.set(3, 2, 3); scene.add(pl1);
+  var pl2 = new THREE.PointLight(0x4b3fe4, 2.0, 12); pl2.position.set(-3, -1.5, -2); scene.add(pl2);
+
+  var mouseX = 0, mouseY = 0, targetRotX = 0, targetRotY = 0;
+  container.addEventListener('mousemove', function(e){
+    var rect = container.getBoundingClientRect();
+    mouseX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+    mouseY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+  });
+
+  var clock = new THREE.Clock();
+  function animate(){
+    requestAnimationFrame(animate);
+    var t = clock.getElapsedTime();
+
+    if (!reduceMotion){
+      group.rotation.y += 0.0032;
+      group.rotation.x = Math.sin(t * 0.25) * 0.08;
+      shell.rotation.y -= 0.0015;
+      ring2.rotation.z += 0.002;
+      particles.rotation.y += 0.0006;
+
+      nodes.forEach(function(n){
+        n.userData.angle += 0.006 * n.userData.speed;
+        n.position.x = Math.cos(n.userData.angle) * n.userData.radius;
+        n.position.z = Math.sin(n.userData.angle) * n.userData.radius;
+        n.position.y = n.userData.y + Math.sin(t + n.userData.angle) * 0.25;
+      });
+
+      targetRotX += (mouseY * 0.25 - targetRotX) * 0.04;
+      targetRotY += (mouseX * 0.35 - targetRotY) * 0.04;
+      camera.position.x = targetRotY * 1.2;
+      camera.position.y = 0.4 - targetRotX * 0.8;
+      camera.lookAt(0,0,0);
+    }
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', function(){
+    if (!container.clientWidth) return;
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+  });
+})();
+
+/* ---------------- Crypto section 3D scene: coin + blockchain network ---------------- */
+(function(){
+  var container = document.getElementById('coinStage');
+  if (!container || typeof THREE === 'undefined') return;
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 100);
+  camera.position.set(0, 0.6, 6);
+
+  var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  container.appendChild(renderer.domElement);
+
+  // coin: cylinder with gold gradient-ish material
+  var coinGroup = new THREE.Group();
+  scene.add(coinGroup);
+
+  var coinGeo = new THREE.CylinderGeometry(1.55, 1.55, 0.28, 64);
+  var coinMat = new THREE.MeshStandardMaterial({ color: 0xffb648, metalness: 0.85, roughness: 0.28, emissive: 0x3a2200, emissiveIntensity: 0.3 });
+  var coin = new THREE.Mesh(coinGeo, coinMat);
+  coin.rotation.x = Math.PI / 2.6;
+  coinGroup.add(coin);
+
+  // rim ring accents
+  var rimGeo = new THREE.TorusGeometry(1.55, 0.035, 12, 80);
+  var rimMat = new THREE.MeshStandardMaterial({ color: 0xfff1cf, metalness: 0.9, roughness: 0.2 });
+  var rimTop = new THREE.Mesh(rimGeo, rimMat);
+  rimTop.rotation.x = Math.PI / 2.6;
+  rimTop.position.y = 0.145;
+  coinGroup.add(rimTop);
+
+  // "$" mark using a torusKnot substitute (simple icosahedron cluster) centered as emblem
+  var emblemGeo = new THREE.IcosahedronGeometry(0.34, 0);
+  var emblemMat = new THREE.MeshStandardMaterial({ color: 0x1c1204, metalness: 0.4, roughness: 0.5 });
+  var emblem = new THREE.Mesh(emblemGeo, emblemMat);
+  emblem.position.y = 0.16;
+  coinGroup.add(emblem);
+
+  // blockchain network: nodes + connecting lines forming a loose sphere around coin
+  var netGroup = new THREE.Group();
+  scene.add(netGroup);
+  var nodeCount = 14;
+  var nodePositions = [];
+  var netNodeGeo = new THREE.SphereGeometry(0.045, 8, 8);
+  var netNodeMat = new THREE.MeshBasicMaterial({ color: 0x34d8ff });
+  for (var i = 0; i < nodeCount; i++){
+    var r = 2.6;
+    var theta = Math.random() * Math.PI * 2;
+    var phi = Math.acos((Math.random() * 2) - 1);
+    var v = new THREE.Vector3(
+      r * Math.sin(phi) * Math.cos(theta),
+      r * Math.sin(phi) * Math.sin(theta) * 0.65,
+      r * Math.cos(phi)
+    );
+    nodePositions.push(v);
+    var nm = new THREE.Mesh(netNodeGeo, netNodeMat);
+    nm.position.copy(v);
+    netGroup.add(nm);
+  }
+  // connect nearby nodes with lines
+  var lineMat = new THREE.LineBasicMaterial({ color: 0x2f6fff, transparent: true, opacity: 0.35 });
+  var linePositions = [];
+  for (var a = 0; a < nodePositions.length; a++){
+    for (var b = a + 1; b < nodePositions.length; b++){
+      if (nodePositions[a].distanceTo(nodePositions[b]) < 2.1){
+        linePositions.push(nodePositions[a].x, nodePositions[a].y, nodePositions[a].z);
+        linePositions.push(nodePositions[b].x, nodePositions[b].y, nodePositions[b].z);
+      }
+    }
+  }
+  var lineGeo = new THREE.BufferGeometry();
+  lineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(linePositions), 3));
+  var lines = new THREE.LineSegments(lineGeo, lineMat);
+  netGroup.add(lines);
+
+  scene.add(new THREE.AmbientLight(0x443322, 1.2));
+  var pl1 = new THREE.PointLight(0xffdca0, 2.4, 14); pl1.position.set(3, 3, 3); scene.add(pl1);
+  var pl2 = new THREE.PointLight(0x34d8ff, 1.6, 14); pl2.position.set(-3, -2, -2); scene.add(pl2);
+
+  var clock = new THREE.Clock();
+  function animate(){
+    requestAnimationFrame(animate);
+    var t = clock.getElapsedTime();
+    if (!reduceMotion){
+      coinGroup.rotation.y += 0.008;
+      coinGroup.position.y = Math.sin(t * 0.9) * 0.08;
+      netGroup.rotation.y -= 0.0022;
+      netGroup.rotation.x = Math.sin(t * 0.3) * 0.05;
+      emblem.rotation.y += 0.02;
+    }
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', function(){
+    if (!container.clientWidth) return;
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+  });
+})();
+(function(){
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) return;
+  var stage = document.getElementById('heroStage');
+  var core = document.querySelector('.core-visual');
+  if (!stage || !core) return;
+  stage.addEventListener('mousemove', function(e){
+    var rect = stage.getBoundingClientRect();
+    var x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+    var y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    core.style.setProperty('--tiltX', (y * -6) + 'deg');
+    core.style.setProperty('--tiltY', (x * 6) + 'deg');
+  });
+  stage.addEventListener('mouseleave', function(){
+    core.style.setProperty('--tiltX', '0deg');
+    core.style.setProperty('--tiltY', '0deg');
+  });
+})();
+</script>
+
+</body>
+</html>

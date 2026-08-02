@@ -1,0 +1,59 @@
+2026-07-31 10:06:06,112 | INFO    | handler.wallet | 🍓 Nexon Reputation Bot стартует...
+2026-07-31 10:06:07,230 | INFO    | handler.wallet | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-31 10:06:07,230 | INFO    | handler.wallet | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-31 10:06:07,230 | INFO    | aiogram.dispatcher | Start polling
+2026-07-31 10:06:07,258 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-31 10:21:59,367 | INFO    | aiogram.event | Update id=543850094 is not handled. Duration 23 ms by bot id=8578283530
+2026-07-31 10:22:39,491 | INFO    | aiogram.event | Update id=543850095 is not handled. Duration 17 ms by bot id=8578283530
+2026-07-31 10:35:05,749 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-31 10:35:05,750 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-31 10:35:05,750 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-31 10:35:06,007 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-31 10:35:31,831 | INFO    | handler.wallet | 🍓 Nexon Reputation Bot стартует...
+2026-07-31 10:35:32,987 | INFO    | handler.wallet | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-31 10:35:32,988 | INFO    | handler.wallet | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-31 10:35:32,988 | INFO    | aiogram.dispatcher | Start polling
+2026-07-31 10:35:33,018 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-31 10:35:46,017 | INFO    | aiogram.event | Update id=543850096 is handled. Duration 199 ms by bot id=8578283530
+2026-07-31 10:35:51,300 | INFO    | aiogram.event | Update id=543850097 is handled. Duration 195 ms by bot id=8578283530
+2026-07-31 11:00:05,739 | INFO    | aiogram.event | Update id=543850098 is not handled. Duration 15 ms by bot id=8578283530
+2026-07-31 11:02:16,650 | INFO    | aiogram.event | Update id=543850099 is not handled. Duration 16 ms by bot id=8578283530
+2026-07-31 11:06:45,730 | INFO    | aiogram.event | Update id=543850100 is not handled. Duration 17 ms by bot id=8578283530
+2026-07-31 11:06:56,889 | INFO    | aiogram.event | Update id=543850101 is not handled. Duration 14 ms by bot id=8578283530
+2026-07-31 11:29:15,980 | INFO    | aiogram.event | Update id=543850102 is not handled. Duration 32 ms by bot id=8578283530
+2026-07-31 11:41:02,343 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-31 11:41:02,346 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-31 11:41:02,346 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-31 11:41:02,606 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-31 11:41:21,766 | INFO    | handler.wallet | 🍓 Nexon Reputation Bot стартует...
+2026-07-31 11:41:22,778 | INFO    | handler.wallet | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-31 11:41:22,778 | INFO    | handler.wallet | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-31 11:41:22,778 | INFO    | aiogram.dispatcher | Start polling
+2026-07-31 11:41:22,805 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-31 11:41:34,215 | INFO    | aiogram.event | Update id=543850103 is handled. Duration 168 ms by bot id=8578283530
+2026-07-31 11:41:47,064 | INFO    | aiogram.event | Update id=543850104 is handled. Duration 83 ms by bot id=8578283530
+2026-07-31 11:42:41,145 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-31 11:42:41,146 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-31 11:42:41,147 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-31 11:42:41,401 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-31 11:42:53,498 | INFO    | handler.wallet | 🍓 Nexon Reputation Bot стартует...
+2026-07-31 11:42:54,698 | INFO    | handler.wallet | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-31 11:42:54,698 | INFO    | handler.wallet | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-31 11:42:54,698 | INFO    | aiogram.dispatcher | Start polling
+2026-07-31 11:42:54,764 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-31 11:42:56,451 | INFO    | aiogram.event | Update id=543850105 is handled. Duration 411 ms by bot id=8578283530
+2026-07-31 11:43:02,602 | INFO    | aiogram.event | Update id=543850106 is handled. Duration 329 ms by bot id=8578283530
+2026-07-31 11:43:11,466 | INFO    | aiogram.event | Update id=543850107 is handled. Duration 64 ms by bot id=8578283530
+2026-07-31 11:43:23,157 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-31 11:43:23,158 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-31 11:43:23,158 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-31 11:43:23,418 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-31 11:43:41,997 | INFO    | handler.wallet | 🍓 Nexon Reputation Bot стартует...
+2026-07-31 11:43:43,153 | INFO    | handler.wallet | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-07-31 11:43:43,153 | INFO    | handler.wallet | Логи пишутся в папку: C:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-07-31 11:43:43,154 | INFO    | aiogram.dispatcher | Start polling
+2026-07-31 11:43:43,185 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-07-31 11:44:10,986 | INFO    | aiogram.dispatcher | Polling stopped
+2026-07-31 11:44:10,988 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-07-31 11:44:10,988 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-07-31 11:44:11,241 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
