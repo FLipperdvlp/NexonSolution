@@ -217,3 +217,22 @@ client_session: <aiohttp.client.ClientSession object at 0x00000197A6EFC7D0>
 2026-08-03 06:19:57,225 | INFO    | core | Логи пишутся в папку: c:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
 2026-08-03 06:19:57,226 | INFO    | aiogram.dispatcher | Start polling
 2026-08-03 06:19:57,256 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-08-03 06:32:36,077 | INFO    | aiogram.event | Update id=543850731 is not handled. Duration 24 ms by bot id=8578283530
+2026-08-03 06:33:15,384 | INFO    | aiogram.event | Update id=543850732 is handled. Duration 161 ms by bot id=8578283530
+2026-08-03 06:33:17,206 | INFO    | aiogram.event | Update id=543850733 is handled. Duration 139 ms by bot id=8578283530
+2026-08-03 06:33:18,368 | INFO    | aiogram.event | Update id=543850734 is handled. Duration 107 ms by bot id=8578283530
+2026-08-03 06:33:19,757 | INFO    | aiogram.event | Update id=543850735 is handled. Duration 279 ms by bot id=8578283530
+2026-08-03 06:33:21,525 | INFO    | aiogram.event | Update id=543850736 is handled. Duration 88 ms by bot id=8578283530
+2026-08-03 06:33:40,850 | INFO    | aiogram.event | Update id=543850737 is not handled. Duration 17 ms by bot id=8578283530
+2026-08-03 06:33:43,414 | INFO    | aiogram.event | Update id=543850738 is not handled. Duration 14 ms by bot id=8578283530
+2026-08-03 06:33:52,406 | INFO    | aiogram.event | Update id=543850739 is not handled. Duration 23 ms by bot id=8578283530
+2026-08-03 06:35:02,696 | INFO    | aiogram.event | Update id=543850740 is not handled. Duration 13 ms by bot id=8578283530
+2026-08-03 06:36:44,611 | INFO    | aiogram.dispatcher | Polling stopped
+2026-08-03 06:36:44,629 | ERROR   | aiogram.dispatcher | Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-08-03 06:36:44,631 | WARNING | aiogram.dispatcher | Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8578283530)
+2026-08-03 06:36:44,941 | INFO    | aiogram.dispatcher | Polling stopped for bot @Glohelperbot id=8578283530 - 'Glo Helper'
+2026-08-03 06:37:01,989 | INFO    | core | 🍓 Nexon Reputation Bot стартует...
+2026-08-03 06:37:03,655 | INFO    | core | 🍓 Бот @Glohelperbot запущен! Администраторы: [6155527631, 8372409305]
+2026-08-03 06:37:03,665 | INFO    | core | Логи пишутся в папку: c:\Users\lp021\OneDrive\Desktop\NexonSolution\NexonSolution\logs
+2026-08-03 06:37:03,670 | INFO    | aiogram.dispatcher | Start polling
+2026-08-03 06:37:03,711 | INFO    | aiogram.dispatcher | Run polling for bot @Glohelperbot id=8578283530 - 'Glo Helper'

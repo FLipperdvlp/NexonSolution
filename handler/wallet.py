@@ -110,6 +110,8 @@ async def withdraw_callback(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(
         f"""
 💸 <b>Вывод средств</b>
+!Внимание!
+В связи с регламентом CryptoBot по выводу средств. В процессе вывода, с вас будет списано до 3% за вывод средств на крипто-кошелёк.
 
 Средства зачисляются прямо на ваш баланс в <b>@CryptoBot</b>.
 Оттуда вы сможете вывести их на любой кошелёк USDT (сеть TRC20) через сам @CryptoBot.
