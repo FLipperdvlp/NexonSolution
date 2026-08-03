@@ -15,7 +15,7 @@ from aiogram.types import (
     InlineKeyboardMarkup,
 )
 
-from bot import LOGS_DIR, WithdrawState, crypto
+from core import bot, dp, db, LOGS_DIR, WithdrawState, crypto, logger
 from checks.checks import *
 from keyboards.back import *
 from db.database import Database
@@ -26,15 +26,6 @@ bot = Bot(
     token=BOT_TOKEN,
     default=DefaultBotProperties(parse_mode=ParseMode.HTML),
 )
-
-DB_PATH: str = os.getenv("DB_PATH", "reputation.db")
-
-storage = MemoryStorage()
-dp = Dispatcher(storage=storage)
-db = Database(DB_PATH)
-logger = logging.getLogger(__name__)
-
-
 
 action_formatter = logging.Formatter("%(asctime)s | %(message)s")
 action_file_handler = TimedRotatingFileHandler(
@@ -165,14 +156,12 @@ async def withdraw_amount(message: types.Message, state: FSMContext):
         await message.answer("❌ Недостаточно средств")
         return
 
-    # уведомляем админов о самом факте запроса на вывод — сразу, до попытки отправки
     await notify_admins_withdraw_request(
         message.from_user.id,
         message.from_user.username or "",
         amount,
     )
 
-    # списываем баланс сразу, чтобы нельзя было вывести дважды
     if not db.remove_balance(message.from_user.id, amount):
         await message.answer("❌ Ошибка списания баланса")
         return

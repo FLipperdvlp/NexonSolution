@@ -3,6 +3,7 @@ from logging.handlers import TimedRotatingFileHandler
 from handler.wallet import *
 from keyboards.admin import *
 from handler.withdrawals import _withdrawals
+from core import bot, dp, db, LOGS_DIR, WithdrawState, crypto
 
 WITHDRAWALS_PATH = os.getenv("WITHDRAWALS_PATH", "withdrawals.json")
 

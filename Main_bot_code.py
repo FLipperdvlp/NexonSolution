@@ -1,107 +1,50 @@
 import asyncio
-import hashlib
-import hmac
 import json
 import logging
 import os
 import re
-import uuid
 from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
-from html import escape as html_escape
-from pathlib import Path
 from typing import Optional, Tuple
-from urllib.parse import parse_qsl
-
-from aiogram import Bot, Dispatcher, F, types
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import (
     CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
-    WebAppInfo,
+    MenuButtonDefault,
 )
 from aiohttp import web
 from dotenv import load_dotenv
-from aiocryptopay import AioCryptoPay, Networks
-from db.database import Database
+from concurrent_log_handler import ConcurrentRotatingFileHandler
 
 
-class DepositState(StatesGroup):
-    waiting_amount = State()
-class WithdrawState(StatesGroup):
-    waiting_amount = State()
-    waiting_wallet = State()
-class TransferState(StatesGroup):
-    waiting_user = State()
-    waiting_amount = State()
 
-# ---------------------------------------------------------------------------
-# Загрузка переменных окружения
-# ---------------------------------------------------------------------------
-load_dotenv()
+from core import bot, dp, db, LOGS_DIR, WithdrawState, crypto
+from keyboards.main_menu import *
+from keyboards.admin     import *
+from keyboards.back      import *
+from keyboards.garant    import *
+from keyboards.help      import *
+from keyboards.review    import *
+from keyboards.view_user import *
+from keyboards.wallet    import *
+from checks.checks       import *
+from handler.wallet      import *
+from handler.handler     import *
+from classes.class_      import *
+from handler.withdrawals import _withdrawals
 
-BOT_TOKEN: str = os.getenv("BOT_TOKEN", "8578283530:AAEUajtwik66P-ReEfPA_j8ge36zClfoN-M")
-if not BOT_TOKEN:
-    raise ValueError(
-        "❌ BOT_TOKEN не задан! Создай файл .env и укажи BOT_TOKEN=<твой токен>"
-    )
-
-CRYPTO_TOKEN = os.getenv("CRYPTO_TOKEN", "609209:AAVVfrpjEHytPvjZgcpl3VBoozwwEwSCnMq")
-
-crypto = AioCryptoPay(
-    token=CRYPTO_TOKEN,
-    network=Networks.MAIN_NET
-)
-
-ADMIN_IDS: list[int] = [
-    int(x) for x in os.getenv("ADMIN_IDS", "6155527631, 8372409305").split(",") if x.strip()
-]
-DB_PATH: str = os.getenv("DB_PATH", "reputation.db")
-
-# Username "живого гаранта", который показывается в разделе 🛡️ Гарант.
-# Можно переопределить через переменную окружения GARANT_USERNAME.
 GARANT_USERNAME: str = os.getenv("GARANT_USERNAME", "gavrilovit")
-
-# ---------------------------------------------------------------------------
-# Mini App / Web API конфигурация
-# ---------------------------------------------------------------------------
-# Адрес, где захостен nexon-miniapp.html (Netlify/Vercel/свой домен, обязательно HTTPS).
-WEBAPP_URL: str = os.getenv("WEBAPP_URL", "https://effulgent-kataifi-b0cc37.netlify.app")
-# Origin мини-аппа для CORS (по умолчанию берём из WEBAPP_URL без завершающего слэша).
-WEBAPP_ORIGIN: str = os.getenv("WEBAPP_ORIGIN", WEBAPP_URL.rstrip("/"))
-
-# Хост/порт, на которых поднимается встроенный веб-API для мини-аппа.
-API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
-API_PORT: int = int(os.getenv("API_PORT", "8080"))
-
-# Куда сохранять скриншоты, загруженные через мини-апп (не через бота).
-UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "uploads"))
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-MAX_PHOTO_BYTES = 8 * 1024 * 1024  # 8 МБ на один скриншот
-
-# Где хранить заявки на вывод (статусы pending/done/rejected), чтобы они
-# не терялись при перезапуске бота и админ мог их подтверждать кнопками.
-WITHDRAWALS_PATH = os.getenv("WITHDRAWALS_PATH", "withdrawals.json")
-
-# ---------------------------------------------------------------------------
-# Логирование
-# ---------------------------------------------------------------------------
-LOGS_DIR = os.getenv("LOGS_DIR", "logs")
-os.makedirs(LOGS_DIR, exist_ok=True)
 
 LOG_FORMAT = "%(asctime)s | %(levelname)-7s | %(name)s | %(message)s"
 formatter = logging.Formatter(LOG_FORMAT)
 
-bot_file_handler = TimedRotatingFileHandler(
+bot_file_handler = ConcurrentRotatingFileHandler(
     filename=os.path.join(LOGS_DIR, "bot.log"),
-    when="midnight",
+    maxBytes=10 * 1024 * 1024,   # например, 10 МБ на файл
     backupCount=14,
     encoding="utf-8",
 )
@@ -114,133 +57,7 @@ logging.basicConfig(
     level=logging.INFO,
     handlers=[console_handler, bot_file_handler],
 )
-logger = logging.getLogger(__name__)
 
-action_formatter = logging.Formatter("%(asctime)s | %(message)s")
-action_file_handler = TimedRotatingFileHandler(
-    filename=os.path.join(LOGS_DIR, "actions.log"),
-    when="midnight",
-    backupCount=14,
-    encoding="utf-8",
-)
-action_file_handler.setFormatter(action_formatter)
-
-action_logger = logging.getLogger("actions")
-action_logger.setLevel(logging.INFO)
-action_logger.addHandler(action_file_handler)
-action_console_handler = logging.StreamHandler()
-action_console_handler.setFormatter(action_formatter)
-action_logger.addHandler(action_console_handler)
-action_logger.propagate = False
-
-
-# Эмодзи по категории действия — подбирается по ключевому слову в самом
-# названии действия (action), так что вызовы log_action() по всему коду
-# не нужно менять — просто новая красивая обёртка вокруг того же вызова.
-_ACTION_EMOJI: list[tuple[str, str]] = [
-    ("ПЕРЕВОД", "🔄"),
-    ("ПОПОЛНЕНИЕ", "💰"),
-    ("ВЫВОД", "💸"),
-    ("БАН", "🚫"),
-    ("РАЗБАН", "✅"),
-    ("УДАЛЕНИЕ", "🗑️"),
-    ("ОТЗЫВ", "✍️"),
-    ("ПРОВЕРКА", "🔍"),
-    ("СТАРТ", "🚀"),
-    ("АДМИН", "🛡️"),
-]
-
-
-def _action_emoji(action: str) -> str:
-    upper = action.upper()
-    for keyword, emoji in _ACTION_EMOJI:
-        if keyword in upper:
-            return emoji
-    return "•"
-
-
-def log_action(
-    user_id: Optional[int],
-    username: Optional[str],
-    action: str,
-    details: str = "",
-    chat: Optional[types.Chat] = None,
-) -> None:
-    """
-    Пишет одну строго структурированную строку в logs/actions.log:
-
-        🔄 ПЕРЕВОД (mini app)        | user=123456789 (@ivan)      | чат=-           | получатель=987654 сумма=15.00 USDT баланс_после=35.00
-
-    Так по одному файлу видно: кто (user_id + username), что сделал
-    (action с эмодзи-категорией), где (chat, если применимо) и с какими
-    конкретно цифрами/деталями (details) — суммы, балансы до/после,
-    кошельки, получатели и т.п. Каждый вызывающий код сам собирает
-    details максимально информативно (см. финансовые хендлеры ниже).
-    """
-    uname = f"@{username}" if username else "-"
-    user_part = f"{user_id if user_id is not None else '-'} ({uname})"
-
-    chat_part = "-"
-    if chat is not None:
-        chat_label = chat.title or chat.type
-        chat_part = f"{escape(chat_label)}({chat.id})"
-
-    emoji = _action_emoji(action)
-    line = (
-        f"{emoji} {action:<28} | user={user_part:<28} | чат={chat_part:<22}"
-    )
-    if details:
-        line += f" | {details}"
-
-    action_logger.info(line)
-
-
-class CheckState(StatesGroup):
-    waiting_for_username = State()
-
-
-class ReviewState(StatesGroup):
-    choosing_sign = State()
-    waiting_target = State()
-    waiting_description = State()
-    waiting_photos = State()
-
-
-class AdminState(StatesGroup):
-    waiting_delreview_id = State()
-    waiting_ban_target = State()
-    waiting_unban_target = State()
-
-
-bot = Bot(
-    token=BOT_TOKEN,
-    default=DefaultBotProperties(parse_mode=ParseMode.HTML),
-)
-storage = MemoryStorage()
-dp = Dispatcher(storage=storage)
-db = Database(DB_PATH)
-
-
-def is_admin(user_id: int) -> bool:
-    return user_id in ADMIN_IDS
-
-def is_private(message: types.Message) -> bool:
-    return message.chat.type == "private"
-
-
-# ---------------------------------------------------------------------------
-# Регистрация username <-> telegram_id для ЛЮБОГО сообщения, которое видит
-# бот (личка, группа, супергруппа) — не только команды и +реп.
-#
-# Раньше resolve_target() умел находить продавца по @username только если
-# он либо уже писал боту лично, либо уже фигурировал в базе (upsert_user
-# вызывался лишь в отдельных хендлерах). Из-за этого отзыв по @username
-# на участника группы, который боту в личку не писал, падал с "не найден",
-# даже если человек активно переписывается прямо в этой группе.
-#
-# Этот middleware стоит первым и просто регистрирует автора любого
-# апдейта в БД, ничего не блокируя — дальше сообщение идёт по обычной
-# цепочке хендлеров как раньше.
 @dp.message.outer_middleware()
 async def register_user_middleware(handler, event: types.Message, data: dict):
     user = event.from_user
@@ -256,205 +73,27 @@ async def register_user_middleware(handler, event: types.Message, data: dict):
     return await handler(event, data)
 
 
-def main_menu_kb(admin: bool = False, private: bool = False) -> InlineKeyboardMarkup:
-    rows = [
-        [InlineKeyboardButton(
-            text="🍓 Открыть Nexon",
-            web_app=WebAppInfo(url=WEBAPP_URL)
-        )],
-        [InlineKeyboardButton(text="✍️ Оставить отзыв", callback_data="leave_review")],
-        [InlineKeyboardButton(text="🔍 Проверить продавца", callback_data="check")],
-        [
-            InlineKeyboardButton(text="📊 Топ продавцов", callback_data="top"),
-            InlineKeyboardButton(text="📈 Статистика", callback_data="stats"),
-        ],
-        [
-            InlineKeyboardButton(
-                text="💳 Мой баланс",
-                callback_data="balance"
-            )
-        ],
-        [InlineKeyboardButton(text="❓ Как пользоваться", callback_data="help")],
-    ]
-    if private:
-        rows.append([InlineKeyboardButton(text="🛡️ Гарант", callback_data="garant_menu")])
-    if admin:
-        rows.append([InlineKeyboardButton(text="🛡️ Админ-панель", callback_data="admin_panel")])
-    return InlineKeyboardMarkup(inline_keyboard=rows)
-
-
-def review_cancel_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="❌ Отменить", callback_data="review_cancel")]]
-    )
-
-
-def review_sign_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="✅ Положительный", callback_data="revsign_+")],
-            [InlineKeyboardButton(text="❌ Отрицательный", callback_data="revsign_-")],
-            [InlineKeyboardButton(text="◀️ Отмена", callback_data="menu")],
-        ]
-    )
-
-
-def review_photos_kb(count: int) -> InlineKeyboardMarkup:
-    done_text = f"✅ Готово ({count} 📸) — сохранить" if count else "✅ Готово — сохранить"
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text=done_text, callback_data="review_done")],
-            [InlineKeyboardButton(text="❌ Отменить", callback_data="review_cancel")],
-        ]
-    )
-
-
-def back_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="◀️ Назад в меню", callback_data="menu")]]
-    )
-
-
-def card_kb(target_id: int, has_photos: bool) -> InlineKeyboardMarkup:
-    rows: list[list[InlineKeyboardButton]] = []
-    if has_photos:
-        rows.append(
-            [
-                InlineKeyboardButton(
-                    text="📸 Скриншоты сделок",
-                    callback_data=f"photos_{target_id}",
-                )
-            ]
-        )
-    rows.append([InlineKeyboardButton(text="◀️ Назад в меню", callback_data="menu")])
-    return InlineKeyboardMarkup(inline_keyboard=rows)
-
-
-def view_user_kb(target_id: int, username: str = "") -> InlineKeyboardMarkup:
-    label = f"@{username}" if username else str(target_id)
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text=f"🔍 Открыть репутацию {label}",
-                    callback_data=f"view_{target_id}",
-                )
-            ],
-            [InlineKeyboardButton(text="◀️ Назад в меню", callback_data="menu")],
-        ]
-    )
-
-
-def help_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(text="❓ Как пользоваться", callback_data="help"),
-                InlineKeyboardButton(text="◀️ Назад в меню", callback_data="menu"),
-            ]
-        ]
-    )
-
-
-def admin_panel_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="🗑️ Удалить отзыв", callback_data="admin_delreview")],
-            [InlineKeyboardButton(text="🚫 Забанить", callback_data="admin_ban")],
-            [InlineKeyboardButton(text="✅ Разбанить", callback_data="admin_unban")],
-            [InlineKeyboardButton(text="📡 Каналы", callback_data="admin_channels")],
-            [InlineKeyboardButton(text="📈 Статистика", callback_data="stats")],
-            [InlineKeyboardButton(text="◀️ Назад в меню", callback_data="menu")],
-        ]
-    )
-
-
-def admin_cancel_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="❌ Отмена", callback_data="admin_panel")]]
-    )
-
-
-def garant_menu_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="🧑‍💼 Живой гарант", callback_data="garant_live")],
-            [InlineKeyboardButton(text="💰 Деп", callback_data="garant_dep")],
-            [InlineKeyboardButton(text="◀️ Назад в меню", callback_data="menu")],
-        ]
-    )
-
-
-def garant_back_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="◀️ Назад", callback_data="garant_menu")],
-            [InlineKeyboardButton(text="◀️ Назад в меню", callback_data="menu")],
-        ]
-    )
-
-def balance_kb():
-
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="💰 Пополнить",
-                    callback_data="deposit"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="💸 Вывести",
-                    callback_data="withdraw"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🔄 Передать",
-                    callback_data="transfer"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="⬅️ Назад",
-                    callback_data="menu"
-                )
-            ]
-        ]
-    )
-
 REP_PATTERN = re.compile(
-    r"^\s*([+\-])\s*реп\s+@?(\w+)\s*(.*)$",
+    r"^\s*(?:@?(\w+)\s*([+\-])\s*реп\s*(.*)|([+\-])\s*реп\s+@?(\w+)\s*(.*))$",
     re.IGNORECASE | re.DOTALL,
 )
 
-# Кошелёк для вывода принимаем только в сети TRC20 (адрес TRON: начинается
-# с "T", 34 символа base58). Пополнение баланса всегда идёт через CryptoBot
-# (aiocryptopay) — эта часть уже была без выбора провайдера.
-TRC20_ADDRESS_PATTERN = re.compile(r"^T[1-9A-HJ-NP-Za-km-z]{33}$")
+def parse_rep_message(text: str) -> Optional[Tuple[str, str, str]]:
+    match = REP_PATTERN.match(text.strip())
+    if not match:
+        return None
 
+    if match.group(1):
+        identifier = match.group(1)
+        sign = match.group(2)
+        description = match.group(3).strip()
 
-def is_valid_trc20_address(wallet: str) -> bool:
-    return bool(TRC20_ADDRESS_PATTERN.match((wallet or "").strip()))
+    else:
+        sign = match.group(4)
+        identifier = match.group(5)
+        description = match.group(6).strip()
 
-
-# ---------------------------------------------------------------------------
-# Заявки на вывод — теперь с подтверждением админом, а не просто
-# уведомлением "в пустоту". Каждая заявка хранится в withdrawals.json
-# со статусом (pending/done/rejected), чтобы не терялась при перезапуске
-# бота, и под уведомлением админу есть кнопки ✅/❌.
-# ---------------------------------------------------------------------------
-
-def _load_withdrawals() -> dict:
-    if os.path.exists(WITHDRAWALS_PATH):
-        try:
-            with open(WITHDRAWALS_PATH, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except (json.JSONDecodeError, OSError) as e:
-            logger.error(f"Не удалось прочитать {WITHDRAWALS_PATH}: {e}")
-    return {}
-
+    return sign, identifier, description
 
 def _save_withdrawals() -> None:
     try:
@@ -463,14 +102,9 @@ def _save_withdrawals() -> None:
     except OSError as e:
         logger.error(f"Не удалось сохранить {WITHDRAWALS_PATH}: {e}")
 
-
-_withdrawals: dict[str, dict] = _load_withdrawals()
-
-
 def create_withdrawal_request(
     user_id: int, username: str, amount: float, wallet: str, source: str
 ) -> dict:
-    """Создаёт заявку на вывод со статусом pending и сразу сохраняет на диск."""
     wd_id = str(int(datetime.utcnow().timestamp() * 1000))
     wd = {
         "id": wd_id,
@@ -490,47 +124,7 @@ def create_withdrawal_request(
     _save_withdrawals()
     return wd
 
-
-def withdrawal_notice_text(wd: dict) -> str:
-    label = display_name(wd["user_id"], wd["username"])
-    lines = [
-        "💸 <b>Заявка на вывод</b>",
-        "",
-        f"🆔 Заявка: <code>{wd['id']}</code>",
-        f"Пользователь: <code>{wd['user_id']}</code> ({label})",
-        f"Сумма: <b>{wd['amount']:.2f} USDT</b>",
-        "Кошелёк (TRC20):",
-        f"<code>{escape(wd['wallet'])}</code>",
-        "",
-    ]
-    if wd["status"] == "pending":
-        lines.append("⏳ Статус: <b>ожидает обработки</b>")
-    else:
-        who = (
-            f"@{escape(wd['handled_by_username'])}"
-            if wd.get("handled_by_username")
-            else (f"ID {wd['handled_by']}" if wd.get("handled_by") else "—")
-        )
-        if wd["status"] == "done":
-            lines.append(f"✅ Статус: <b>выполнено</b> ({who})")
-        else:
-            lines.append(f"❌ Статус: <b>отклонено, деньги возвращены</b> ({who})")
-    return "\n".join(lines)
-
-
-def withdrawal_admin_kb(wd_id: str) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(text="✅ Выполнено", callback_data=f"wd_done_{wd_id}"),
-                InlineKeyboardButton(text="❌ Отклонить", callback_data=f"wd_reject_{wd_id}"),
-            ]
-        ]
-    )
-
-
 async def notify_admins_withdrawal(wd_id: str) -> None:
-    """Рассылает заявку всем админам с кнопками подтверждения/отклонения."""
     wd = _withdrawals.get(wd_id)
     if wd is None:
         return
@@ -546,9 +140,21 @@ async def notify_admins_withdrawal(wd_id: str) -> None:
     _save_withdrawals()
 
 
+async def notify_admins_deposit(user_id: int, username: str, amount: float, invoice_id: str) -> None:
+    text = (
+        f"💰 <b>Заявка на пополнение</b>\n\n"
+        f"👤 Пользователь: {display_name(user_id, username)} (id={user_id})\n"
+        f"💵 Сумма: {amount:.2f} USDT\n"
+        f"🆔 Invoice: <code>{invoice_id}</code>"
+    )
+    for admin_id in ADMIN_IDS:
+        try:
+            await bot.send_message(admin_id, text)
+        except TelegramAPIError as e:
+            logger.warning(f"Не удалось уведомить админа {admin_id} о пополнении: {e}")
+
+
 async def _refresh_admin_notifications(wd: dict) -> None:
-    """После подтверждения/отклонения обновляет уведомление у ВСЕХ админов
-    (не только у того, кто нажал кнопку) — снимает кнопки, дописывает статус."""
     text = withdrawal_notice_text(wd)
     kb = withdrawal_admin_kb(wd["id"]) if wd["status"] == "pending" else None
     for admin_id_str, message_id in (wd.get("notified") or {}).items():
@@ -623,8 +229,6 @@ async def withdrawal_reject_callback(callback: CallbackQuery) -> None:
     wd["handled_at"] = datetime.utcnow().isoformat(timespec="seconds")
     _save_withdrawals()
 
-    # Деньги списывались с баланса пользователя в момент создания заявки —
-    # при отклонении возвращаем их обратно.
     db.add_balance(wd["user_id"], wd["amount"])
 
     await _refresh_admin_notifications(wd)
@@ -650,44 +254,8 @@ async def withdrawal_reject_callback(callback: CallbackQuery) -> None:
     )
     await callback.answer("❌ Отклонено, деньги возвращены")
 
-
-@dp.message(Command("withdrawals"))
-async def withdrawals_list_handler(message: types.Message) -> None:
-    """Админская команда: список всех заявок на вывод, ожидающих обработки."""
-    if not is_admin(message.from_user.id):
-        return
-
-    pending = [wd for wd in _withdrawals.values() if wd["status"] == "pending"]
-    if not pending:
-        await message.answer("📭 Нет заявок на вывод, ожидающих обработки.")
-        return
-
-    pending.sort(key=lambda w: w["created_at"])
-    await message.answer(f"📋 <b>Заявок в ожидании: {len(pending)}</b>")
-    for wd in pending:
-        await message.answer(withdrawal_notice_text(wd), reply_markup=withdrawal_admin_kb(wd["id"]))
-
-
-def parse_rep_message(
-    text: str,
-) -> Optional[Tuple[str, str, str]]:
-    match = REP_PATTERN.match(text)
-    if not match:
-        return None
-    sign = match.group(1)
-    identifier = match.group(2)
-    description = match.group(3).strip()
-    return sign, identifier, description
-
-
 album_buffers: dict[str, list[types.Message]] = {}
-
-# Набор media_group_id, которые прямо сейчас собираются в мастере отзыва
-# (review_photo_handler). Нужен, чтобы на альбом из нескольких фото
-# отправлялось только ОДНО подтверждение "Добавлено...", а не по одному
-# на каждое фото альбома.
 album_confirm_in_progress: set[str] = set()
-
 
 @dp.message.outer_middleware()
 async def album_collector_middleware(handler, event: types.Message, data: dict):
@@ -772,20 +340,11 @@ def trust_bar(score: int) -> str:
     return f"[{bar}] {score}% — {level}"
 
 
-def escape(text: str) -> str:
-    return html_escape(str(text), quote=False)
-
-
 def truncate(text: str, max_len: int = 200) -> str:
     text = text.strip()
     if len(text) <= max_len:
         return text
     return text[:max_len].rstrip() + "…"
-
-
-def display_name(target_id: int, username: str = "") -> str:
-    return f"@{escape(username)}" if username else f"ID {target_id}"
-
 
 def get_review_photo_ids(rev) -> list[str]:
     try:
@@ -795,7 +354,6 @@ def get_review_photo_ids(rev) -> list[str]:
     if not value:
         return []
     return [pid for pid in str(value).split(",") if pid]
-
 
 def get_review_id(rev) -> Optional[int]:
     for key in ("id", "review_id"):
@@ -809,7 +367,6 @@ def get_review_id(rev) -> Optional[int]:
             except (TypeError, ValueError):
                 continue
     return None
-
 
 def deal_button_label(rev, index: int) -> str:
     sign_emoji = "✅" if rev["sign"] == "+" else "❌"
@@ -871,8 +428,6 @@ async def resolve_target_smart(
         return await resolve_target(identifier)
     return None, ""
 
-
-
 @dp.message.outer_middleware()
 async def block_channel_commands(handler, event: types.Message, data: dict):
     if event.chat.type in ("group", "supergroup"):
@@ -881,30 +436,18 @@ async def block_channel_commands(handler, event: types.Message, data: dict):
 
         if text.startswith("/"):
             user = event.from_user
-            # Анонимные админы группы (или сообщения от имени привязанного
-            # канала) приходят без from_user — раньше это падало с
-            # AttributeError. Такие сообщения просто пропускаем дальше.
             if user is None:
                 return await handler(event, data)
-
             if not is_admin(user.id):
                 try:
                     await event.delete()
                 except TelegramAPIError:
                     pass
-
                 return
 
     return await handler(event, data)
 
-
-
-async def send_reputation_card(
-    target: types.Message | types.CallbackQuery,
-    identifier: Optional[str] = None,
-    source_message: Optional[types.Message] = None,
-) -> None:
-
+async def send_reputation_card( target: types.Message | types.CallbackQuery, identifier: Optional[str] = None, source_message: Optional[types.Message] = None, ) -> None:
     if isinstance(target, CallbackQuery):
         msg = target.message
         is_callback = True
@@ -986,6 +529,7 @@ async def send_reputation_card(
     ]
 
     medals = ["🥇", "🥈", "🥉", "🏅", "🏅"]
+    is_admin_viewer = is_admin(requester.id) if requester else False
     for i, rev in enumerate(reviews):
         medal = medals[i] if i < len(medals) else "▫️"
         sign_emoji = "✅" if rev["sign"] == "+" else "❌"
@@ -1002,10 +546,12 @@ async def send_reputation_card(
 
         date_str = str(rev["created_at"])[:10]
         desc = truncate(rev["description"] or "", 200)
+        rev_id = get_review_id(rev)
+        id_tag = f" <code>#{rev_id}</code>" if is_admin_viewer and rev_id is not None else ""
 
         lines.append(
             f"\n{medal} {sign_emoji}"
-            f"<i>({date_str})</i>"
+            f"<i>({date_str})</i>{id_tag}"
         )
         if desc:
             lines.append(f"   <blockquote>{escape(desc)}</blockquote>")
@@ -1060,7 +606,6 @@ async def start_handler(message: types.Message) -> None:
         reply_markup=main_menu_kb(admin=is_admin(user.id), private=is_private(message)),
     )
 
-
 @dp.message(Command("help"))
 async def help_handler(message: types.Message) -> None:
     help_text = (
@@ -1084,7 +629,7 @@ async def help_handler(message: types.Message) -> None:
         "━━━━━━━━━━━━━━━━━━━━━\n"
         "⚠️ <b>Правила</b>\n"
         "📸 Скриншот сделки обязателен\n"
-        "📝 Описание минимум 10 символов\n"
+        "📝 Описание минимум 2 символов\n"
         "🚫 Нельзя оставлять отзыв самому себе\n"
         "⏰ Один отзыв об одном человеке в сутки\n\n"
         "━━━━━━━━━━━━━━━━━━━━━\n"
@@ -1102,9 +647,6 @@ async def help_handler(message: types.Message) -> None:
             await message.answer(help_text, reply_markup=back_kb())
     else:
         await message.answer(help_text, reply_markup=back_kb())
-
-
-
 
 @dp.message(Command("check"))
 async def check_command(message: types.Message, command: CommandObject) -> None:
@@ -1132,36 +674,17 @@ async def check_command(message: types.Message, command: CommandObject) -> None:
     await send_reputation_card(message, identifier, source_message=message)
 
 
-@dp.message(F.text.regexp(r"^[+\-]\s*реп\s+(@?\w+|\S+)"))
-@dp.message(F.caption.regexp(r"^[+\-]\s*реп\s+(@?\w+|\S+)"))
+@dp.message(F.text.regexp(r"^\s*(?:@?\w+\s*[+\-]\s*реп|[+\-]\s*реп\s+@?\w+)"))
+@dp.message(F.caption.regexp(r"^\s*(?:@?\w+\s*[+\-]\s*реп|[+\-]\s*реп\s+@?\w+)"))
 async def reputation_handler(message: types.Message) -> None:
     text = get_target_text(message)
     parsed = parse_rep_message(text)
-    if not parsed:
-        await message.answer(
-            "❌ <b>Неверный формат команды</b>\n\n"
-            "Правильно так:\n"
-            "<code>+реп @username описание сделки</code>\n"
-            "<code>-реп @username описание проблемы</code>\n\n"
-            "Не забудь <b>@</b> перед именем пользователя, либо укажи "
-            "числовой Telegram ID вместо него.\n"
-            "Также можно ответить (reply) на сообщение продавца.",
-            reply_markup=help_kb(),
-        )
+
+    if parsed is None:
         return
 
     sign, identifier, description = parsed
     reviewer = message.from_user
-
-    if reviewer is None:
-        # Сообщение отправлено анонимно (от имени группы/анонимного админа) —
-        # нам физически некого записать автором отзыва.
-        await message.answer(
-            "❌ <b>Не удалось определить отправителя</b>\n\n"
-            "Похоже, сообщение отправлено анонимно от имени группы. "
-            "Отключи анонимность и повтори отзыв от своего имени."
-        )
-        return
 
     db.upsert_user(
         telegram_id=reviewer.id,
@@ -1286,8 +809,8 @@ async def reputation_handler(message: types.Message) -> None:
     )
 
 
-@dp.channel_post(F.text.regexp(r"^[+\-]\s*реп\s+@?\w+"))
-@dp.channel_post(F.caption.regexp(r"^[+\-]\s*реп\s+@?\w+"))
+@dp.channel_post(F.text.regexp(r"^\s*(?:@?\w+\s*[+\-]\s*реп|[+\-]\s*реп\s+@?\w+)"))
+@dp.channel_post(F.caption.regexp(r"^\s*(?:@?\w+\s*[+\-]\s*реп|[+\-]\s*реп\s+@?\w+)"))
 async def channel_reputation_handler(message: types.Message) -> None:
     text = get_target_text(message)
     parsed = parse_rep_message(text)
@@ -1514,9 +1037,6 @@ async def review_photo_handler(message: types.Message, state: FSMContext) -> Non
     if message.media_group_id:
         gid = message.media_group_id
         if gid in album_confirm_in_progress:
-            # Это фото — часть альбома, который уже обрабатывается другим
-            # апдейтом (первым фото альбома). Не отвечаем повторно —
-            # оно уже будет учтено в общем подтверждении.
             return
         album_confirm_in_progress.add(gid)
         try:
@@ -1877,9 +1397,28 @@ async def garant_live_callback(callback: CallbackQuery) -> None:
 
 
 @dp.callback_query(F.data == "garant_dep")
-async def garant_dep_callback(callback: CallbackQuery) -> None:
-    text = "💰 <b>Деп</b>\n\n🚧 <i>Функция в разработке.</i>"
-    await callback.message.edit_text(text, reply_markup=garant_back_kb())
+async def garant_dep_callback(
+    callback: CallbackQuery,
+    state: FSMContext
+):
+    balance = db.get_balance(callback.from_user.id)
+
+    await state.set_state(WithdrawState.waiting_amount)
+
+    await callback.message.edit_text(
+        f"""
+💰 <b>Депозит-гарант</b>
+
+Переведите средства в депозит.
+
+Ваш баланс:
+<b>{balance:.2f} USDT</b>
+
+Введите сумму депозита:
+""",
+        reply_markup=back_kb()
+    )
+
     await callback.answer()
 
 @dp.callback_query(F.data=="balance")
@@ -1889,20 +1428,16 @@ async def balance_callback(callback:CallbackQuery):
         callback.from_user.id
     )
 
-
     text = (
         "💳 <b>Ваш баланс</b>\n\n"
         f"💰 {balance:.2f} USDT"
     )
 
-
     await callback.message.edit_text(
         text,
         reply_markup=balance_kb()
     )
-
     await callback.answer()
-
 
 @dp.callback_query(F.data=="deposit")
 async def deposit_callback(
@@ -1918,179 +1453,52 @@ async def deposit_callback(
             Пополнение — только через <b>CryptoBot</b>, USDT в сети <b>TRC20</b>.
             Введите сумму в USDT:
             Минимальная сумма:
-            <b>1 USDT</b>
+            <b>0.5 USDT</b>
         """,
         reply_markup=back_kb()
     )
 
     await callback.answer()
 
-@dp.callback_query(F.data=="withdraw")
-async def withdraw_callback(
+
+@dp.callback_query(F.data == "transfer")
+async def transfer_callback(
     callback: CallbackQuery,
     state: FSMContext
 ):
-    balance = db.get_balance(
-        callback.from_user.id
-    )
-    await state.set_state(
-        WithdrawState.waiting_amount
-    )
+    await state.set_state(TransferState.waiting_user)
+
     await callback.message.edit_text(
-        f"""
-💸 <b>Вывод средств</b>
+        """
+🔄 <b>Передача баланса</b>
 
-Вывод — только на кошелёк USDT в сети <b>TRC20</b>.
+Введите <b>@username</b> получателя:
 
-Ваш баланс:
-<b>{balance:.2f} USDT</b>
-
-
-Введите сумму вывода:
         """,
         reply_markup=back_kb()
-    )
-    await callback.answer()
-
-@dp.message(WithdrawState.waiting_amount)
-async def withdraw_amount(
-    message: types.Message,
-    state:FSMContext
-):
-    try:
-        amount=float(message.text)
-    except:
-        await message.answer(
-            "❌ Введите число"
-        )
-        return
-    balance=db.get_balance(
-        message.from_user.id
-    )
-    if amount > balance:
-        await message.answer(
-            "❌ Недостаточно средств"
-        )
-        return
-    await state.update_data(
-        amount=amount
-    )
-    await state.set_state(
-        WithdrawState.waiting_wallet
-    )
-    await message.answer(
-        """
-            💳 Отправьте ваш USDT-кошелёк в сети <b>TRC20</b> (адрес TRON, начинается с «T»):
-
-            Например:
-            TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        """
-    )
-
-@dp.message(WithdrawState.waiting_wallet)
-async def withdraw_wallet(
-    message:types.Message,
-    state:FSMContext
-):
-    data=await state.get_data()
-    amount=data["amount"]
-    wallet=(message.text or "").strip()
-
-    # Принимаем вывод только на кошелёк в сети TRC20
-    if not is_valid_trc20_address(wallet):
-        await message.answer(
-            "❌ <b>Это не похоже на адрес TRC20</b>\n\n"
-            "Адрес TRON начинается с «T» и состоит из 34 символов.\n"
-            "Отправьте корректный TRC20-адрес:"
-        )
-        return
-
-    # снимаем баланс
-    success=db.remove_balance(
-        message.from_user.id,
-        amount
-    )
-    if not success:
-        await message.answer(
-            "❌ Ошибка"
-        )
-        return
-
-    log_action(
-        message.from_user.id,
-        message.from_user.username,
-        "ВЫВОД (заявка создана)",
-        details=(
-            f"сумма={amount} USDT кошелёк(TRC20)={wallet} "
-            f"баланс_после={db.get_balance(message.from_user.id):.2f}"
-        ),
-        chat=message.chat,
-    )
-
-    for admin_id in ADMIN_IDS:
-        try:
-            await bot.send_message(
-                admin_id,
-                "💸 <b>Заявка на вывод</b>\n\n"
-                f"Пользователь: <code>{message.from_user.id}</code>"
-                f" (@{escape(message.from_user.username or '-')})\n"
-                f"Сумма: <b>{amount} USDT</b>\n"
-                f"Кошелёк (TRC20):\n<code>{escape(wallet)}</code>",
-            )
-        except TelegramAPIError:
-            pass
-
-    await message.answer(
-        f"""
-            ✅ <b>Заявка создана</b>
-
-            Сумма:
-            <b>{amount} USDT</b>
-
-            Кошелек (TRC20):
-            <code>{wallet}</code>
-
-            Администратор обработает вывод.
-        """
-    )
-    await state.clear()
-
-@dp.callback_query(F.data=="transfer")
-async def transfer_callback(
-    callback:CallbackQuery,
-    state:FSMContext
-):
-    await state.set_state(
-        TransferState.waiting_user
-    )
-    await callback.message.edit_text(
-        """
-            🔄 <b>Передача баланса</b>
-            
-            Введите Telegram ID получателя:
-
-            Например:
-            123456789
-        """
     )
 
     await callback.answer()
 
 @dp.message(TransferState.waiting_user)
 async def transfer_user(
-    message:types.Message,
-    state:FSMContext
+    message: types.Message,
+    state: FSMContext
 ):
-    try:
-        user_id=int(message.text)
-    except:
+    username = (message.text or "").strip().lstrip("@")
+
+    user = db.get_user_by_username(username)
+
+    if user is None:
         await message.answer(
-            "❌ Нужен Telegram ID"
+            "❌ Пользователь не найден.\n\n"
+            "Он должен вступить в группу и хотя бы один раз запустить бота."
         )
         return
 
     await state.update_data(
-        target=user_id
+        target=user["user_id"],
+        username=username
     )
 
     await state.set_state(
@@ -2098,8 +1506,11 @@ async def transfer_user(
     )
 
     await message.answer(
-        "💰 Введите сумму:"
+        f"👤 Получатель: @{username}\n\n"
+        "💰 Введите сумму перевода:",
+        reply_markup=back_kb()
     )
+
 
 @dp.message(TransferState.waiting_amount)
 async def transfer_amount(
@@ -2158,10 +1569,6 @@ async def check_crypto_payments():
     invoices = await crypto.get_invoices(
         status="paid"
     )
-
-    # aiocryptopay иногда возвращает None вместо пустого списка, когда
-    # оплаченных инвойсов нет — раньше это валило `for inv in invoices`
-    # с "'NoneType' object is not iterable" каждые 15 секунд.
     if not invoices:
         return
 
@@ -2192,6 +1599,18 @@ async def check_crypto_payments():
         )
         db.mark_invoice_paid(invoice_id)
 
+        try:
+            await bot.send_message(
+                data["telegram_id"],
+                f"✅ <b>Оплата прошла успешно!</b>\n\n"
+                f"Баланс пополнен на <b>{float(data['amount']):.2f} USDT</b>.\n"
+                f"Текущий баланс: <b>{db.get_balance(data['telegram_id']):.2f} USDT</b>",
+            )
+        except TelegramAPIError as e:
+            logger.warning(
+                f"Не удалось уведомить пользователя {data['telegram_id']} об оплате: {e}"
+            )
+
 
 @dp.message(DepositState.waiting_amount)
 async def process_deposit_amount(
@@ -2207,9 +1626,9 @@ async def process_deposit_amount(
             "❌ Введите только число\n\nНапример: 10"
         )
         return
-    if amount < 1:
+    if amount < 0:
         await message.answer(
-            "❌ Минимальное пополнение 1 USDT"
+            "❌ Минимальное пополнение 0.5 USDT"
         )
         return
     invoice = await crypto.create_invoice(
@@ -2230,6 +1649,14 @@ async def process_deposit_amount(
         details=f"сумма={amount:.2f} USDT invoice_id={invoice.invoice_id}",
         chat=message.chat,
     )
+
+    await notify_admins_deposit(
+        message.from_user.id,
+        message.from_user.username or "",
+        amount,
+        str(invoice.invoice_id),
+    )
+
     await message.answer(
         f"""
             💰 <b>Счёт создан</b>
@@ -2462,32 +1889,6 @@ async def admin_unban_input(message: types.Message, state: FSMContext) -> None:
         chat=message.chat,
     )
 
-
-@dp.callback_query(F.data == "admin_channels")
-async def admin_channels_callback(callback: CallbackQuery) -> None:
-    if not is_admin(callback.from_user.id):
-        await callback.answer("🚫 Доступ запрещён", show_alert=True)
-        return
-
-    channels = db.list_monitored_channels()
-
-    if not channels:
-        text = (
-            "📡 <b>Мониторируемые каналы</b>\n\n"
-            "Пока ни один канал не добавлен.\n"
-            "Добавь бота в канал как администратора."
-        )
-    else:
-        lines = ["📡 <b>Мониторируемые каналы:</b>\n"]
-        for ch in channels:
-            title = escape(ch["chat_title"] or "Без названия")
-            lines.append(f"• <b>{title}</b> (<code>{ch['chat_id']}</code>)")
-        text = "\n".join(lines)
-
-    await callback.message.edit_text(text, reply_markup=admin_panel_kb())
-    await callback.answer()
-
-
 @dp.message(Command("delreview"))
 async def delreview_handler(message: types.Message, command: CommandObject):
     if not is_admin(message.from_user.id):
@@ -2515,9 +1916,12 @@ async def delreview_handler(message: types.Message, command: CommandObject):
     if review is None:
         await message.answer("Такого отзыва нет.")
         return
-    db.delete_review(review["id"])
+    success = db.delete_review(review["id"])
+    if not success:
+        await message.answer("❌ Не удалось удалить отзыв (уже удалён?).")
+        return
     await message.answer(
-        f"✅ Удалён отзыв №{review_number} пользователя {username}"
+        f"✅ Удалён отзыв №{review_number} (id={review['id']}) пользователя {username}"
     )
     log_action(
         message.from_user.id,
@@ -2526,7 +1930,6 @@ async def delreview_handler(message: types.Message, command: CommandObject):
         details=f"цель={username} номер={review_number} review_id={review['id']}",
         chat=message.chat,
     )
-
 
 @dp.message(Command("banuser"))
 async def banuser_handler(message: types.Message, command: CommandObject) -> None:
@@ -2600,641 +2003,6 @@ async def unban_handler(message: types.Message, command: CommandObject) -> None:
         chat=message.chat,
     )
 
-
-@dp.message(Command("channels"))
-async def channels_handler(message: types.Message) -> None:
-    if not is_admin(message.from_user.id):
-        return
-
-    channels = db.list_monitored_channels()
-
-    if not channels:
-        await message.answer(
-            "📡 <b>Мониторируемые каналы</b>\n\n"
-            "Пока ни один канал не добавлен.\n"
-            "Добавь бота в канал как администратора."
-        )
-        return
-
-    lines = ["📡 <b>Мониторируемые каналы:</b>\n"]
-    for ch in channels:
-        title = escape(ch["chat_title"] or "Без названия")
-        lines.append(f"• <b>{title}</b> (<code>{ch['chat_id']}</code>)")
-
-    await message.answer("\n".join(lines))
-
-
-@dp.message(Command("activity"))
-async def activity_handler(message: types.Message, command: CommandObject) -> None:
-    """
-    Админская команда: /activity @username или /activity 123456789
-    Достаёт из logs/actions.log все строки, где упоминается этот
-    пользователь (по user_id или @username), и присылает последние из
-    них аккуратным, читаемым отчётом прямо в чат — переводы, пополнения,
-    выводы, отзывы, баны и т.п. в одном месте.
-    """
-    if not is_admin(message.from_user.id):
-        return
-
-    if not command.args:
-        await message.answer(
-            "❌ Укажи @username или Telegram ID.\n"
-            "Пример: <code>/activity @username</code> или <code>/activity 123456789</code>"
-        )
-        return
-
-    identifier = command.args.strip().split()[0].lstrip("@")
-    target_id, target_username = await resolve_target(identifier)
-    if target_id is None:
-        await message.answer(f"❌ Не удалось найти пользователя @{escape(identifier)}.")
-        return
-
-    log_path = os.path.join(LOGS_DIR, "actions.log")
-    needle_id = f"user={target_id} ("
-    needle_uname = f"(@{target_username.lower()})" if target_username else None
-
-    matches: list[str] = []
-    try:
-        with open(log_path, "r", encoding="utf-8") as f:
-            for line in f:
-                if needle_id in line or (needle_uname and needle_uname in line.lower()):
-                    matches.append(line.rstrip())
-    except FileNotFoundError:
-        matches = []
-
-    label = display_name(target_id, target_username)
-
-    if not matches:
-        await message.answer(
-            f"📭 <b>Активность не найдена</b>\n"
-            f"В журнале ничего не найдено для {label}."
-        )
-        return
-
-    last = matches[-20:]
-    header = (
-        f"📋 <b>Активность — {label}</b>\n"
-        f"<i>Последние {len(last)} из {len(matches)} записей</i>\n\n"
-    )
-    body = "\n".join(escape(entry) for entry in last)
-    full_text = header + f"<pre>{body}</pre>"
-
-    # Telegram режет сообщения длиннее 4096 символов — подрезаем тело
-    # с начала (оставляя самые свежие записи), а не всё сообщение целиком.
-    if len(full_text) > 4000:
-        overflow = len(full_text) - 4000
-        body = body[overflow:]
-        # первая обрезанная строка может быть неполной — уберём её остаток
-        body = body.split("\n", 1)[-1] if "\n" in body else body
-        full_text = header + f"<pre>{body}</pre>"
-
-    await message.answer(full_text)
-
-    log_action(
-        message.from_user.id,
-        message.from_user.username,
-        "АДМИН (просмотр активности)",
-        details=f"цель={label}(id={target_id}) записей={len(matches)}",
-        chat=message.chat,
-    )
-
-
-# ===========================================================================
-# ====================  WEB API ДЛЯ MINI APP  ==============================
-# ===========================================================================
-# Всё ниже — отдельный HTTP-слой поверх той же базы `db` и того же `bot`,
-# который дёргает фронтенд (nexon-miniapp.html) через fetch(). Работает
-# в том же процессе и на том же event loop'е, что и поллинг бота.
-#
-# NB: все нужные модули (hmac, hashlib, json, uuid, Path, parse_qsl,
-# datetime) уже импортированы в самом верху файла — раньше здесь был
-# повторный `import`, дублирующий их, это убрано.
-
-
-# =========================
-# TELEGRAM MINI APP AUTH
-# =========================
-
-def validate_init_data(
-    init_data: str,
-    bot_token: str,
-    max_age: int = 86400,
-) -> Optional[dict]:
-    if not init_data:
-        return None
-    try:
-        parsed = dict(parse_qsl(init_data, strict_parsing=True))
-    except ValueError:
-        return None
-
-    received_hash = parsed.pop("hash", None)
-    if not received_hash:
-        return None
-
-    data_check_string = "\n".join(
-        f"{k}={v}" for k, v in sorted(parsed.items())
-    )
-
-    secret_key = hmac.new(b"WebAppData", bot_token.encode(), hashlib.sha256).digest()
-    calculated_hash = hmac.new(
-        secret_key, data_check_string.encode(), hashlib.sha256
-    ).hexdigest()
-
-    if not hmac.compare_digest(calculated_hash, received_hash):
-        return None
-
-    try:
-        auth_date = int(parsed.get("auth_date", 0))
-    except ValueError:
-        return None
-
-    if max_age and datetime.utcnow().timestamp() - auth_date > max_age:
-        return None
-
-    return parsed
-
-
-def get_webapp_user(request: web.Request) -> Optional[dict]:
-    init_data = request.headers.get("X-Telegram-Init-Data", "")
-    parsed = validate_init_data(init_data, BOT_TOKEN)
-    if parsed is None:
-        return None
-
-    user_raw = parsed.get("user")
-    if not user_raw:
-        return None
-    try:
-        return json.loads(user_raw)
-    except (TypeError, ValueError):
-        return None
-
-
-# =========================
-# USER SYNC WITH DATABASE
-# =========================
-
-async def sync_user(user: dict) -> None:
-    db.upsert_user(
-        telegram_id=user["id"],
-        username=user.get("username") or "",
-        first_name=user.get("first_name") or "",
-    )
-
-
-# =========================
-# AUTH DECORATOR (единственная версия — раньше была продублирована)
-# =========================
-
-def require_auth(handler):
-    async def wrapper(request: web.Request):
-        user = get_webapp_user(request)
-        if user is None:
-            return web.json_response({"error": "unauthorized"}, status=401)
-        await sync_user(user)
-        request["tg_user"] = user
-        return await handler(request)
-    return wrapper
-
-
-# =========================
-# CORS + единая обработка ошибок
-# =========================
-# Раньше здесь ловились только web.HTTPException — любая другая ошибка
-# (например, обрыв записи файла на диск при загрузке скрина) улетала
-# наружу голой HTML-страницей 500, а фронт видел не JSON, а мусор и не
-# мог показать внятное сообщение. Теперь любая ошибка оборачивается
-# в аккуратный JSON-ответ.
-@web.middleware
-async def cors_middleware(request: web.Request, handler):
-    if request.method == "OPTIONS":
-        response = web.Response()
-    else:
-        try:
-            response = await handler(request)
-        except web.HTTPException as exc:
-            response = exc
-        except Exception as e:
-            logger.exception(f"Необработанная ошибка в Web API ({request.path}): {e}")
-            response = web.json_response({"error": "server_error"}, status=500)
-
-    origin = request.headers.get("Origin")
-    if origin:
-        response.headers["Access-Control-Allow-Origin"] = origin
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, X-Telegram-Init-Data"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    return response
-
-
-# ===========================================================================
-# PROFILE
-# ===========================================================================
-
-async def api_me(request: web.Request) -> web.Response:
-    user = request["tg_user"]
-    await sync_user(user)
-    stats = db.get_user_stats(user["id"])
-
-    return web.json_response({
-        "id": user["id"],
-        "username": user.get("username") or "",
-        "first_name": user.get("first_name") or "",
-        "balance": db.get_balance(user["id"]),
-        "banned": db.is_banned(user["id"]),
-        "score": stats["score"] if stats else None,
-        "total": stats["total"] if stats else 0,
-        "positive": stats["positive"] if stats else 0,
-        "negative": stats["negative"] if stats else 0,
-    })
-
-
-# ===========================================================================
-# CHECK USER — публичная ручка, авторизация не нужна: любой может
-# посмотреть репутацию любого продавца, как и в самом боте (/check).
-# ===========================================================================
-
-async def api_check(request: web.Request) -> web.Response:
-    q = request.query.get("q", "").strip()
-    if not q:
-        return web.json_response({"error": "empty_query"}, status=400)
-
-    target_id, username = await resolve_target(q)
-    if target_id is None:
-        return web.json_response({"error": "not_found"}, status=404)
-
-    if db.is_banned(target_id):
-        return web.json_response({
-            "id": target_id,
-            "username": username,
-            "banned": True,
-        })
-
-    stats = db.get_user_stats(target_id)
-    if stats is None:
-        return web.json_response({
-            "id": target_id,
-            "username": username,
-            "banned": False,
-            "no_reviews": True,
-        })
-
-    reviews = db.get_user_reviews(target_id, limit=10)
-    return web.json_response({
-        "id": target_id,
-        "username": username,
-        "banned": False,
-        "score": stats["score"],
-        "total": stats["total"],
-        "positive": stats["positive"],
-        "negative": stats["negative"],
-        "reviews": [serialize_review(r) for r in reviews],
-    })
-
-
-# ===========================================================================
-# REVIEWS + PHOTOS
-# ===========================================================================
-
-def photo_url(photo_id: str) -> str:
-    if photo_id.startswith("web:"):
-        return f"/uploads/{photo_id[4:]}"
-    return f"/api/photo/{photo_id}"
-
-
-def serialize_review(rev) -> dict:
-    return {
-        "id": get_review_id(rev),
-        "sign": rev["sign"],
-        "description": rev["description"] or "",
-        "created_at": str(rev["created_at"]),
-        "reviewer_username": rev["reviewer_username"] or "",
-        "reviewer_name": rev["reviewer_name"] or "",
-        "photos": [photo_url(p) for p in get_review_photo_ids(rev)],
-    }
-
-
-async def api_photo(request: web.Request) -> web.Response:
-    """Проксирует фото из Telegram (по file_id), не светя токен бота фронтенду."""
-    file_id = request.match_info.get("file_id", "")
-    try:
-        tg_file = await bot.get_file(file_id)
-        buffer = await bot.download_file(tg_file.file_path)
-    except TelegramAPIError:
-        raise web.HTTPNotFound()
-
-    return web.Response(
-        body=buffer.read(),
-        content_type="image/jpeg",
-        headers={"Cache-Control": "public, max-age=86400"},
-    )
-
-
-async def api_add_review(request: web.Request) -> web.Response:
-    reviewer = request["tg_user"]
-    reviewer_id = reviewer["id"]
-
-    await sync_user(reviewer)
-
-    if db.is_banned(reviewer_id):
-        return web.json_response({"error": "banned"}, status=403)
-
-    sign: Optional[str] = None
-    target_raw: Optional[str] = None
-    description = ""
-    photos: list[str] = []
-
-    # Любая ошибка при чтении multipart (обрыв соединения, битые данные,
-    # не хватило места на диске под /uploads и т.п.) раньше падала как
-    # необработанное исключение и превращалась в голую HTML-страницу 500
-    # на стороне фронтенда — там это и выглядело как загадочный "failed
-    # to upload". Теперь любая проблема тут возвращает понятный JSON.
-    try:
-        reader = await request.multipart()
-        async for field in reader:
-            if field.name == "sign":
-                sign = (await field.text()).strip()
-            elif field.name == "target":
-                target_raw = (await field.text()).strip()
-            elif field.name == "description":
-                description = (await field.text()).strip()
-            elif field.name == "photos" and field.filename:
-                filename = f"{uuid.uuid4().hex}.jpg"
-                path = UPLOAD_DIR / filename
-                size = 0
-                with open(path, "wb") as f:
-                    while True:
-                        chunk = await field.read_chunk(65536)
-                        if not chunk:
-                            break
-                        size += len(chunk)
-                        if size > MAX_PHOTO_BYTES:
-                            f.close()
-                            path.unlink(missing_ok=True)
-                            return web.json_response({"error": "photo_too_large"}, status=413)
-                        f.write(chunk)
-                if size:
-                    photos.append(f"web:{filename}")
-                else:
-                    path.unlink(missing_ok=True)
-    except Exception as e:
-        logger.exception(f"Ошибка загрузки скриншота через мини-апп: {e}")
-        return web.json_response({"error": "upload_failed"}, status=500)
-
-    if sign not in ("+", "-"):
-        return web.json_response({"error": "bad_sign"}, status=400)
-    if not target_raw:
-        return web.json_response({"error": "no_target"}, status=400)
-    if len(description) < 3:
-        return web.json_response({"error": "description_short"}, status=400)
-    if not photos:
-        return web.json_response({"error": "no_photos"}, status=400)
-
-    target_id, target_username = await resolve_target(target_raw)
-    if target_id is None:
-        return web.json_response({"error": "target_not_found"}, status=404)
-    if target_id == reviewer_id:
-        return web.json_response({"error": "self_review"}, status=400)
-    if db.has_recent_review(reviewer_id, target_id, hours=0.03):
-        return web.json_response({"error": "rate_limit"}, status=429)
-
-    # Подтягиваем данные цели, если она ещё не встречалась боту.
-    try:
-        chat = await bot.get_chat(target_id)
-        db.upsert_user(
-            telegram_id=target_id,
-            username=chat.username or "",
-            first_name=chat.first_name or "",
-        )
-    except TelegramAPIError:
-        pass
-
-    review_id = db.add_review(
-        target_id=target_id,
-        target_username=target_username,
-        reviewer_id=reviewer_id,
-        reviewer_username=reviewer.get("username") or "",
-        reviewer_name=reviewer.get("first_name") or "",
-        sign=sign,
-        description=description,
-        photo_file_id=",".join(photos),
-        chat_id=0,
-        chat_title="Nexon Mini App",
-        message_id=0,
-        source="webapp",
-    )
-
-    log_action(
-        reviewer_id,
-        reviewer.get("username"),
-        "НОВЫЙ ОТЗЫВ MINI APP",
-        details=f"review={review_id} target={target_id}",
-    )
-
-    return web.json_response({"ok": True, "review_id": review_id})
-
-
-# ===========================================================================
-# TOP USERS — публичная ручка
-# ===========================================================================
-
-async def api_top(request: web.Request) -> web.Response:
-    try:
-        limit = int(request.query.get("limit", 10))
-    except ValueError:
-        limit = 10
-    limit = max(1, min(limit, 50))
-
-    users = db.get_top_users(limit=limit, min_reviews=2)
-    return web.json_response({"users": [dict(u) for u in users]})
-
-
-# ===========================================================================
-# GLOBAL STATS — публичная ручка
-# ===========================================================================
-
-async def api_stats(request: web.Request) -> web.Response:
-    return web.json_response(db.get_global_stats())
-
-
-# ===========================================================================
-# CONFIG — раньше отдавал захардкоженный юзернейм гаранта ("затычку"),
-# теперь берёт реальное значение из той же переменной, которую использует
-# сам бот (GARANT_USERNAME), так что бот и мини-апп никогда не расходятся.
-# ===========================================================================
-
-async def api_config(request: web.Request) -> web.Response:
-    return web.json_response({
-        "garant_username": GARANT_USERNAME,
-        "min_deposit": 1,
-    })
-
-
-# ===========================================================================
-# WALLET
-# ===========================================================================
-
-async def api_wallet(request: web.Request) -> web.Response:
-    user = request["tg_user"]
-    return web.json_response({"balance": db.get_balance(user["id"])})
-
-
-async def api_deposit(request: web.Request) -> web.Response:
-    user = request["tg_user"]
-
-    try:
-        body = await request.json()
-        amount = float(body.get("amount", 0))
-    except Exception:
-        return web.json_response({"error": "bad_amount"}, status=400)
-
-    if amount < 1:
-        return web.json_response({"error": "min_amount"}, status=400)
-
-    invoice = await crypto.create_invoice(asset="USDT", amount=amount, payload=str(user["id"]))
-    db.save_invoice(
-        invoice_id=str(invoice.invoice_id),
-        telegram_id=user["id"],
-        amount=amount,
-        asset="USDT",
-    )
-
-    log_action(
-        user["id"], user.get("username"),
-        "ПОПОЛНЕНИЕ (mini app, счёт создан)",
-        details=f"сумма={amount:.2f} USDT invoice_id={invoice.invoice_id}",
-    )
-
-    return web.json_response({
-        "ok": True,
-        "pay_url": invoice.bot_invoice_url,
-        "invoice_id": str(invoice.invoice_id),
-    })
-
-
-async def api_withdraw(request: web.Request) -> web.Response:
-    user = request["tg_user"]
-
-    try:
-        body = await request.json()
-        amount = float(body.get("amount", 0))
-        wallet = (body.get("wallet", "") or "").strip()
-    except Exception:
-        return web.json_response({"error": "bad_request"}, status=400)
-
-    if amount <= 0 or not wallet:
-        return web.json_response({"error": "bad_request"}, status=400)
-    if not is_valid_trc20_address(wallet):
-        return web.json_response({"error": "bad_wallet"}, status=400)
-    if not db.remove_balance(user["id"], amount):
-        return web.json_response({"error": "insufficient_funds"}, status=400)
-
-    for admin_id in ADMIN_IDS:
-        try:
-            await bot.send_message(
-                admin_id,
-                "💸 <b>Вывод средств (mini app)</b>\n\n"
-                f"ID: <code>{user['id']}</code>\n"
-                f"Сумма: <b>{amount:.2f} USDT</b>\n"
-                f"Кошелёк (TRC20):\n<code>{escape(wallet)}</code>",
-            )
-        except TelegramAPIError:
-            pass
-
-    log_action(
-        user["id"], user.get("username"),
-        "ВЫВОД (mini app, заявка создана)",
-        details=(
-            f"сумма={amount:.2f} USDT кошелёк(TRC20)={wallet} "
-            f"баланс_после={db.get_balance(user['id']):.2f}"
-        ),
-    )
-
-    return web.json_response({"ok": True})
-
-
-async def api_transfer(request: web.Request) -> web.Response:
-    user = request["tg_user"]
-
-    try:
-        body = await request.json()
-        target_id = int(body.get("target_id"))
-        amount = float(body.get("amount", 0))
-    except Exception:
-        return web.json_response({"error": "bad_request"}, status=400)
-
-    if target_id == user["id"]:
-        return web.json_response({"error": "self_transfer"}, status=400)
-    if amount <= 0:
-        return web.json_response({"error": "bad_amount"}, status=400)
-    if not db.remove_balance(user["id"], amount):
-        return web.json_response({"error": "insufficient_funds"}, status=400)
-
-    db.add_balance(target_id, amount)
-    log_action(
-        user["id"], user.get("username"),
-        "ПЕРЕВОД (mini app)",
-        details=(
-            f"получатель={target_id} сумма={amount:.2f} USDT "
-            f"баланс_отправителя_после={db.get_balance(user['id']):.2f} "
-            f"баланс_получателя_после={db.get_balance(target_id):.2f}"
-        ),
-    )
-
-    return web.json_response({"ok": True})
-
-
-async def favicon(request: web.Request) -> web.Response:
-    return web.Response(status=204)
-
-
-# ===========================================================================
-# WEB APPLICATION
-# ===========================================================================
-
-def build_web_app() -> web.Application:
-    app = web.Application(
-        client_max_size=MAX_PHOTO_BYTES * 12,
-        middlewares=[cors_middleware],
-    )
-
-    app.router.add_get("/favicon.ico", favicon)
-    app.router.add_route("OPTIONS", "/{tail:.*}", lambda request: web.Response(status=200))
-
-    # Публичные ручки — не требуют initData.
-    app.router.add_get("/api/config", api_config)
-    app.router.add_get("/api/check", api_check)
-    app.router.add_get("/api/top", api_top)
-    app.router.add_get("/api/stats", api_stats)
-    app.router.add_get("/api/photo/{file_id}", api_photo)
-
-    # Требуют подтверждённого Telegram.WebApp.initData.
-    app.router.add_get("/api/me", require_auth(api_me))
-    app.router.add_post("/api/review", require_auth(api_add_review))
-    app.router.add_get("/api/wallet", require_auth(api_wallet))
-    app.router.add_post("/api/wallet/deposit", require_auth(api_deposit))
-    app.router.add_post("/api/wallet/withdraw", require_auth(api_withdraw))
-    app.router.add_post("/api/wallet/transfer", require_auth(api_transfer))
-
-    app.router.add_static("/uploads/", UPLOAD_DIR, show_index=False)
-    return app
-
-
-async def run_web_app() -> web.AppRunner:
-    app = build_web_app()
-    runner = web.AppRunner(app)
-    await runner.setup()
-
-    site = web.TCPSite(runner, API_HOST, API_PORT)
-    await site.start()
-
-    logger.info(f"🌐 Mini App API запущен на {API_HOST}:{API_PORT}")
-    return runner
-
-
-# ===========================================================================
-# CRYPTO PAYMENT LOOP
-# ===========================================================================
-
 async def crypto_payments_loop() -> None:
     while True:
         try:
@@ -3243,19 +2011,10 @@ async def crypto_payments_loop() -> None:
             logger.error(f"Ошибка при проверке платежей CryptoPay: {e}")
         await asyncio.sleep(15)
 
-# ===========================================================================
-# BOT STARTUP
-# ===========================================================================
-
 async def on_startup() -> None:
     db.init()
 
-    await bot.set_chat_menu_button(
-        menu_button=types.MenuButtonWebApp(
-            text="Nexon",
-            web_app=WebAppInfo(url=WEBAPP_URL),
-        )
-    )
+    await bot.set_chat_menu_button(menu_button=MenuButtonDefault())
 
     await bot.set_my_commands(
         [
@@ -3270,7 +2029,6 @@ async def on_startup() -> None:
         types.BotCommand(command="start",    description="🍓 Главное меню"),
         types.BotCommand(command="admin",    description="🛡️ Админ-панель"),
         types.BotCommand(command="balance",  description="💰 Баланс"),
-        types.BotCommand(command="activity", description="📋 Активность пользователя"),
         types.BotCommand(command="rep",      description="✍️ Оставить отзыв"),
         types.BotCommand(command="check",    description="🔍 Проверить продавца"),
         types.BotCommand(command="help",     description="❓ Как пользоваться"),
@@ -3286,7 +2044,6 @@ async def on_startup() -> None:
         f"🍓 Бот @{me.username} запущен! "
         f"Администраторы: {ADMIN_IDS if ADMIN_IDS else 'не назначены'}"
     )
-    logger.info(f"✅ WEBAPP кнопка установлена: {WEBAPP_URL}")
     logger.info(f"Логи пишутся в папку: {os.path.abspath(LOGS_DIR)}")
 
 
@@ -3300,21 +2057,15 @@ async def shutdown() -> None:
     except Exception:
         pass
 
-
 async def main() -> None:
     db.init()
     dp.startup.register(on_startup)
     logger.info("🍓 Nexon Reputation Bot стартует...")
-
-    web_runner = await run_web_app()
     asyncio.create_task(crypto_payments_loop())
-
     try:
         await dp.start_polling(bot)
     finally:
-        await web_runner.cleanup()
         await shutdown()
-
 
 if __name__ == "__main__":
     asyncio.run(main())
