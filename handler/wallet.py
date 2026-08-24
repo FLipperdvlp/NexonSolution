@@ -20,7 +20,7 @@ from checks.checks import *
 from keyboards.back import *
 from db.database import Database
 
-BOT_TOKEN: str = os.getenv("BOT_TOKEN", "8578283530:AAEUajtwik66P-ReEfPA_j8ge36zClfoN-M")
+BOT_TOKEN: str = os.getenv("BOT_TOKEN", "")
 
 bot = Bot(
     token=BOT_TOKEN,
